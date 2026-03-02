@@ -111,11 +111,15 @@ class ContextBar(QFrame):
     def set_model(self, model: str) -> None:
         self._model_label[1].setText(model)
 
-    def set_tokens(self, count: int) -> None:
+    def set_tokens(self, count: int, context_window: int = 0) -> None:
         if count >= 1000:
-            self._tokens_label[1].setText(f"{count / 1000:.1f}k")
+            text = f"{count / 1000:.1f}k"
         else:
-            self._tokens_label[1].setText(str(count))
+            text = str(count)
+        if context_window > 0:
+            pct = min(int(count * 100 / context_window), 100)
+            text += f" ({pct}%)"
+        self._tokens_label[1].setText(text)
 
     def _update_cursor(self) -> None:
         if self._stopped:

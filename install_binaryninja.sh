@@ -55,6 +55,18 @@ CONFIG_DIR="$BN_USER_DIR/rikugan"
 SKILLS_DIR="$CONFIG_DIR/skills"
 PLUGIN_LINK="$PLUGINS_DIR/rikugan"
 
+# ── Remove old "iris" installation (rebrand cleanup) ─────────────────
+OLD_LINK="$PLUGINS_DIR/iris"
+if [[ -L "$OLD_LINK" ]]; then
+    warn "Removing old 'iris' plugin symlink: $OLD_LINK"
+    rm "$OLD_LINK"
+    ok "Old 'iris' symlink removed"
+elif [[ -d "$OLD_LINK" ]]; then
+    warn "Removing old 'iris' plugin directory: $OLD_LINK"
+    rm -rf "$OLD_LINK"
+    ok "Old 'iris' directory removed"
+fi
+
 if [[ ! -f "$SCRIPT_DIR/rikugan_binaryninja.py" ]] || [[ ! -f "$SCRIPT_DIR/plugin.json" ]]; then
     err "Binary Ninja plugin files missing in $SCRIPT_DIR"
     exit 1

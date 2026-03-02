@@ -66,6 +66,20 @@ fi
 PLUGINS_DIR="$IDA_USER_DIR/plugins"
 CONFIG_DIR="$IDA_USER_DIR/rikugan"
 
+# ── Remove old "iris" installation (rebrand cleanup) ─────────────────
+for old_name in "iris_plugin.py" "iris"; do
+    OLD_PATH="$PLUGINS_DIR/$old_name"
+    if [[ -L "$OLD_PATH" ]]; then
+        warn "Removing old '$old_name' symlink: $OLD_PATH"
+        rm "$OLD_PATH"
+        ok "Old '$old_name' symlink removed"
+    elif [[ -e "$OLD_PATH" ]]; then
+        warn "Removing old '$old_name': $OLD_PATH"
+        rm -rf "$OLD_PATH"
+        ok "Old '$old_name' removed"
+    fi
+done
+
 # ── Sanity checks ─────────────────────────────────────────────────────
 
 if [[ ! -f "$SCRIPT_DIR/rikugan_plugin.py" ]]; then

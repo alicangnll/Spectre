@@ -41,6 +41,20 @@ set "PLUGINS_DIR=%BN_USER_DIR%\plugins"
 set "CONFIG_DIR=%BN_USER_DIR%\rikugan"
 set "SKILLS_DIR=%CONFIG_DIR%\skills"
 
+:: ── Remove old "iris" installation (rebrand cleanup) ───────────────
+set "OLD_LINK=%PLUGINS_DIR%\iris"
+if exist "%OLD_LINK%\" (
+    fsutil reparsepoint query "%OLD_LINK%" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [!] Removing old 'iris' plugin junction: %OLD_LINK%
+        rmdir "%OLD_LINK%"
+    ) else (
+        echo [!] Removing old 'iris' plugin directory: %OLD_LINK%
+        rmdir /s /q "%OLD_LINK%"
+    )
+    echo [+] Old 'iris' installation removed
+)
+
 echo [*] Installing Python dependencies...
 if defined BN_PYTHON (
     set "PIP_CMD=""%BN_PYTHON%"" -m pip"

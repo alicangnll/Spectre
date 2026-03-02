@@ -318,6 +318,104 @@ class UserMessageWidget(QFrame):
 
 
 # ---------------------------------------------------------------------------
+# Thinking content parser
+# ---------------------------------------------------------------------------
+
+_THINK_RE = _re.compile(r'<think>(.*?)</think>', _re.DOTALL)
+
+
+def _split_thinking(text: str):
+    """Split text into (thinking_content, visible_content).
+
+    Handles:
+    - One or more complete ``<think>...</think>`` blocks
+    - An unclosed ``<think>`` during streaming
+    """
+    thinking_parts: list = []
+
+    # Extract all complete <think>...</think> blocks
+    last_end = 0
+    visible_parts: list = []
+    for m in _THINK_RE.finditer(text):
+        visible_parts.append(text[last_end:m.start()])
+        thinking_parts.append(m.group(1).strip())
+        last_end = m.end()
+    visible_parts.append(text[last_end:])
+    remaining = "".join(visible_parts)
+
+    # Check for unclosed <think> (still streaming)
+    open_idx = remaining.rfind("<think>")
+    if open_idx >= 0:
+        partial = remaining[open_idx + 7:].strip()
+        if partial:
+            thinking_parts.append(partial)
+        remaining = remaining[:open_idx]
+
+    return "\n\n".join(thinking_parts), remaining.strip()
+
+
+# ---------------------------------------------------------------------------
+# Collapsible thinking block
+# ---------------------------------------------------------------------------
+
+class _ThinkingBlock(QFrame):
+    """Collapsible block for model reasoning / chain-of-thought."""
+
+    def __init__(self, parent: QWidget = None):
+        super().__init__(parent)
+        self.setObjectName("thinking_block")
+        self.setStyleSheet(
+            "#thinking_block { background: #1a1a2e; border: 1px solid #2a2a3e; "
+            "border-radius: 6px; }"
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(0)
+
+        self._toggle = QToolButton()
+        self._toggle.setObjectName("collapse_button")
+        self._toggle.setText("\u25b6")  # ▶
+        self._toggle.setFixedSize(14, 14)
+        self._toggle.clicked.connect(self._on_toggle)
+
+        header = QHBoxLayout()
+        header.setContentsMargins(0, 0, 0, 0)
+        header.setSpacing(4)
+        header.addWidget(self._toggle)
+        self._header_label = QLabel("Thinking")
+        self._header_label.setStyleSheet(
+            "color: #707090; font-size: 11px; font-style: italic;"
+        )
+        header.addWidget(self._header_label, 1)
+        layout.addLayout(header)
+
+        self._content = QLabel()
+        self._content.setWordWrap(True)
+        self._content.setTextFormat(Qt.TextFormat.RichText)
+        self._content.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self._content.setStyleSheet("color: #606078; font-size: 12px;")
+        self._content.hide()
+        layout.addWidget(self._content)
+
+        self._expanded = False
+        self.hide()
+
+    def _on_toggle(self) -> None:
+        self._expanded = not self._expanded
+        self._content.setVisible(self._expanded)
+        self._toggle.setText("\u25bc" if self._expanded else "\u25b6")
+
+    def set_thinking(self, text: str, in_progress: bool = False) -> None:
+        self._content.setText(md_to_html(text))
+        label = "Thinking\u2026" if in_progress else "Thinking"
+        self._header_label.setText(label)
+        self.show()
+
+
+# ---------------------------------------------------------------------------
 # Assistant message (with streaming + Markdown)
 # ---------------------------------------------------------------------------
 
@@ -339,6 +437,9 @@ class AssistantMessageWidget(QFrame):
         role_label.setStyleSheet("color: #569cd6; font-weight: bold; font-size: 11px;")
         layout.addWidget(role_label)
 
+        self._thinking_block = _ThinkingBlock()
+        layout.addWidget(self._thinking_block)
+
         self._content = QLabel()
         self._content.setWordWrap(True)
         self._content.setTextFormat(Qt.TextFormat.RichText)
@@ -351,7 +452,13 @@ class AssistantMessageWidget(QFrame):
         layout.addWidget(self._content)
 
     def _render(self) -> None:
-        self._content.setText(md_to_html(self._full_text))
+        thinking, visible = _split_thinking(self._full_text)
+        if thinking:
+            in_progress = "<think>" in self._full_text and "</think>" not in self._full_text
+            self._thinking_block.set_thinking(thinking, in_progress=in_progress)
+        else:
+            self._thinking_block.hide()
+        self._content.setText(md_to_html(visible))
         self._pending_delta = 0
 
     def append_text(self, delta: str) -> None:
@@ -949,6 +1056,16 @@ class ToolApprovalWidget(QFrame):
         self._allow_btn.clicked.connect(self._on_allow)
         btn_layout.addWidget(self._allow_btn)
 
+        self._always_btn = QToolButton()
+        self._always_btn.setText("  Always Allow  ")
+        self._always_btn.setStyleSheet(
+            "QToolButton { background: #1a5c2d; color: #ffffff; border: none; "
+            "border-radius: 4px; padding: 4px 16px; font-size: 11px; font-weight: bold; }"
+            "QToolButton:hover { background: #2ea043; }"
+        )
+        self._always_btn.clicked.connect(self._on_always_allow)
+        btn_layout.addWidget(self._always_btn)
+
         self._deny_btn = QToolButton()
         self._deny_btn.setText("  Deny  ")
         self._deny_btn.setStyleSheet(
@@ -962,9 +1079,13 @@ class ToolApprovalWidget(QFrame):
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
-    def _on_allow(self):
+    def _disable_buttons(self):
         self._allow_btn.setEnabled(False)
+        self._always_btn.setEnabled(False)
         self._deny_btn.setEnabled(False)
+
+    def _on_allow(self):
+        self._disable_buttons()
         self._allow_btn.setText("  Allowed  ")
         self._allow_btn.setStyleSheet(
             "QToolButton { background: #1a5c2d; color: #808080; border: none; "
@@ -972,9 +1093,17 @@ class ToolApprovalWidget(QFrame):
         )
         self.approved.emit(self._tool_call_id, "allow")
 
+    def _on_always_allow(self):
+        self._disable_buttons()
+        self._always_btn.setText("  Always Allowed  ")
+        self._always_btn.setStyleSheet(
+            "QToolButton { background: #1a5c2d; color: #808080; border: none; "
+            "border-radius: 4px; padding: 4px 16px; font-size: 11px; }"
+        )
+        self.approved.emit(self._tool_call_id, "allow_all")
+
     def _on_deny(self):
-        self._allow_btn.setEnabled(False)
-        self._deny_btn.setEnabled(False)
+        self._disable_buttons()
         self._deny_btn.setText("  Denied  ")
         self._deny_btn.setStyleSheet(
             "QToolButton { background: #6e1a12; color: #808080; border: none; "

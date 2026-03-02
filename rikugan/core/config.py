@@ -39,6 +39,7 @@ class ProviderConfig:
 class RikuganConfig:
     provider: ProviderConfig = field(default_factory=ProviderConfig)
     providers: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    custom_providers: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     auto_context: bool = True
     plan_mode_default: bool = False
     checkpoint_auto_save: bool = True
@@ -81,6 +82,7 @@ class RikuganConfig:
                 if hasattr(self.provider, k):
                     setattr(self.provider, k, v)
         self.providers = data.get("providers", {})
+        self.custom_providers = data.get("custom_providers", {})
         for k in ("auto_context", "plan_mode_default",
                    "checkpoint_auto_save", "theme"):
             if k in data:
@@ -123,6 +125,18 @@ class RikuganConfig:
             self.provider.temperature = DEFAULT_TEMPERATURE
             self.provider.max_tokens = DEFAULT_MAX_TOKENS
             self.provider.context_window = DEFAULT_CONTEXT_WINDOW
+
+    def add_custom_provider(self, name: str) -> None:
+        """Register a new custom OpenAI-compatible provider name."""
+        self.custom_providers[name] = {}
+
+    def remove_custom_provider(self, name: str) -> None:
+        """Remove a custom provider and its saved settings."""
+        self.custom_providers.pop(name, None)
+        self.providers.pop(name, None)
+
+    def is_custom_provider(self, name: str) -> bool:
+        return name in self.custom_providers
 
     @classmethod
     def load_or_create(cls) -> "RikuganConfig":

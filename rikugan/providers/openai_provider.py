@@ -137,9 +137,15 @@ class OpenAIProvider(LLMProvider):
                 total_tokens=response.usage.total_tokens,
             )
 
+        # OpenAI o-series reasoning_content
+        text = rm.content or ""
+        reasoning = getattr(rm, "reasoning_content", None)
+        if reasoning:
+            text = f"<think>{reasoning}</think>\n{text}"
+
         return Message(
             role=Role.ASSISTANT,
-            content=rm.content or "",
+            content=text,
             tool_calls=tool_calls,
             token_usage=usage,
         )
@@ -208,10 +214,23 @@ class OpenAIProvider(LLMProvider):
             stream = client.chat.completions.create(**kwargs)
             current_tool_calls: Dict[int, dict] = {}
 
+            _in_reasoning = False
+
             for chunk in stream:
                 if not chunk.choices:
                     continue
                 delta = chunk.choices[0].delta
+
+                # OpenAI o-series reasoning_content
+                reasoning = getattr(delta, "reasoning_content", None)
+                if reasoning:
+                    if not _in_reasoning:
+                        yield StreamChunk(text="<think>")
+                        _in_reasoning = True
+                    yield StreamChunk(text=reasoning)
+                elif _in_reasoning:
+                    yield StreamChunk(text="</think>\n")
+                    _in_reasoning = False
 
                 if delta.content:
                     yield StreamChunk(text=delta.content)
@@ -241,6 +260,9 @@ class OpenAIProvider(LLMProvider):
                             )
 
                 if chunk.choices[0].finish_reason:
+                    if _in_reasoning:
+                        yield StreamChunk(text="</think>\n")
+                        _in_reasoning = False
                     for tc_info in current_tool_calls.values():
                         yield StreamChunk(
                             tool_call_id=tc_info["id"],

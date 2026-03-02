@@ -159,7 +159,14 @@ class GeminiProvider(LLMProvider):
         return [genai.protos.Tool(function_declarations=declarations)]
 
     def _format_history(self, messages: List[Message]) -> list:
-        """Convert messages to Gemini chat history."""
+        """Convert messages to Gemini chat history.
+
+        For assistant messages that have ``_raw_parts`` (preserved from a
+        previous Gemini response), replay them as-is so ``thought_signature``
+        fields are kept intact.  Gemini 3 models require these signatures
+        on ``functionCall`` parts; reconstructing from our internal ToolCall
+        objects would strip them.
+        """
         genai = self._get_client()
         history = []
         for msg in messages:
@@ -168,16 +175,20 @@ class GeminiProvider(LLMProvider):
             elif msg.role == Role.USER:
                 history.append({"role": "user", "parts": [msg.content]})
             elif msg.role == Role.ASSISTANT:
-                parts = []
-                if msg.content:
-                    parts.append(msg.content)
-                for tc in msg.tool_calls:
-                    parts.append(genai.protos.Part(
-                        function_call=genai.protos.FunctionCall(
-                            name=tc.name, args=tc.arguments,
-                        )
-                    ))
-                history.append({"role": "model", "parts": parts})
+                # Prefer raw parts (preserves thought_signatures)
+                if getattr(msg, "_raw_parts", None):
+                    history.append({"role": "model", "parts": list(msg._raw_parts)})
+                else:
+                    parts = []
+                    if msg.content:
+                        parts.append(msg.content)
+                    for tc in msg.tool_calls:
+                        parts.append(genai.protos.Part(
+                            function_call=genai.protos.FunctionCall(
+                                name=tc.name, args=tc.arguments,
+                            )
+                        ))
+                    history.append({"role": "model", "parts": parts})
             elif msg.role == Role.TOOL:
                 parts = []
                 for tr in msg.tool_results:
@@ -243,9 +254,13 @@ class GeminiProvider(LLMProvider):
     def _normalize_response(self, response) -> Message:
         text = ""
         tool_calls = []
-        for part in response.candidates[0].content.parts:
+        raw_parts = list(response.candidates[0].content.parts)
+        for part in raw_parts:
             if hasattr(part, "text") and part.text:
-                text += part.text
+                if getattr(part, "thought", False):
+                    text += f"<think>{part.text}</think>\n"
+                else:
+                    text += part.text
             if hasattr(part, "function_call") and part.function_call:
                 fc = part.function_call
                 tool_calls.append(ToolCall(
@@ -263,7 +278,10 @@ class GeminiProvider(LLMProvider):
                 total_tokens=getattr(um, "total_token_count", 0) or 0,
             )
 
-        return Message(role=Role.ASSISTANT, content=text, tool_calls=tool_calls, token_usage=usage)
+        msg = Message(role=Role.ASSISTANT, content=text, tool_calls=tool_calls, token_usage=usage)
+        # Preserve raw parts so thought_signatures are available for history replay
+        msg._raw_parts = raw_parts
+        return msg
 
     def chat_stream(
         self, messages: List[Message],
@@ -287,9 +305,20 @@ class GeminiProvider(LLMProvider):
         last_content = self._format_last_message(messages[-1]) if messages else "hello"
         try:
             response = chat.send_message(last_content, stream=True)
+            all_raw_parts: list = []
+            last_usage: Optional[TokenUsage] = None
+            _in_thought = False
             for chunk in response:
                 for part in chunk.candidates[0].content.parts:
+                    all_raw_parts.append(part)
                     if hasattr(part, "text") and part.text:
+                        is_thought = getattr(part, "thought", False)
+                        if is_thought and not _in_thought:
+                            yield StreamChunk(text="<think>")
+                            _in_thought = True
+                        elif not is_thought and _in_thought:
+                            yield StreamChunk(text="</think>\n")
+                            _in_thought = False
                         yield StreamChunk(text=part.text)
                     if hasattr(part, "function_call") and part.function_call:
                         fc = part.function_call
@@ -305,5 +334,19 @@ class GeminiProvider(LLMProvider):
                             tool_name=fc.name,
                             is_tool_call_end=True,
                         )
+                if hasattr(chunk, "usage_metadata") and chunk.usage_metadata:
+                    um = chunk.usage_metadata
+                    last_usage = TokenUsage(
+                        prompt_tokens=getattr(um, "prompt_token_count", 0) or 0,
+                        completion_tokens=getattr(um, "candidates_token_count", 0) or 0,
+                        total_tokens=getattr(um, "total_token_count", 0) or 0,
+                    )
+            if _in_thought:
+                yield StreamChunk(text="</think>\n")
+            # Emit a final chunk carrying usage and raw parts (for thought_signature preservation)
+            yield StreamChunk(
+                usage=last_usage or TokenUsage(),
+                raw_parts=all_raw_parts if all_raw_parts else None,
+            )
         except Exception as e:
             self._handle_api_error(e)

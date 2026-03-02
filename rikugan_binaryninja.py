@@ -219,7 +219,7 @@ def _register_sidebar() -> None:
     class RikuganSidebarWidgetType(SidebarWidgetType):
         def __init__(self):
             icon_dir = os.path.join(os.path.dirname(__file__), "assets")
-            icon = QImage(os.path.join(icon_dir, "rikugan_icon.png"))
+            icon = QImage(os.path.join(icon_dir, "rikugan_icon_light.png"))
             if icon.isNull():
                 icon = QImage(":/icons/sidekick-assistant.png")
             if icon.isNull():

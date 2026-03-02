@@ -32,6 +32,12 @@ class ProviderRegistry:
     def register(self, name: str, provider_cls: Type[LLMProvider]) -> None:
         self._providers[name] = provider_cls
 
+    def register_custom_providers(self, names: List[str]) -> None:
+        """Register custom provider names as OpenAI-compatible endpoints."""
+        for name in names:
+            if name not in _BUILTIN_PROVIDERS:
+                self._providers[name] = OpenAICompatProvider
+
     def list_providers(self) -> List[str]:
         return list(self._providers.keys())
 
@@ -47,6 +53,10 @@ class ProviderRegistry:
         cls = self._providers.get(name)
         if cls is None:
             raise ProviderError(f"Unknown provider: {name}. Available: {self.list_providers()}")
+
+        # Custom OpenAI-compatible providers need their name passed through
+        if cls is OpenAICompatProvider and name != "openai_compat":
+            kwargs.setdefault("provider_name", name)
 
         instance = cls(api_key=api_key, api_base=api_base, model=model, **kwargs)
         self._instances[name] = instance

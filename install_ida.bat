@@ -55,6 +55,25 @@ if not defined IDA_USER_DIR (
 set "PLUGINS_DIR=%IDA_USER_DIR%\plugins"
 set "CONFIG_DIR=%IDA_USER_DIR%\rikugan"
 
+:: ── Remove old "iris" installation (rebrand cleanup) ───────────────
+if exist "%PLUGINS_DIR%\iris_plugin.py" (
+    echo [!] Removing old iris_plugin.py
+    del "%PLUGINS_DIR%\iris_plugin.py"
+    echo [+] Old iris_plugin.py removed
+)
+set "OLD_IRIS=%PLUGINS_DIR%\iris"
+if exist "%OLD_IRIS%\" (
+    fsutil reparsepoint query "%OLD_IRIS%" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [!] Removing old 'iris' plugin junction: %OLD_IRIS%
+        rmdir "%OLD_IRIS%"
+    ) else (
+        echo [!] Removing old 'iris' plugin directory: %OLD_IRIS%
+        rmdir /s /q "%OLD_IRIS%"
+    )
+    echo [+] Old 'iris' installation removed
+)
+
 :: ── Install dependencies ─────────────────────────────────────────────
 
 echo [*] Installing Python dependencies...

@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Optional
 
 from .qt_compat import (
     QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QTimer,
-    QTabWidget, QTabBar, QToolButton, Signal, QFileDialog, QMenu, Qt,
+    QTabWidget, QTabBar, QToolButton, Signal, QFileDialog, QMenu, QMessageBox, Qt,
 )
 from .styles import DARK_THEME
 from .chat_view import ChatView
@@ -239,9 +239,28 @@ class RikuganPanelCore(QWidget):
         return chat_view
 
     def _on_new_tab(self) -> None:
-        """Create a new chat tab."""
+        """Create a new chat tab, with optional context clearing."""
         if self._is_shutdown:
             return
+        session = self._ctrl.session
+        has_messages = session and session.messages
+        if has_messages:
+            ctx_window = self._config.provider.context_window or 200000
+            used = session.total_usage.total_tokens
+            pct = min(int(used * 100 / ctx_window), 100) if ctx_window > 0 else 0
+            result = self._show_new_chat_dialog(pct)
+            if result == "no":
+                return
+            if result == "clear":
+                # Clear current tab instead of creating a new one
+                self._ctrl.new_chat()
+                chat_view = self._active_chat_view()
+                if chat_view:
+                    chat_view.clear_chat()
+                self._update_token_display(0)
+                self._update_tab_label(self._ctrl.active_tab_id)
+                return
+            # "yes" — fall through to create a new tab
         tab_id = self._ctrl.create_tab()
         self._create_tab(tab_id, "New Chat")
         self._ctrl.switch_tab(tab_id)
@@ -400,9 +419,7 @@ class RikuganPanelCore(QWidget):
         if tab_id is None:
             return
         self._ctrl.switch_tab(tab_id)
-        if self._context_bar is not None:
-            session = self._ctrl.session
-            self._context_bar.set_tokens(session.total_usage.total_tokens)
+        self._update_token_display()
 
     def _tab_id_at_index(self, index: int) -> Optional[str]:
         """Find the tab_id for a given tab index by matching the widget."""
@@ -417,6 +434,15 @@ class RikuganPanelCore(QWidget):
     def _active_chat_view(self) -> Optional[ChatView]:
         """Return the ChatView for the currently active tab."""
         return self._chat_views.get(self._ctrl.active_tab_id)
+
+    def _update_token_display(self, token_count: Optional[int] = None) -> None:
+        """Update the context bar token display with context window percentage."""
+        if self._context_bar is None:
+            return
+        if token_count is None:
+            token_count = self._ctrl.session.total_usage.total_tokens
+        ctx_window = self._config.provider.context_window or 0
+        self._context_bar.set_tokens(token_count, ctx_window)
 
     def _update_tab_label(self, tab_id: str) -> None:
         """Update tab label from the first user message."""
@@ -522,16 +548,33 @@ class RikuganPanelCore(QWidget):
         except Exception as e:
             log_error(f"Settings dialog error: {e}")
 
-    def _on_new_chat(self) -> None:
-        """Reset the current tab to a new chat."""
-        if self._ctrl.is_agent_running or self._is_shutdown:
-            return
-        self._ctrl.new_chat()
-        chat_view = self._active_chat_view()
-        if chat_view:
-            chat_view.clear_chat()
-        self._context_bar.set_tokens(0)
-        self._update_tab_label(self._ctrl.active_tab_id)
+    def _show_new_chat_dialog(self, context_pct: int) -> str:
+        """Show a confirmation dialog with context usage. Returns 'yes', 'clear', or 'no'."""
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("New Chat")
+        dlg.setText("Start a new chat? Current conversation will be saved.")
+        dlg.setInformativeText(f"Context usage: {context_pct}%")
+        dlg.setStyleSheet(
+            "QMessageBox { background: #1e1e1e; color: #d4d4d4; }"
+            "QLabel { color: #d4d4d4; font-size: 12px; }"
+            "QPushButton { background: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; "
+            "border-radius: 4px; padding: 6px 16px; font-size: 11px; min-width: 80px; }"
+            "QPushButton:hover { background: #3c3c3c; }"
+        )
+        yes_btn = dlg.addButton("Yes", QMessageBox.ButtonRole.AcceptRole)
+        clear_btn = dlg.addButton(
+            f"Yes, clear context ({context_pct}% used)",
+            QMessageBox.ButtonRole.AcceptRole,
+        )
+        no_btn = dlg.addButton("No", QMessageBox.ButtonRole.RejectRole)
+        dlg.setDefaultButton(no_btn)
+        dlg.exec_()
+        clicked = dlg.clickedButton()
+        if clicked is clear_btn:
+            return "clear"
+        if clicked is yes_btn:
+            return "yes"
+        return "no"
 
     def _start_agent(self, user_message: str) -> None:
         chat_view = self._active_chat_view()
@@ -591,7 +634,7 @@ class RikuganPanelCore(QWidget):
             return
         chat_view.handle_event(event)
         if event.usage:
-            self._context_bar.set_tokens(self._ctrl.session.total_usage.total_tokens)
+            self._update_token_display()
         if event.type == TurnEventType.USER_QUESTION:
             self._pending_answer = True
             self._set_running(False)
@@ -649,8 +692,7 @@ class RikuganPanelCore(QWidget):
                         if self._tab_widget.widget(i) is cv:
                             self._tab_widget.setCurrentIndex(i)
                             break
-                session = self._ctrl.session
-                self._context_bar.set_tokens(session.total_usage.total_tokens)
+                self._update_token_display()
         else:
             # No saved sessions — try legacy single-session restore
             session = self._ctrl.restore_session()
@@ -658,7 +700,7 @@ class RikuganPanelCore(QWidget):
                 chat_view = self._active_chat_view()
                 if chat_view:
                     chat_view.restore_from_messages(session.messages)
-                self._context_bar.set_tokens(session.total_usage.total_tokens)
+                self._update_token_display()
 
     def _set_running(self, running: bool) -> None:
         self._input_area.set_enabled(not running)

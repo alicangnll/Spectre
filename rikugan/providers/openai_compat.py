@@ -38,6 +38,10 @@ class OpenAICompatProvider(OpenAIProvider):
             kwargs: Dict[str, Any] = {}
             if self.api_key:
                 kwargs["api_key"] = self.api_key
+            elif self.api_base:
+                # Custom endpoint without explicit key — use a placeholder
+                # to prevent the SDK from reading OPENAI_API_KEY env var
+                kwargs["api_key"] = "no-key"
             if self.api_base:
                 kwargs["base_url"] = self.api_base
             self._client = openai.OpenAI(**kwargs)
@@ -55,6 +59,23 @@ class OpenAICompatProvider(OpenAIProvider):
         )
 
     def list_models(self) -> List[ModelInfo]:
+        """Fetch models from the OpenAI-compatible endpoint."""
+        try:
+            client = self._get_client()
+            response = client.models.list()
+            models = []
+            for m in response.data:
+                name = getattr(m, "name", None) or m.id
+                models.append(ModelInfo(
+                    id=m.id, name=name, provider=self._provider_name,
+                ))
+            if models:
+                models.sort(key=lambda x: x.id)
+                return models
+        except Exception:
+            pass
+        # Endpoint doesn't support /v1/models or returned nothing.
+        # Return current model if set; otherwise empty (user types manually).
         if self.model:
             return [ModelInfo(self.model, self.model, self._provider_name)]
         return []

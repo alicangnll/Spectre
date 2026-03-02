@@ -64,7 +64,7 @@ class SkillRegistry:
         """Format a summary for inclusion in the system prompt."""
         if not self._skills:
             return None
-        lines = ["Available skills (user invokes with /slug):"]
+        lines = ["Available skills (user invokes with /slug, or you can call activate_skill):"]
         for slug, skill in sorted(self._skills.items()):
             desc = skill.description or "(no description)"
             lines.append(f"  - /{slug}: {desc}")

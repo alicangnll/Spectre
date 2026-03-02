@@ -33,6 +33,9 @@ class SessionControllerBase:
         self.config = config
         self.host_name = host_name
         self._provider_registry = ProviderRegistry()
+        self._provider_registry.register_custom_providers(
+            list(config.custom_providers.keys())
+        )
         self._tool_registry = tool_registry_factory()
         self._skill_registry = SkillRegistry()
         self._skill_registry.discover()
@@ -262,6 +265,10 @@ class SessionControllerBase:
         self._active_tab_id = tab_id
 
     def update_settings(self) -> None:
+        # Re-register custom providers in case user added/removed one
+        self._provider_registry.register_custom_providers(
+            list(self.config.custom_providers.keys())
+        )
         for session in self._sessions.values():
             session.provider_name = self.config.provider.name
             session.model_name = self.config.provider.model

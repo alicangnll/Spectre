@@ -70,7 +70,8 @@ class AgentLoop:
 
         # Tool approval state (for execute_python)
         self._tool_approval_event = threading.Event()
-        self._tool_approved: Optional[str] = None  # "allow" or "deny"
+        self._tool_approved: Optional[str] = None  # "allow", "allow_all", or "deny"
+        self._always_allow_scripts = False
 
     @property
     def is_running(self) -> bool:
@@ -175,7 +176,7 @@ class AgentLoop:
             yield TurnEvent.turn_start(_st + 1)
 
             try:
-                assistant_text, tool_calls, last_usage = yield from self._stream_llm_turn(
+                assistant_text, tool_calls, last_usage, raw_parts = yield from self._stream_llm_turn(
                     system_prompt, tools_schema,
                 )
             except CancellationError:
@@ -192,6 +193,8 @@ class AgentLoop:
                 role=Role.ASSISTANT, content=assistant_text,
                 tool_calls=tool_calls, token_usage=last_usage,
             )
+            if raw_parts is not None:
+                assistant_msg._raw_parts = raw_parts
             self.session.add_message(assistant_msg)
 
             if not tool_calls:
@@ -219,7 +222,7 @@ class AgentLoop:
 
         yield TurnEvent.turn_start(1)
         try:
-            plan_text, _, usage = yield from self._stream_llm_turn(system_prompt, None)
+            plan_text, _, usage, _ = yield from self._stream_llm_turn(system_prompt, None)
         except (CancellationError, ProviderError) as e:
             yield TurnEvent.error_event(str(e))
             return
@@ -262,13 +265,19 @@ class AgentLoop:
 
     def _stream_llm_turn(
         self, system_prompt: str, tools_schema: Optional[List],
-    ) -> Generator[TurnEvent, None, Tuple[str, List[ToolCall], Optional[TokenUsage]]]:
-        """Stream one LLM call, yielding events. Returns (text, tool_calls, usage)."""
+    ) -> Generator[TurnEvent, None, Tuple[str, List[ToolCall], Optional[TokenUsage], Any]]:
+        """Stream one LLM call, yielding events.
+
+        Returns ``(text, tool_calls, usage, raw_parts)`` where *raw_parts* is
+        provider-specific opaque data (e.g. Gemini parts with thought_signatures)
+        that should be stored on the :class:`Message` for faithful history replay.
+        """
         assistant_text = ""
         tool_calls: List[ToolCall] = []
         current_tool_args: Dict[str, str] = {}
         current_tool_names: Dict[str, str] = {}
         last_usage: Optional[TokenUsage] = None
+        raw_parts: Any = None
 
         stream = self.provider.chat_stream(
             messages=self.session.get_messages_for_provider(),
@@ -313,8 +322,12 @@ class AgentLoop:
                 last_usage = chunk.usage
                 yield TurnEvent.usage_update(chunk.usage)
 
+            # Capture provider-specific raw parts (e.g. Gemini thought_signatures)
+            if chunk.raw_parts is not None:
+                raw_parts = chunk.raw_parts
+
         log_debug(f"Stream done: {chunk_count} chunks, {len(assistant_text)} chars, {len(tool_calls)} tool calls")
-        return (assistant_text, tool_calls, last_usage)
+        return (assistant_text, tool_calls, last_usage, raw_parts)
 
     @staticmethod
     def _describe_tool_call(name: str, args: Dict[str, Any]) -> str:
@@ -354,7 +367,12 @@ class AgentLoop:
         """Yield an approval request and wait for the user decision.
 
         Returns True if approved, False if denied.
+        Handles 'allow_all' to skip future approval prompts for this session.
         """
+        # Skip prompt if user previously chose "Always Allow"
+        if self._always_allow_scripts:
+            return True
+
         args_str = json.dumps(tc.arguments, indent=2)
         description = self._describe_tool_call(tc.name, tc.arguments)
         yield TurnEvent.tool_approval_request(tc.id, tc.name, args_str, description)
@@ -365,6 +383,9 @@ class AgentLoop:
             self._check_cancelled()
 
         decision = (self._tool_approved or "deny").lower()
+        if decision == "allow_all":
+            self._always_allow_scripts = True
+            return True
         return decision == "allow"
 
     def _execute_tool_calls(
@@ -374,6 +395,28 @@ class AgentLoop:
         tool_results: List[ToolResult] = []
         for tc in tool_calls:
             self._check_cancelled()
+
+            # activate_skill: load skill body and return as tool result
+            if tc.name == "activate_skill":
+                slug = tc.arguments.get("slug", "")
+                skill = self.skills.get(slug) if self.skills else None
+                if skill is None:
+                    content = f"Skill '{slug}' not found."
+                    is_err = True
+                else:
+                    content = (
+                        f"[Skill: {skill.name}]\n\n"
+                        f"{skill.body}"
+                    )
+                    is_err = False
+                    log_debug(f"Agent activated skill: /{slug}")
+                tr = ToolResult(
+                    tool_call_id=tc.id, name=tc.name,
+                    content=content, is_error=is_err,
+                )
+                tool_results.append(tr)
+                yield TurnEvent.tool_result_event(tc.id, tc.name, content, is_err)
+                continue
 
             # ask_user: block until the UI delivers an answer
             if tc.name == "ask_user":
@@ -466,6 +509,35 @@ class AgentLoop:
                     if t.get("function", {}).get("name") in allowed
                 ]
 
+            # Append the activate_skill pseudo-tool so the agent can load skills on demand
+            if self.skills and self.skills.list_slugs():
+                _ACTIVATE_SKILL_SCHEMA = {
+                    "type": "function",
+                    "function": {
+                        "name": "activate_skill",
+                        "description": (
+                            "Load a skill's full prompt and reference material into context. "
+                            "Call this when the user's request matches a skill's domain "
+                            "(e.g., activate 'malware-analysis' for malware tasks, "
+                            "'vuln-audit' for security audits, 'ida-scripting' or "
+                            "'binja-scripting' when you need to write scripts). "
+                            "The skill body will be returned so you can follow its methodology."
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string",
+                                    "description": "The skill slug to activate.",
+                                    "enum": self.skills.list_slugs(),
+                                },
+                            },
+                            "required": ["slug"],
+                        },
+                    },
+                }
+                tools_schema.append(_ACTIVATE_SKILL_SCHEMA)
+
             # Append the ask_user pseudo-tool so the LLM can ask the user
             _ASK_USER_SCHEMA = {
                 "type": "function",
@@ -528,7 +600,7 @@ class AgentLoop:
                     # yield from propagates streamed TurnEvents to the caller
                     # while the generator's return value (via StopIteration.value)
                     # provides the accumulated result tuple (PEP 380).
-                    assistant_text, tool_calls, last_usage = yield from self._stream_llm_turn(
+                    assistant_text, tool_calls, last_usage, raw_parts = yield from self._stream_llm_turn(
                         system_prompt, turn_tools,
                     )
                 except CancellationError:
@@ -549,6 +621,8 @@ class AgentLoop:
                     tool_calls=tool_calls,
                     token_usage=last_usage,
                 )
+                if raw_parts is not None:
+                    assistant_msg._raw_parts = raw_parts
                 self.session.add_message(assistant_msg)
 
                 # If no tool calls, we're done

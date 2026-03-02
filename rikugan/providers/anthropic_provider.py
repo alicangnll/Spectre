@@ -227,7 +227,9 @@ class AnthropicProvider(LLMProvider):
         tool_calls = []
 
         for block in response.content:
-            if block.type == "text":
+            if block.type == "thinking":
+                content_text += f"<think>{block.thinking}</think>\n"
+            elif block.type == "text":
                 content_text += block.text
             elif block.type == "tool_use":
                 tool_calls.append(ToolCall(
@@ -322,6 +324,8 @@ class AnthropicProvider(LLMProvider):
                 current_tool_name = None
                 tool_args_buf = ""
 
+                in_thinking = False
+
                 for event in stream:
                     etype = event.type
 
@@ -336,13 +340,18 @@ class AnthropicProvider(LLMProvider):
                                 tool_name=block.name,
                                 is_tool_call_start=True,
                             )
+                        elif block.type == "thinking":
+                            in_thinking = True
+                            yield StreamChunk(text="<think>\n")
                         elif block.type == "text":
                             if block.text:
                                 yield StreamChunk(text=block.text)
 
                     elif etype == "content_block_delta":
                         delta = event.delta
-                        if delta.type == "text_delta":
+                        if delta.type == "thinking_delta":
+                            yield StreamChunk(text=delta.thinking)
+                        elif delta.type == "text_delta":
                             yield StreamChunk(text=delta.text)
                         elif delta.type == "input_json_delta":
                             tool_args_buf += delta.partial_json
@@ -353,7 +362,10 @@ class AnthropicProvider(LLMProvider):
                             )
 
                     elif etype == "content_block_stop":
-                        if current_tool_id:
+                        if in_thinking:
+                            yield StreamChunk(text="\n</think>\n")
+                            in_thinking = False
+                        elif current_tool_id:
                             yield StreamChunk(
                                 tool_call_id=current_tool_id,
                                 tool_name=current_tool_name,

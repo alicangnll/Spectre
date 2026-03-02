@@ -93,7 +93,7 @@ class InputArea(QPlainTextEdit):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         self.setObjectName("input_area")
-        self.setPlaceholderText("Ask Rikugan about this binary... (Enter to send, Shift+Enter for newline)")
+        self.setPlaceholderText("Ask about this binary... (/ for skills, /plan for step-by-step)")
         self.setMaximumHeight(100)
         self.setMinimumHeight(40)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -112,8 +112,13 @@ class InputArea(QPlainTextEdit):
         self._cancel_callback = callback
 
     def set_skill_slugs(self, slugs: List[str]) -> None:
-        """Set the list of available skill slugs for autocomplete."""
-        self._skill_slugs = sorted(slugs)
+        """Set the list of available skill slugs for autocomplete.
+
+        Automatically includes /plan as a built-in command.
+        """
+        combined = set(slugs)
+        combined.add("plan")
+        self._skill_slugs = sorted(combined)
 
     def keyPressEvent(self, event) -> None:  # noqa: N802
         # Handle popup navigation when popup is visible
@@ -156,7 +161,7 @@ class InputArea(QPlainTextEdit):
         self._enabled = enabled
         self.setReadOnly(not enabled)
         if enabled:
-            self.setPlaceholderText("Ask Rikugan about this binary... (Enter to send, Shift+Enter for newline)")
+            self.setPlaceholderText("Ask about this binary... (/ for skills, /plan for step-by-step)")
         else:
             self.setPlaceholderText("Rikugan is thinking...")
 

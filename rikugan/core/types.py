@@ -55,6 +55,9 @@ class Message:
     timestamp: float = field(default_factory=time.time)
     token_usage: Optional[TokenUsage] = None
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+    # Provider-specific raw response data (e.g. Gemini parts with thought_signatures).
+    # Not serialized to JSON — only kept in-memory for the current session.
+    _raw_parts: Any = field(default=None, repr=False)
 
     def to_dict(self) -> Dict[str, Any]:
         d: Dict[str, Any] = {"role": self.role.value, "id": self.id, "timestamp": self.timestamp}
@@ -150,3 +153,5 @@ class StreamChunk:
     usage: Optional[TokenUsage] = None
     is_tool_call_start: bool = False
     is_tool_call_end: bool = False
+    # Provider-specific raw response parts (e.g. Gemini parts with thought_signatures).
+    raw_parts: Any = None

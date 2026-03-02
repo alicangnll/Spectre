@@ -101,6 +101,68 @@ class _ModelFetcher:
             return None
 
 
+_BUILTIN_PROVIDERS = ["anthropic", "openai", "gemini", "ollama", "openai_compat"]
+
+
+class _AddProviderDialog(QDialog):
+    """Mini-dialog to create a new custom OpenAI-compatible connection."""
+
+    def __init__(self, existing_names: list, parent: QWidget = None):
+        super().__init__(parent)
+        self.setWindowTitle("Add Custom Connection")
+        self.setMinimumWidth(400)
+        self._existing = {n.lower() for n in existing_names}
+
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+
+        self._name_edit = QLineEdit()
+        self._name_edit.setPlaceholderText("e.g. minimax, deepseek, local-vllm")
+        form.addRow("Connection Name:", self._name_edit)
+
+        self._base_edit = QLineEdit()
+        self._base_edit.setPlaceholderText("https://api.example.com/v1")
+        form.addRow("API Base URL:", self._base_edit)
+
+        layout.addLayout(form)
+
+        self._error_label = QLabel()
+        self._error_label.setStyleSheet("color: #f44747; font-size: 11px;")
+        self._error_label.hide()
+        layout.addWidget(self._error_label)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self._validate)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _validate(self) -> None:
+        name = self._name_edit.text().strip().lower().replace(" ", "-")
+        if not name:
+            self._error_label.setText("Name is required")
+            self._error_label.show()
+            return
+        if name in self._existing:
+            self._error_label.setText(f"'{name}' already exists")
+            self._error_label.show()
+            return
+        base = self._base_edit.text().strip()
+        if not base:
+            self._error_label.setText("API Base URL is required")
+            self._error_label.show()
+            return
+        self._name_edit.setText(name)
+        self.accept()
+
+    def provider_name(self) -> str:
+        return self._name_edit.text().strip()
+
+    def api_base(self) -> str:
+        return self._base_edit.text().strip()
+
+
 class SettingsDialog(QDialog):
     """Configuration dialog for Rikugan."""
 
@@ -110,6 +172,9 @@ class SettingsDialog(QDialog):
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self._config = config
         self._registry = registry or ProviderRegistry()
+        self._registry.register_custom_providers(
+            list(self._config.custom_providers.keys())
+        )
         self._fetcher = _ModelFetcher(self._registry)
         self._fetched_models: List[ModelInfo] = []
         self._resolved_token: str = ""
@@ -125,6 +190,9 @@ class SettingsDialog(QDialog):
             self.resize(700, 600)
         self.setMinimumWidth(400)
         self._build_ui()
+        self._remove_provider_btn.setEnabled(
+            self._config.is_custom_provider(self._config.provider.name)
+        )
 
         # Poll timer for fetcher results — NO cross-thread signals
         self._poll_timer = QTimer(self)
@@ -144,15 +212,35 @@ class SettingsDialog(QDialog):
         provider_group = QGroupBox("LLM Provider")
         provider_form = QFormLayout(provider_group)
 
+        provider_row = QHBoxLayout()
         self._provider_combo = QComboBox()
-        self._provider_combo.addItems([
-            "anthropic", "openai", "gemini", "ollama", "openai_compat",
-        ])
+        self._populate_provider_combo()
         idx = self._provider_combo.findText(self._config.provider.name)
         if idx >= 0:
             self._provider_combo.setCurrentIndex(idx)
+        provider_row.addWidget(self._provider_combo, 1)
+
+        btn_style = (
+            "QPushButton { background: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; "
+            "border-radius: 4px; font-size: 13px; font-weight: bold; }"
+            "QPushButton:hover { background: #3c3c3c; }"
+        )
+        self._add_provider_btn = QPushButton("+")
+        self._add_provider_btn.setFixedSize(28, 28)
+        self._add_provider_btn.setToolTip("Add custom OpenAI-compatible connection")
+        self._add_provider_btn.setStyleSheet(btn_style)
+        self._add_provider_btn.clicked.connect(self._on_add_custom_provider)
+        provider_row.addWidget(self._add_provider_btn)
+
+        self._remove_provider_btn = QPushButton("\u2212")  # minus sign
+        self._remove_provider_btn.setFixedSize(28, 28)
+        self._remove_provider_btn.setToolTip("Remove custom connection")
+        self._remove_provider_btn.setStyleSheet(btn_style)
+        self._remove_provider_btn.clicked.connect(self._on_remove_custom_provider)
+        provider_row.addWidget(self._remove_provider_btn)
+
         # Connect AFTER setting index so it doesn't fire during construction
-        provider_form.addRow("Provider:", self._provider_combo)
+        provider_form.addRow("Provider:", provider_row)
 
         # API key — only show explicit user keys, NOT auto-resolved OAuth tokens
         key_layout = QHBoxLayout()
@@ -303,6 +391,10 @@ class SettingsDialog(QDialog):
         # Use config.switch_provider() to snapshot current & restore saved
         self._config.switch_provider(provider)
 
+        # Enable remove button only for custom providers
+        is_custom = self._config.is_custom_provider(provider)
+        self._remove_provider_btn.setEnabled(is_custom)
+
         # Update UI fields from the (possibly restored) config
         self._api_key_edit.setText(self._config.provider.api_key)
         self._api_base_edit.setText(self._config.provider.api_base)
@@ -320,7 +412,7 @@ class SettingsDialog(QDialog):
             self._api_key_edit.setPlaceholderText("sk-... or leave empty for OAuth auto-detect")
         elif provider == "ollama":
             self._api_key_edit.setPlaceholderText("Not required for local Ollama")
-        elif provider == "openai_compat":
+        elif provider in ("openai_compat",) or is_custom:
             self._api_key_edit.setPlaceholderText("API key for the endpoint")
         else:
             self._api_key_edit.setPlaceholderText("API key")
@@ -405,8 +497,12 @@ class SettingsDialog(QDialog):
             # instead of keeping garbage text in the editable combo.
             self._model_combo.setCurrentIndex(0)
 
-        self._model_status.setText(f"{len(models)} models")
-        self._model_status.setStyleSheet("color: #4ec9b0; font-size: 10px;")
+        if models:
+            self._model_status.setText(f"{len(models)} models")
+            self._model_status.setStyleSheet("color: #4ec9b0; font-size: 10px;")
+        else:
+            self._model_status.setText("Type model name manually")
+            self._model_status.setStyleSheet("color: #808080; font-size: 10px;")
 
         # Auto-fill generation defaults based on selected model
         self._update_generation_defaults()
@@ -430,6 +526,61 @@ class SettingsDialog(QDialog):
         if data:
             return data
         return self._model_combo.currentText().strip()
+
+    # --- Custom provider management ---
+
+    def _populate_provider_combo(self) -> None:
+        """Fill the provider combo with builtins + custom connections."""
+        self._provider_combo.clear()
+        self._provider_combo.addItems(_BUILTIN_PROVIDERS)
+        custom = sorted(self._config.custom_providers.keys())
+        if custom:
+            self._provider_combo.insertSeparator(len(_BUILTIN_PROVIDERS))
+            self._provider_combo.addItems(custom)
+
+    def _on_add_custom_provider(self) -> None:
+        all_names = _BUILTIN_PROVIDERS + list(self._config.custom_providers.keys())
+        dlg = _AddProviderDialog(all_names, parent=self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        name = dlg.provider_name()
+        api_base = dlg.api_base()
+        # Snapshot current provider settings before switching
+        self._sync_config_from_ui()
+        # Register in config and registry
+        self._config.add_custom_provider(name)
+        self._registry.register_custom_providers([name])
+        # Initialize settings for the new provider
+        self._config.switch_provider(name)
+        self._config.provider.api_base = api_base
+        # Rebuild combo and select the new provider
+        self._provider_combo.currentTextChanged.disconnect(self._on_provider_changed)
+        self._populate_provider_combo()
+        idx = self._provider_combo.findText(name)
+        if idx >= 0:
+            self._provider_combo.setCurrentIndex(idx)
+        self._provider_combo.currentTextChanged.connect(self._on_provider_changed)
+        self._on_provider_changed(name)
+
+    def _on_remove_custom_provider(self) -> None:
+        name = self._provider_combo.currentText()
+        if not self._config.is_custom_provider(name):
+            return
+        self._config.remove_custom_provider(name)
+        self._provider_combo.currentTextChanged.disconnect(self._on_provider_changed)
+        self._populate_provider_combo()
+        self._provider_combo.setCurrentIndex(0)
+        self._provider_combo.currentTextChanged.connect(self._on_provider_changed)
+        self._on_provider_changed(self._provider_combo.currentText())
+
+    def _sync_config_from_ui(self) -> None:
+        """Copy current UI values into config (without accepting the dialog)."""
+        self._config.provider.model = self._get_selected_model_id()
+        self._config.provider.api_key = self._api_key_edit.text().strip()
+        self._config.provider.api_base = self._api_base_edit.text().strip()
+        self._config.provider.temperature = self._temp_spin.value()
+        self._config.provider.max_tokens = self._max_tokens_spin.value()
+        self._config.provider.context_window = self._context_spin.value()
 
     # --- Accept ---
 
