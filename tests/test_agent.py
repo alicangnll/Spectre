@@ -10,12 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.agent.turn import TurnEvent, TurnEventType
-from iris.agent.plan_mode import parse_plan, create_plan_from_text, PlanStepStatus
-from iris.agent.context_window import ContextWindowManager
-from iris.core.types import Message, Role, TokenUsage
-from iris.core.config import IRISConfig
-from iris.state.session import SessionState
+from rikugan.agent.turn import TurnEvent, TurnEventType
+from rikugan.agent.plan_mode import parse_plan, create_plan_from_text, PlanStepStatus
+from rikugan.agent.context_window import ContextWindowManager
+from rikugan.core.types import Message, Role, TokenUsage
+from rikugan.core.config import RikuganConfig
+from rikugan.state.session import SessionState
 
 
 class TestTurnEvents(unittest.TestCase):
@@ -120,8 +120,8 @@ class TestSessionState(unittest.TestCase):
 class TestSessionHistory(unittest.TestCase):
     def test_save_and_load(self):
         import tempfile
-        from iris.state.history import SessionHistory
-        cfg = IRISConfig()
+        from rikugan.state.history import SessionHistory
+        cfg = RikuganConfig()
         cfg._config_dir = tempfile.mkdtemp()
 
         history = SessionHistory(cfg)
@@ -138,8 +138,8 @@ class TestSessionHistory(unittest.TestCase):
 
     def test_list_sessions(self):
         import tempfile
-        from iris.state.history import SessionHistory
-        cfg = IRISConfig()
+        from rikugan.state.history import SessionHistory
+        cfg = RikuganConfig()
         cfg._config_dir = tempfile.mkdtemp()
         history = SessionHistory(cfg)
 

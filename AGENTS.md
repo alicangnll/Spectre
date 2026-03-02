@@ -1,8 +1,8 @@
-# AGENTS.md — IRIS Developer Guide
+# AGENTS.md — Rikugan Developer Guide
 
 ## Project Overview
 
-IRIS (Intelligent Reverse-engineering Integrated System) is a multi-host reverse-engineering agent plugin that integrates an LLM-powered assistant directly inside IDA Pro and Binary Ninja. It has its own agentic loop, in-process tool orchestration, streaming UI, MCP client support, and host-native tool sets.
+Rikugan (Intelligent Reverse-engineering Integrated System) is a multi-host reverse-engineering agent plugin that integrates an LLM-powered assistant directly inside IDA Pro and Binary Ninja. It has its own agentic loop, in-process tool orchestration, streaming UI, MCP client support, and host-native tool sets.
 
 ## Directory Structure
 
@@ -20,7 +20,7 @@ iris/
 │       └── binja.py          # Binary Ninja base prompt
 │
 ├── core/                     # Shared infrastructure (host-agnostic)
-│   ├── config.py             # IRISConfig — settings, provider config, paths
+│   ├── config.py             # RikuganConfig — settings, provider config, paths
 │   ├── errors.py             # Exception hierarchy (ToolError, AgentError, etc.)
 │   ├── host.py               # Host context (BV, address, navigate callback)
 │   ├── logging.py            # Logging utilities
@@ -29,7 +29,7 @@ iris/
 │
 ├── ida/                      # IDA Pro host package (canonical)
 │   ├── tools/
-│   │   └── registry.py       # IDA create_default_registry() — imports from iris.tools.*
+│   │   └── registry.py       # IDA create_default_registry() — imports from rikugan.tools.*
 │   └── ui/
 │       ├── panel.py          # IDA PluginForm wrapper
 │       ├── actions.py        # IDA UI hooks & context menu integration
@@ -37,7 +37,7 @@ iris/
 │
 ├── binja/                    # Binary Ninja host package (canonical)
 │   ├── tools/
-│   │   ├── registry.py       # BN create_default_registry() — imports from iris.binja.tools.*
+│   │   ├── registry.py       # BN create_default_registry() — imports from rikugan.binja.tools.*
 │   │   ├── common.py         # BN shared helpers (get_bv, get_function_at, etc.)
 │   │   ├── navigation.py     # Navigation tools
 │   │   ├── functions.py      # Function listing/search tools
@@ -115,8 +115,8 @@ iris/
 ```
 
 Entry points:
-- **IDA Pro**: `iris_plugin.py` — `PLUGIN_ENTRY()` → `IRISPlugin` → `IRISPlugmod`
-- **Binary Ninja**: `iris_binaryninja.py` — registers sidebar + commands at import time
+- **IDA Pro**: `rikugan_plugin.py` — `PLUGIN_ENTRY()` → `RikuganPlugin` → `RikuganPlugmod`
+- **Binary Ninja**: `rikugan_binaryninja.py` — registers sidebar + commands at import time
 
 ## How the Agent Loop Works
 
@@ -146,7 +146,7 @@ Plan mode uses the same loop but adds a planning step: the LLM first generates a
 
 ```python
 from typing import Annotated
-from iris.tools.base import tool
+from rikugan.tools.base import tool
 
 @tool(category="navigation", description="Jump to an address in the disassembly view.")
 def jump_to(
@@ -170,14 +170,14 @@ Optional `@tool` parameters:
 
 **For IDA** — add the module import to `iris/ida/tools/registry.py`:
 ```python
-from iris.tools import my_new_module
+from rikugan.tools import my_new_module
 # ...
 _TOOL_MODULES = (..., my_new_module)
 ```
 
 **For Binary Ninja** — add the module import to `iris/binja/tools/registry.py`:
 ```python
-from iris.binja.tools import my_new_module
+from rikugan.binja.tools import my_new_module
 # ...
 _TOOL_MODULES = (..., my_new_module)
 ```
@@ -187,17 +187,17 @@ The registry calls `register_module()` on each module, which discovers all `@too
 ## How to Add a New Host
 
 1. Create `iris/<host>/` with `tools/` and `ui/` sub-packages
-2. Implement tool modules under `iris/<host>/tools/` — use `from iris.tools.base import tool` for the decorator
+2. Implement tool modules under `iris/<host>/tools/` — use `from rikugan.tools.base import tool` for the decorator
 3. Create `iris/<host>/tools/registry.py` with a `create_default_registry()` factory
 4. Subclass `SessionControllerBase` in `iris/<host>/ui/session_controller.py` — pass your registry factory and host name
 5. Create a panel widget in `iris/<host>/ui/panel.py` — embed the shared `PanelCore` widget
 6. Add a host-specific prompt in `iris/agent/prompts/<host>.py` and register it in `system_prompt.py`'s `_HOST_PROMPTS` dict
-7. Create an entry point script (e.g., `iris_<host>.py`) that bootstraps the plugin
+7. Create an entry point script (e.g., `rikugan_<host>.py`) that bootstraps the plugin
 
 ## Import Conventions
 
-- **Cross-package imports** use absolute paths: `from iris.tools.base import tool`
-- **Within the same package** (e.g., `iris/binja/tools/`) use absolute imports to avoid confusion: `from iris.binja.tools.common import get_bv`
+- **Cross-package imports** use absolute paths: `from rikugan.tools.base import tool`
+- **Within the same package** (e.g., `iris/binja/tools/`) use absolute imports to avoid confusion: `from rikugan.binja.tools.common import get_bv`
 - **IDA tool modules** (`iris/tools/*.py`) use relative imports within `iris.tools` but absolute for other packages
 - **Backward-compat shims** in `iris/tools_bn/`, `iris/hosts/`, and `iris/ui/` re-export from canonical locations
 
@@ -229,12 +229,12 @@ iris/agent/prompts/
 | `iris/tools/registry.py` | `ToolRegistry` class — registration, dispatch, argument coercion |
 | `iris/ui/session_controller_base.py` | `SessionControllerBase` — host-agnostic session orchestration |
 | `iris/ui/panel_core.py` | `PanelCore` — shared Qt panel logic (chat view, input, settings) |
-| `iris/core/config.py` | `IRISConfig` — all settings, provider config, host paths |
+| `iris/core/config.py` | `RikuganConfig` — all settings, provider config, host paths |
 | `iris/core/host.py` | Host context singleton (BinaryView, address, navigate callback) |
 | `iris/core/thread_safety.py` | `@idasync` decorator for main-thread marshalling |
 | `iris/providers/base.py` | `LLMProvider` ABC — interface for all LLM providers |
 | `iris/mcp/manager.py` | `MCPManager` — starts MCP servers, bridges tools into registry |
 | `iris/skills/registry.py` | `SkillRegistry` — discovers and loads SKILL.md files |
 | `iris/state/session.py` | `SessionState` — message history, token usage tracking |
-| `iris_plugin.py` | IDA Pro plugin entry point |
-| `iris_binaryninja.py` | Binary Ninja plugin entry point |
+| `rikugan_plugin.py` | IDA Pro plugin entry point |
+| `rikugan_binaryninja.py` | Binary Ninja plugin entry point |

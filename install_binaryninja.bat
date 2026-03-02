@@ -1,14 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: IRIS installer for Binary Ninja on Windows
+:: Rikugan installer for Binary Ninja on Windows
 :: Usage: install_binaryninja.bat [BN_USER_DIR]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-if not exist "%SCRIPT_DIR%\iris_binaryninja.py" (
-    echo [-] iris_binaryninja.py not found in %SCRIPT_DIR%
+if not exist "%SCRIPT_DIR%\rikugan_binaryninja.py" (
+    echo [-] rikugan_binaryninja.py not found in %SCRIPT_DIR%
     exit /b 1
 )
 if not exist "%SCRIPT_DIR%\plugin.json" (
@@ -123,12 +123,12 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-echo [+] IRIS Binary Ninja plugin installed successfully!
+echo [+] Rikugan Binary Ninja plugin installed successfully!
 echo [*] Plugin: %PLUGIN_LINK%
 echo [*] Config: %CONFIG_DIR%\
 echo [*] Skills: %SKILLS_DIR%\
 echo.
-echo [*] Restart Binary Ninja and open Tools ^> IRIS ^> Open Panel.
+echo [*] Restart Binary Ninja and open Tools ^> Rikugan ^> Open Panel.
 
 endlocal
 exit /b 0

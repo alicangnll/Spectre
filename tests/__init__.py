@@ -1,1 +1,1 @@
-"""IRIS test suite."""
+"""Rikugan test suite."""

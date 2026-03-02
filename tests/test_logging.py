@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.logging import (
+from rikugan.core.logging import (
     get_logger,
     log_info,
     log_warning,
@@ -48,7 +48,7 @@ class TestLogFunctions(unittest.TestCase):
     def test_get_logger_returns_logger(self):
         logger = get_logger()
         self.assertIsInstance(logger, logging.Logger)
-        self.assertEqual(logger.name, "IRIS")
+        self.assertEqual(logger.name, "Rikugan")
 
     def test_get_logger_singleton(self):
         a = get_logger()
@@ -152,10 +152,10 @@ class TestFlushFileHandler(unittest.TestCase):
             os.unlink(path)
 
     def test_log_file_path_creates_directory(self):
-        from iris.core.logging import _log_file_path
+        from rikugan.core.logging import _log_file_path
         path = _log_file_path()
         self.assertTrue(os.path.isdir(os.path.dirname(path)))
-        self.assertTrue(path.endswith("iris_debug.log"))
+        self.assertTrue(path.endswith("rikugan_debug.log"))
 
 
 if __name__ == "__main__":

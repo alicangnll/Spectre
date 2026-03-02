@@ -10,13 +10,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.agent.system_prompt import build_system_prompt, _BASE_PROMPT
+from rikugan.agent.system_prompt import build_system_prompt, _BASE_PROMPT
 
 
 class TestBuildSystemPrompt(unittest.TestCase):
     def test_base_prompt_only(self):
         prompt = build_system_prompt()
-        self.assertIn("IRIS", prompt)
+        self.assertIn("Rikugan", prompt)
         self.assertIn("reverse engineering", prompt)
 
     def test_with_binary_info(self):

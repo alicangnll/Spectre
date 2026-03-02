@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Iris installer for Windows
+:: Rikugan installer for Windows
 :: Usage: install.bat [IDA_USER_DIR]
 ::   IDA_USER_DIR  Optional path to IDA user directory (default: auto-detect)
 
@@ -11,8 +11,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ── Sanity checks ────────────────────────────────────────────────────
 
-if not exist "%SCRIPT_DIR%\iris_plugin.py" (
-    echo [-] iris_plugin.py not found in %SCRIPT_DIR% — run this from the repo root
+if not exist "%SCRIPT_DIR%\rikugan_plugin.py" (
+    echo [-] rikugan_plugin.py not found in %SCRIPT_DIR% — run this from the repo root
     exit /b 1
 )
 
@@ -107,17 +107,17 @@ if exist "%BUILTINS_SRC%\" (
 
 :: ── Install plugin (copy) ────────────────────────────────────────────
 
-echo [*] Installing Iris into %PLUGINS_DIR%...
+echo [*] Installing Rikugan into %PLUGINS_DIR%...
 
-:: iris_plugin.py
-if exist "%PLUGINS_DIR%\iris_plugin.py" (
-    del "%PLUGINS_DIR%\iris_plugin.py"
+:: rikugan_plugin.py
+if exist "%PLUGINS_DIR%\rikugan_plugin.py" (
+    del "%PLUGINS_DIR%\rikugan_plugin.py"
 )
-copy "%SCRIPT_DIR%\iris_plugin.py" "%PLUGINS_DIR%\iris_plugin.py" >nul
+copy "%SCRIPT_DIR%\rikugan_plugin.py" "%PLUGINS_DIR%\rikugan_plugin.py" >nul
 if !errorlevel! equ 0 (
-    echo [+] iris_plugin.py -^> %PLUGINS_DIR%\iris_plugin.py
+    echo [+] rikugan_plugin.py -^> %PLUGINS_DIR%\rikugan_plugin.py
 ) else (
-    echo [-] Failed to copy iris_plugin.py
+    echo [-] Failed to copy rikugan_plugin.py
     exit /b 1
 )
 
@@ -153,13 +153,13 @@ if !errorlevel! equ 0 (
 :: ── Done ─────────────────────────────────────────────────────────────
 
 echo.
-echo [+] Iris installed successfully!
-echo [*] Plugin:  %PLUGINS_DIR%\iris_plugin.py
+echo [+] Rikugan installed successfully!
+echo [*] Plugin:  %PLUGINS_DIR%\rikugan_plugin.py
 echo [*] Package: %PLUGINS_DIR%\iris
 echo [*] Config:  %CONFIG_DIR%\
 echo [*] Skills:  %SKILLS_DIR%\
 echo.
-echo [*] Open IDA and press Ctrl+Shift+I to start Iris.
+echo [*] Open IDA and press Ctrl+Shift+I to start Rikugan.
 echo [*] First run: click Settings to configure your LLM provider and API key.
 echo [*] For Binary Ninja installation, run install_binaryninja.bat
 

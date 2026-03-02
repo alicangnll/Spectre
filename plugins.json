@@ -1,7 +1,7 @@
 [
   {
     "pluginmetadataversion": 2,
-    "name": "IRIS",
+    "name": "Rikugan",
     "author": "buzzer-re + contributors",
     "type": [
       "ui",
@@ -10,8 +10,8 @@
     "api": [
       "python3"
     ],
-    "description": "IRIS reverse engineering companion for Binary Ninja.",
-    "longdescription": "IRIS embeds an agentic LLM workflow into Binary Ninja with native tooling, skills, and an integrated chat sidebar. Supports multiple LLM providers (Anthropic, OpenAI, Google, Ollama) and MCP tool servers.",
+    "description": "Rikugan reverse engineering companion for Binary Ninja.",
+    "longdescription": "Rikugan embeds an agentic LLM workflow into Binary Ninja with native tooling, skills, and an integrated chat sidebar. Supports multiple LLM providers (Anthropic, OpenAI, Google, Ollama) and MCP tool servers.",
     "license": {
       "name": "MIT",
       "text": "See project repository."
@@ -29,12 +29,12 @@
       ]
     },
     "installinstructions": {
-      "Darwin": "Clone/symlink this repository into ~/Library/Application Support/Binary Ninja/plugins/iris",
-      "Linux": "Clone/symlink this repository into ~/.binaryninja/plugins/iris",
-      "Windows": "Clone/symlink this repository into %APPDATA%/Binary Ninja/plugins/iris"
+      "Darwin": "Clone/symlink this repository into ~/Library/Application Support/Binary Ninja/plugins/rikugan",
+      "Linux": "Clone/symlink this repository into ~/.binaryninja/plugins/rikugan",
+      "Windows": "Clone/symlink this repository into %APPDATA%/Binary Ninja/plugins/rikugan"
     },
-    "projectUrl": "https://github.com/buzzer-re/Iris",
-    "packageUrl": "https://github.com/buzzer-re/Iris/archive/refs/heads/main.zip",
+    "projectUrl": "https://github.com/buzzer-re/rikugan",
+    "packageUrl": "https://github.com/buzzer-re/rikugan/archive/refs/heads/main.zip",
     "version": "0.1.0",
     "minimumbinaryninjaversion": 3164
   }

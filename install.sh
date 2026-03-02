@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Iris installer for Linux and macOS
+# Rikugan installer for Linux and macOS
 # Usage: ./install.sh [IDA_USER_DIR]
 #   IDA_USER_DIR  Optional path to IDA user directory (default: auto-detect)
 
@@ -68,8 +68,8 @@ CONFIG_DIR="$IDA_USER_DIR/iris"
 
 # ── Sanity checks ─────────────────────────────────────────────────────
 
-if [[ ! -f "$SCRIPT_DIR/iris_plugin.py" ]]; then
-    err "iris_plugin.py not found in $SCRIPT_DIR — run this from the repo root"
+if [[ ! -f "$SCRIPT_DIR/rikugan_plugin.py" ]]; then
+    err "rikugan_plugin.py not found in $SCRIPT_DIR — run this from the repo root"
     exit 1
 fi
 
@@ -157,19 +157,19 @@ install_link() {
     ok "$name -> $dst"
 }
 
-info "Installing Iris into $PLUGINS_DIR..."
-install_link "$SCRIPT_DIR/iris_plugin.py" "$PLUGINS_DIR/iris_plugin.py" "iris_plugin.py"
+info "Installing Rikugan into $PLUGINS_DIR..."
+install_link "$SCRIPT_DIR/rikugan_plugin.py" "$PLUGINS_DIR/rikugan_plugin.py" "rikugan_plugin.py"
 install_link "$SCRIPT_DIR/iris"           "$PLUGINS_DIR/iris"           "iris/"
 
 # ── Done ──────────────────────────────────────────────────────────────
 
 echo ""
-ok "Iris installed successfully!"
-info "Plugin:  $PLUGINS_DIR/iris_plugin.py"
+ok "Rikugan installed successfully!"
+info "Plugin:  $PLUGINS_DIR/rikugan_plugin.py"
 info "Package: $PLUGINS_DIR/iris"
 info "Config:  $CONFIG_DIR/"
 info "Skills:  $SKILLS_DIR/"
 echo ""
-info "Open IDA and press Ctrl+Shift+I to start Iris."
+info "Open IDA and press Ctrl+Shift+I to start Rikugan."
 info "First run: click Settings to configure your LLM provider and API key."
 info "For Binary Ninja installation, run: ./install_binaryninja.sh"

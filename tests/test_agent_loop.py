@@ -12,17 +12,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.types import (
+from rikugan.core.types import (
     Message, ModelInfo, ProviderCapabilities, Role,
     StreamChunk, TokenUsage,
 )
-from iris.core.config import IRISConfig
-from iris.agent.loop import AgentLoop, BackgroundAgentRunner
-from iris.agent.turn import TurnEvent, TurnEventType
-from iris.tools.base import tool, ParameterSchema, ToolDefinition
-from iris.tools.registry import ToolRegistry
-from iris.state.session import SessionState
-from iris.providers.base import LLMProvider
+from rikugan.core.config import RikuganConfig
+from rikugan.agent.loop import AgentLoop, BackgroundAgentRunner
+from rikugan.agent.turn import TurnEvent, TurnEventType
+from rikugan.tools.base import tool, ParameterSchema, ToolDefinition
+from rikugan.tools.registry import ToolRegistry
+from rikugan.state.session import SessionState
+from rikugan.providers.base import LLMProvider
 
 
 class MockProvider(LLMProvider):
@@ -84,7 +84,7 @@ def _tool_call_response(tool_name: str, args: Dict[str, Any], call_id: str = "ca
 
 class TestAgentLoop(unittest.TestCase):
     def _make_loop(self, provider: MockProvider, tools: Optional[ToolRegistry] = None) -> AgentLoop:
-        config = IRISConfig()
+        config = RikuganConfig()
         config.auto_context = False  # Skip IDA API calls
         session = SessionState(provider_name="mock", model_name="mock-model")
         return AgentLoop(
@@ -110,7 +110,7 @@ class TestAgentLoop(unittest.TestCase):
 
     def test_session_records_messages(self):
         provider = MockProvider(responses=[_text_response("Hi there")])
-        config = IRISConfig()
+        config = RikuganConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -209,7 +209,7 @@ class TestAgentLoop(unittest.TestCase):
 
     def test_usage_tracked(self):
         provider = MockProvider(responses=[_text_response("Hi")])
-        config = IRISConfig()
+        config = RikuganConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -223,7 +223,7 @@ class TestAgentLoop(unittest.TestCase):
 class TestBackgroundAgentRunner(unittest.TestCase):
     def test_run_in_background(self):
         provider = MockProvider(responses=[_text_response("Background response")])
-        config = IRISConfig()
+        config = RikuganConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -248,7 +248,7 @@ class TestSkillInvocation(unittest.TestCase):
     def test_skill_rewrite(self):
         """Test that /slug messages get rewritten with skill body."""
         import tempfile
-        from iris.skills.registry import SkillRegistry
+        from rikugan.skills.registry import SkillRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             skill_dir = os.path.join(tmpdir, "test-skill")
@@ -260,7 +260,7 @@ class TestSkillInvocation(unittest.TestCase):
             registry.discover()
 
             provider = MockProvider(responses=[_text_response("Skill response")])
-            config = IRISConfig()
+            config = RikuganConfig()
             config.auto_context = False
             session = SessionState()
             loop = AgentLoop(provider, ToolRegistry(), config, session, skill_registry=registry)

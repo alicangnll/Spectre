@@ -15,8 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.errors import (
-    IRISError,
+from rikugan.core.errors import (
+    RikuganError,
     AgentError,
     AuthenticationError,
     CancellationError,
@@ -37,9 +37,9 @@ from iris.core.errors import (
 
 
 class TestErrorHierarchy(unittest.TestCase):
-    """Every error type must be a subclass of IRISError."""
+    """Every error type must be a subclass of RikuganError."""
 
-    def test_all_errors_inherit_iris_error(self):
+    def test_all_errors_inherit_rikugan_error(self):
         for cls in (
             ConfigError, ProviderError, AuthenticationError, RateLimitError,
             ContextLengthError, ToolError, ToolNotFoundError, ToolValidationError,
@@ -47,8 +47,8 @@ class TestErrorHierarchy(unittest.TestCase):
             MCPError, MCPConnectionError, MCPTimeoutError,
         ):
             self.assertTrue(
-                issubclass(cls, IRISError),
-                f"{cls.__name__} must inherit IRISError",
+                issubclass(cls, RikuganError),
+                f"{cls.__name__} must inherit RikuganError",
             )
 
     def test_provider_subtypes(self):
@@ -101,7 +101,7 @@ class TestProviderErrorMetadata(unittest.TestCase):
 
 
 class TestProviderErrorConsistency(unittest.TestCase):
-    """All three providers must map errors to the correct IRIS error types.
+    """All three providers must map errors to the correct Rikugan error types.
 
     Anthropic/OpenAI use SDK exception types (isinstance checks); Gemini
     uses string matching.  We create mock SDK exceptions to test the
@@ -120,7 +120,7 @@ class TestProviderErrorConsistency(unittest.TestCase):
     def test_anthropic_sdk_auth_error(self):
         """Anthropic maps anthropic.AuthenticationError → AuthenticationError."""
         import anthropic
-        from iris.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test", model="test")
         resp = self._mock_httpx_response(401)
         err = anthropic.AuthenticationError("auth failed", response=resp, body=None)
@@ -130,7 +130,7 @@ class TestProviderErrorConsistency(unittest.TestCase):
     def test_openai_sdk_auth_error(self):
         """OpenAI maps openai.AuthenticationError → AuthenticationError."""
         import openai
-        from iris.providers.openai_provider import OpenAIProvider
+        from rikugan.providers.openai_provider import OpenAIProvider
         p = OpenAIProvider(api_key="test", model="test")
         resp = self._mock_httpx_response(401)
         err = openai.AuthenticationError("auth failed", response=resp, body=None)
@@ -139,23 +139,23 @@ class TestProviderErrorConsistency(unittest.TestCase):
 
     def test_gemini_string_auth_error(self):
         """Gemini maps 'API key' in message → AuthenticationError."""
-        from iris.providers.gemini_provider import GeminiProvider
+        from rikugan.providers.gemini_provider import GeminiProvider
         p = GeminiProvider(api_key="test", model="test")
         with self.assertRaises(AuthenticationError):
             p._handle_api_error(RuntimeError("Invalid API key provided"))
 
     def test_gemini_string_rate_limit(self):
         """Gemini maps 'Rate' in message → RateLimitError."""
-        from iris.providers.gemini_provider import GeminiProvider
+        from rikugan.providers.gemini_provider import GeminiProvider
         p = GeminiProvider(api_key="test", model="test")
         with self.assertRaises(RateLimitError):
             p._handle_api_error(RuntimeError("Rate limit exceeded, 429"))
 
     def test_all_providers_generic_fallback(self):
         """All providers map unknown errors → ProviderError."""
-        from iris.providers.anthropic_provider import AnthropicProvider
-        from iris.providers.openai_provider import OpenAIProvider
-        from iris.providers.gemini_provider import GeminiProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.openai_provider import OpenAIProvider
+        from rikugan.providers.gemini_provider import GeminiProvider
         for cls, kwargs in (
             (AnthropicProvider, {"api_key": "t", "model": "t"}),
             (OpenAIProvider, {"api_key": "t", "model": "t"}),
@@ -170,19 +170,19 @@ class TestProviderHandleApiErrorReturnType(unittest.TestCase):
     """_handle_api_error must always raise (NoReturn); never silently return."""
 
     def test_anthropic_never_returns(self):
-        from iris.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test", model="test")
         with self.assertRaises(ProviderError):
             p._handle_api_error(ValueError("test"))
 
     def test_openai_never_returns(self):
-        from iris.providers.openai_provider import OpenAIProvider
+        from rikugan.providers.openai_provider import OpenAIProvider
         p = OpenAIProvider(api_key="test", model="test")
         with self.assertRaises(ProviderError):
             p._handle_api_error(ValueError("test"))
 
     def test_gemini_never_returns(self):
-        from iris.providers.gemini_provider import GeminiProvider
+        from rikugan.providers.gemini_provider import GeminiProvider
         p = GeminiProvider(api_key="test", model="test")
         with self.assertRaises(ProviderError):
             p._handle_api_error(ValueError("test"))

@@ -25,7 +25,7 @@ importlib.reload(_mco_mod)
 importlib.reload(_mc_mod)
 importlib.reload(_db_mod)
 
-from iris.tools.registry import create_default_registry, ToolRegistry
+from rikugan.tools.registry import create_default_registry, ToolRegistry
 
 
 class TestDefaultRegistryCreation(unittest.TestCase):
@@ -132,12 +132,12 @@ class TestRegistryExecution(unittest.TestCase):
         self.assertIn("sub_1000", result)
 
     def test_execute_unknown_tool_raises(self):
-        from iris.core.errors import ToolNotFoundError
+        from rikugan.core.errors import ToolNotFoundError
         with self.assertRaises(ToolNotFoundError):
             self.registry.execute("nonexistent_tool_xyz", {})
 
     def test_execute_wrong_args_raises(self):
-        from iris.core.errors import ToolError
+        from rikugan.core.errors import ToolError
         with self.assertRaises(ToolError):
             # list_functions expects int for offset — @tool wraps TypeError as ToolError
             self.registry.execute("list_functions", {"offset": "not_an_int"})

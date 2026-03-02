@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# IRIS installer for Binary Ninja (Linux/macOS)
+# Rikugan installer for Binary Ninja (Linux/macOS)
 # Usage: ./install_binaryninja.sh [BN_USER_DIR]
 #   BN_USER_DIR  Optional path to Binary Ninja user directory
 
@@ -55,7 +55,7 @@ CONFIG_DIR="$BN_USER_DIR/iris"
 SKILLS_DIR="$CONFIG_DIR/skills"
 PLUGIN_LINK="$PLUGINS_DIR/iris"
 
-if [[ ! -f "$SCRIPT_DIR/iris_binaryninja.py" ]] || [[ ! -f "$SCRIPT_DIR/plugin.json" ]]; then
+if [[ ! -f "$SCRIPT_DIR/rikugan_binaryninja.py" ]] || [[ ! -f "$SCRIPT_DIR/plugin.json" ]]; then
     err "Binary Ninja plugin files missing in $SCRIPT_DIR"
     exit 1
 fi
@@ -139,9 +139,9 @@ else
 fi
 
 echo ""
-ok "IRIS Binary Ninja plugin installed successfully!"
+ok "Rikugan Binary Ninja plugin installed successfully!"
 info "Plugin: $PLUGIN_LINK"
 info "Config: $CONFIG_DIR/"
 info "Skills: $SKILLS_DIR/"
 echo ""
-info "Restart Binary Ninja. Open: Tools -> IRIS -> Open Panel."
+info "Restart Binary Ninja. Open: Tools -> Rikugan -> Open Panel."

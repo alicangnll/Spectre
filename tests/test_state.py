@@ -12,10 +12,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
-from iris.state.session import SessionState
-from iris.state.history import SessionHistory
-from iris.core.config import IRISConfig
+from rikugan.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
+from rikugan.state.session import SessionState
+from rikugan.state.history import SessionHistory
+from rikugan.core.config import RikuganConfig
 
 
 class TestSessionState(unittest.TestCase):
@@ -113,7 +113,7 @@ class TestMessageSerialization(unittest.TestCase):
 class TestSessionHistory(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
-        self.config = IRISConfig(_config_dir=self.tmpdir)
+        self.config = RikuganConfig(_config_dir=self.tmpdir)
 
     def test_save_and_load_session(self):
         history = SessionHistory(self.config)

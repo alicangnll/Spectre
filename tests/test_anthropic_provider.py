@@ -11,11 +11,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.types import Message, Role, ToolCall, ToolResult, TokenUsage
+from rikugan.core.types import Message, Role, ToolCall, ToolResult, TokenUsage
 
 
 def _make_provider():
-    from iris.providers.anthropic_provider import AnthropicProvider
+    from rikugan.providers.anthropic_provider import AnthropicProvider
     return AnthropicProvider(api_key="test-key", model="claude-test")
 
 
@@ -156,13 +156,13 @@ class TestAnthropicNormalizeResponse(unittest.TestCase):
 
 class TestAnthropicHandleApiError(unittest.TestCase):
     def test_generic_error_raises_provider_error(self):
-        from iris.core.errors import ProviderError
+        from rikugan.core.errors import ProviderError
         p = _make_provider()
         with self.assertRaises(ProviderError):
             p._handle_api_error(RuntimeError("something broke"))
 
     def test_context_length_error(self):
-        from iris.core.errors import ProviderError
+        from rikugan.core.errors import ProviderError
         p = _make_provider()
         with self.assertRaises(ProviderError):
             p._handle_api_error(RuntimeError("context window exceeded token limit"))
@@ -172,19 +172,19 @@ class TestAnthropicAuthResolution(unittest.TestCase):
     """Test resolve_anthropic_auth priority order."""
 
     def test_explicit_api_key(self):
-        from iris.providers.anthropic_provider import resolve_anthropic_auth
+        from rikugan.providers.anthropic_provider import resolve_anthropic_auth
         token, auth_type = resolve_anthropic_auth("sk-ant-api03-test")
         self.assertEqual(token, "sk-ant-api03-test")
         self.assertEqual(auth_type, "api_key")
 
     def test_explicit_oauth_token(self):
-        from iris.providers.anthropic_provider import resolve_anthropic_auth
+        from rikugan.providers.anthropic_provider import resolve_anthropic_auth
         token, auth_type = resolve_anthropic_auth("sk-ant-oat01-test")
         self.assertEqual(token, "sk-ant-oat01-test")
         self.assertEqual(auth_type, "oauth")
 
     def test_env_var_api_key(self):
-        from iris.providers.anthropic_provider import resolve_anthropic_auth
+        from rikugan.providers.anthropic_provider import resolve_anthropic_auth
         old = os.environ.get("ANTHROPIC_API_KEY")
         try:
             os.environ["ANTHROPIC_API_KEY"] = "sk-from-env"
@@ -198,7 +198,7 @@ class TestAnthropicAuthResolution(unittest.TestCase):
                 os.environ["ANTHROPIC_API_KEY"] = old
 
     def test_empty_returns_empty(self):
-        from iris.providers.anthropic_provider import resolve_anthropic_auth
+        from rikugan.providers.anthropic_provider import resolve_anthropic_auth
         old_api = os.environ.pop("ANTHROPIC_API_KEY", None)
         old_oauth = os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
         try:
@@ -213,13 +213,13 @@ class TestAnthropicAuthResolution(unittest.TestCase):
                 os.environ["CLAUDE_CODE_OAUTH_TOKEN"] = old_oauth
 
     def test_auth_status_with_key(self):
-        from iris.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="sk-test", model="test")
         label, status = p.auth_status()
         self.assertEqual(status, "ok")
 
     def test_auth_status_oauth(self):
-        from iris.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="sk-ant-oat01-test", model="test")
         label, status = p.auth_status()
         self.assertEqual(status, "ok")

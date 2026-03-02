@@ -1,13 +1,13 @@
-# Iris — The IDA Pro + Binary Ninja companion
+# 六眼 Rikugan — The IDA Pro + Binary Ninja companion
 
-A reverse-engineering plugin for **IDA Pro and Binary Ninja** that integrates a multi-provider LLM agent directly in your analysis UI. Iris provides an agentic loop with streaming, 57 host-native tools, 7 built-in analysis skills, MCP client support, and a native Qt chat panel.
+A reverse-engineering plugin for **IDA Pro and Binary Ninja** that integrates a multi-provider LLM agent directly in your analysis UI. Rikugan provides an agentic loop with streaming, 57 host-native tools, 7 built-in analysis skills, MCP client support, and a native Qt chat panel.
 
 This project was done together with my friend, Claude Code.
 
 
 ## Is this another MCP client?
 
-No, Iris is an agent built to live inside your RE host (**IDA Pro or Binary Ninja**). It does not consume an MCP server to interact with the host database; it has its own agentic loop, context management, its own role prompt (you can check it [here](iris/agent/system_prompt.py)), and an in-process tool orchestration layer.
+No, Rikugan is an agent built to live inside your RE host (**IDA Pro or Binary Ninja**). It does not consume an MCP server to interact with the host database; it has its own agentic loop, context management, its own role prompt (you can check it [here](rikugan/agent/system_prompt.py)), and an in-process tool orchestration layer.
 
 The agent loop is a generator-based turn cycle: each user message kicks off a stream→execute→repeat pipeline where the LLM response is streamed token-by-token, tool calls are intercepted and dispatched.
 
@@ -22,7 +22,7 @@ Advantages:
 - Expandable to many LLM providers and local installations (Ollama)
 - Quick enabling, just hit Ctrl+Shift+I and the chat will appear
 
-![Iris chat panel](assets/chat.png)
+![Rikugan chat panel](assets/chat.png)
 
 Also, building agents is an amazing area of study, especially coding with them.
 
@@ -79,18 +79,18 @@ install.bat "C:\Users\you\AppData\Roaming\Hex-Rays\IDA Pro"
 install_binaryninja.bat "C:\Users\you\AppData\Roaming\Binary Ninja"
 ```
 
-Installers create plugin links/junctions, install dependencies, and initialize host-specific Iris config directories.
+Installers create plugin links/junctions, install dependencies, and initialize host-specific Rikugan config directories.
 
 ### Set your API key
 
-Iris has a settings dialog to configure your model of choice. Open Iris → click Settings → paste your key.
+Rikugan has a settings dialog to configure your model of choice. Open Rikugan → click Settings → paste your key.
 
-- IDA config: `~/.idapro/iris/config.json`
-- Binary Ninja config: `~/.binaryninja/iris/config.json` (or platform-equivalent user dir)
+- IDA config: `~/.idapro/rikugan/config.json`
+- Binary Ninja config: `~/.binaryninja/rikugan/config.json` (or platform-equivalent user dir)
 
 ![Settings dialog](assets/settings.png)
 
-**Anthropic OAuth:** If you have Claude Code installed and authenticated, Iris auto-detects the OAuth token from the macOS Keychain. Otherwise, you can get the OAuth token by running `claude setup-token` (you'll have to log in again).
+**Anthropic OAuth:** If you have Claude Code installed and authenticated, Rikugan auto-detects the OAuth token from the macOS Keychain. Otherwise, you can get the OAuth token by running `claude setup-token` (you'll have to log in again).
 
 
 
@@ -98,13 +98,13 @@ Iris has a settings dialog to configure your model of choice. Open Iris → clic
 
 ### Open the panel
 
-IDA Pro: press **Ctrl+Shift+I** or go to **Edit → Plugins → Iris**.  
-Binary Ninja: use **Tools → IRIS → Open Panel**.
+IDA Pro: press **Ctrl+Shift+I** or go to **Edit → Plugins → Rikugan**.  
+Binary Ninja: use **Tools → Rikugan → Open Panel**.
 
 ![Panel overview](assets/panel.png)
 
 
-Type a message and press **Enter** to send. Iris streams the response and executes host tools as needed.
+Type a message and press **Enter** to send. Rikugan streams the response and executes host tools as needed.
 
 - **Enter** — send message
 - **Shift+Enter** — newline
@@ -117,14 +117,14 @@ You can send messages while the agent is working. They appear as `[queued]` in t
 ### Quick actions
 
 IDA Pro exposes these under right-click menus.  
-Binary Ninja exposes equivalent commands under **Tools → IRIS** and address-context command menus.
+Binary Ninja exposes equivalent commands under **Tools → Rikugan** and address-context command menus.
 
 | Action | Views | Behavior |
 |--------|-------|----------|
-| **Send to IRIS** | disasm, pseudo | Pre-fills input with selection (Ctrl+Shift+A) |
+| **Send to Rikugan** | disasm, pseudo | Pre-fills input with selection (Ctrl+Shift+A) |
 | **Explain this** | disasm, pseudo | Auto-explains the current function |
-| **Rename with IRIS** | disasm, pseudo | Analyzes and renames with evidence |
-| **Deobfuscate with IRIS** | disasm, pseudo | Systematic deobfuscation |
+| **Rename with Rikugan** | disasm, pseudo | Analyzes and renames with evidence |
+| **Deobfuscate with Rikugan** | disasm, pseudo | Systematic deobfuscation |
 | **Find vulnerabilities** | disasm, pseudo | Security audit |
 | **Suggest types** | disasm, pseudo | Infers types from usage patterns |
 | **Annotate function** | pseudo | Adds comments to decompiled code |
@@ -137,13 +137,13 @@ Skills are reusable analysis workflows. Type `/` in the input area to see availa
 
 Create custom skills in:
 
-- IDA: `~/.idapro/iris/skills/<slug>/SKILL.md`
-- Binary Ninja: `~/.binaryninja/iris/skills/<slug>/SKILL.md`
+- IDA: `~/.idapro/rikugan/skills/<slug>/SKILL.md`
+- Binary Ninja: `~/.binaryninja/rikugan/skills/<slug>/SKILL.md`
 
 Each skill lives in its own subdirectory.
 
 ```
-~/.idapro/iris/skills/      # or ~/.binaryninja/iris/skills/
+~/.idapro/rikugan/skills/      # or ~/.binaryninja/rikugan/skills/
   my-skill/
     SKILL.md            # required — frontmatter + prompt body
     references/         # optional — .md files appended to the prompt
@@ -168,10 +168,10 @@ The `allowed_tools` field is optional — when set, the agent can only use those
 
 ### MCP Servers
 
-Connect external MCP servers to extend Iris with additional tools. Create the config file at:
+Connect external MCP servers to extend Rikugan with additional tools. Create the config file at:
 
-- IDA: `~/.idapro/iris/mcp.json`
-- Binary Ninja: `~/.binaryninja/iris/mcp.json`
+- IDA: `~/.idapro/rikugan/mcp.json`
+- Binary Ninja: `~/.binaryninja/rikugan/mcp.json`
 
 ```json
 {
@@ -212,7 +212,7 @@ Binary Ninja uses native IL levels (`llil`, `mlil`, `hlil`) instead of IDA's MMA
 
 ## Examples
 
-Here's some practical and cool examples with Iris:
+Here's some practical and cool examples with Rikugan:
 
 ### Removing junk code 
 
@@ -228,7 +228,7 @@ Chat:
 User: This is a CTF challenge, all functions are too big to read, can you identify how the obfuscation works ? dont read everything, otherwise you'll run out of tokens
 ```
 
-Iris:
+Rikugan:
 ```
 ...(picture above)
 

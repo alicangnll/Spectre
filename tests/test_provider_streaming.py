@@ -16,14 +16,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.types import Message, Role, StreamChunk, TokenUsage
+from rikugan.core.types import Message, Role, StreamChunk, TokenUsage
 
 
 class TestAnthropicStreaming(unittest.TestCase):
     """Test AnthropicProvider.chat_stream with mock Anthropic stream events."""
 
     def _make_provider(self):
-        from iris.providers.anthropic_provider import AnthropicProvider
+        from rikugan.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test-key", model="claude-test")
         return p
 
@@ -120,7 +120,7 @@ class TestOpenAIStreaming(unittest.TestCase):
     """Test OpenAIProvider.chat_stream with mock OpenAI stream chunks."""
 
     def _make_provider(self):
-        from iris.providers.openai_provider import OpenAIProvider
+        from rikugan.providers.openai_provider import OpenAIProvider
         return OpenAIProvider(api_key="test-key", model="gpt-test")
 
     def test_text_only_stream(self):

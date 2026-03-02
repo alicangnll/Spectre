@@ -11,14 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.config import IRISConfig
-from iris.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
-from iris.ui.session_controller import SessionController
+from rikugan.core.config import RikuganConfig
+from rikugan.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
+from rikugan.ui.session_controller import SessionController
 
 
 class TestSessionController(unittest.TestCase):
     def setUp(self):
-        self.cfg = IRISConfig()
+        self.cfg = RikuganConfig()
         self.cfg._config_dir = tempfile.mkdtemp()
         self.ctrl = SessionController(self.cfg)
 
@@ -87,7 +87,7 @@ class TestSessionController(unittest.TestCase):
         self.ctrl.on_agent_finished()
 
         # Verify session was saved to disk
-        from iris.state.history import SessionHistory
+        from rikugan.state.history import SessionHistory
         history = SessionHistory(self.cfg)
         sessions = history.list_sessions()
         self.assertTrue(any(s["id"] == self.ctrl.session.id for s in sessions))

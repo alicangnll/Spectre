@@ -10,9 +10,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.core.types import Message, Role, ToolCall, ToolResult, TokenUsage, StreamChunk
-from iris.providers.registry import ProviderRegistry
-from iris.core.errors import ProviderError
+from rikugan.core.types import Message, Role, ToolCall, ToolResult, TokenUsage, StreamChunk
+from rikugan.providers.registry import ProviderRegistry
+from rikugan.core.errors import ProviderError
 
 
 class TestMessageTypes(unittest.TestCase):

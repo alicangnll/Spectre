@@ -11,13 +11,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from iris.skills.loader import (
+from rikugan.skills.loader import (
     SkillDefinition,
     _parse_frontmatter,
     _split_frontmatter,
     discover_skills,
 )
-from iris.skills.registry import SkillRegistry
+from rikugan.skills.registry import SkillRegistry
 
 
 class TestFrontmatterParser(unittest.TestCase):
