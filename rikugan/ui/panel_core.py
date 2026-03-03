@@ -246,7 +246,7 @@ class RikuganPanelCore(QWidget):
         has_messages = session and session.messages
         if has_messages:
             ctx_window = self._config.provider.context_window or 200000
-            used = session.total_usage.total_tokens
+            used = session.last_prompt_tokens or session.total_usage.total_tokens
             pct = min(int(used * 100 / ctx_window), 100) if ctx_window > 0 else 0
             result = self._show_new_chat_dialog(pct)
             if result == "no":
@@ -440,7 +440,9 @@ class RikuganPanelCore(QWidget):
         if self._context_bar is None:
             return
         if token_count is None:
-            token_count = self._ctrl.session.total_usage.total_tokens
+            session = self._ctrl.session
+            # Show current context size (last prompt), not cumulative total
+            token_count = session.last_prompt_tokens or session.total_usage.total_tokens
         ctx_window = self._config.provider.context_window or 0
         self._context_bar.set_tokens(token_count, ctx_window)
 

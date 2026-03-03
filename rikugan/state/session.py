@@ -2,12 +2,49 @@
 
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
 from ..core.types import Message, Role, ToolResult, TokenUsage
+
+# ---------- Token estimation ----------
+
+_CHARS_PER_TOKEN = 3.5
+
+# Tool results older than this many messages from the end get truncated
+_OLD_RESULT_THRESHOLD = 8
+_OLD_RESULT_MAX_CHARS = 500
+_RECENT_RESULT_MAX_CHARS = 8000
+
+
+def _estimate_tokens(msg: Message) -> int:
+    """Rough token count estimate from message text content."""
+    chars = len(msg.content or "")
+    for tc in msg.tool_calls:
+        chars += len(tc.name) + 50
+        if tc.arguments:
+            try:
+                chars += len(json.dumps(tc.arguments))
+            except (TypeError, ValueError):
+                chars += 100
+    for tr in msg.tool_results:
+        chars += len(tr.content or "") + len(tr.name or "") + 20
+    return max(1, int(chars / _CHARS_PER_TOKEN))
+
+
+def _truncate_tool_result(tr: ToolResult, max_chars: int) -> ToolResult:
+    """Return a truncated copy of a tool result if it exceeds max_chars."""
+    if not tr.content or len(tr.content) <= max_chars:
+        return tr
+    return ToolResult(
+        tool_call_id=tr.tool_call_id,
+        name=tr.name,
+        content=tr.content[:max_chars] + "\n... [truncated]",
+        is_error=tr.is_error,
+    )
 
 
 @dataclass
@@ -18,6 +55,7 @@ class SessionState:
     created_at: float = field(default_factory=time.time)
     messages: List[Message] = field(default_factory=list)
     total_usage: TokenUsage = field(default_factory=TokenUsage)
+    last_prompt_tokens: int = 0
     current_turn: int = 0
     is_running: bool = False
     provider_name: str = ""
@@ -31,23 +69,36 @@ class SessionState:
             self.total_usage.prompt_tokens += msg.token_usage.prompt_tokens
             self.total_usage.completion_tokens += msg.token_usage.completion_tokens
             self.total_usage.total_tokens += msg.token_usage.total_tokens
+            # Track the last prompt size as current context usage
+            if msg.token_usage.prompt_tokens > 0:
+                self.last_prompt_tokens = msg.token_usage.prompt_tokens
 
     def clear(self) -> None:
         self.messages.clear()
         self.total_usage = TokenUsage()
+        self.last_prompt_tokens = 0
         self.current_turn = 0
         self.is_running = False
 
-    def get_messages_for_provider(self) -> List[Message]:
-        """Return messages sanitized for the provider API.
+    def get_messages_for_provider(self, context_window: int = 0) -> List[Message]:
+        """Return messages sanitized and trimmed for the provider API.
 
-        Ensures every assistant message that contains tool_calls has
-        matching tool_result entries in the following TOOL message.
-        Orphaned tool_use blocks (e.g. from cancellation mid-execution)
-        get synthetic error results appended so the API never sees a
-        tool_use without a corresponding tool_result.
+        1. Ensures every tool_use has a matching tool_result.
+        2. Truncates old / large tool results.
+        3. Drops oldest messages if the estimated token count exceeds
+           the context window budget.
         """
-        msgs = list(self.messages)
+        sanitized = self._sanitize(list(self.messages))
+        sanitized = self._truncate_results(sanitized)
+        if context_window > 0:
+            sanitized = self._trim_to_budget(sanitized, context_window)
+        return sanitized
+
+    # --- Internal helpers ---
+
+    @staticmethod
+    def _sanitize(msgs: List[Message]) -> List[Message]:
+        """Patch orphaned tool_use blocks with synthetic error results."""
         sanitized: List[Message] = []
         i = 0
         while i < len(msgs):
@@ -55,15 +106,12 @@ class SessionState:
             if msg.role == Role.ASSISTANT and msg.tool_calls:
                 sanitized.append(msg)
                 i += 1
-                # Collect all tool_call ids that need results
                 needed_ids: Set[str] = {tc.id for tc in msg.tool_calls}
-                # Look ahead for the TOOL message with results
                 if i < len(msgs) and msgs[i].role == Role.TOOL:
                     tool_msg = msgs[i]
                     found_ids = {tr.tool_call_id for tr in tool_msg.tool_results}
                     missing = needed_ids - found_ids
                     if missing:
-                        # Add stubs for missing results
                         patched_results = list(tool_msg.tool_results)
                         for tc in msg.tool_calls:
                             if tc.id in missing:
@@ -78,7 +126,6 @@ class SessionState:
                         sanitized.append(tool_msg)
                     i += 1
                 else:
-                    # No TOOL message at all — create one with error stubs
                     stubs = [
                         ToolResult(
                             tool_call_id=tc.id, name=tc.name,
@@ -91,6 +138,44 @@ class SessionState:
                 sanitized.append(msg)
                 i += 1
         return sanitized
+
+    @staticmethod
+    def _truncate_results(messages: List[Message]) -> List[Message]:
+        """Truncate tool results — aggressively for old, moderately for recent."""
+        n = len(messages)
+        result: List[Message] = []
+        for idx, msg in enumerate(messages):
+            if msg.role != Role.TOOL or not msg.tool_results:
+                result.append(msg)
+                continue
+            age = n - idx
+            max_chars = _OLD_RESULT_MAX_CHARS if age > _OLD_RESULT_THRESHOLD else _RECENT_RESULT_MAX_CHARS
+            new_results = [_truncate_tool_result(tr, max_chars) for tr in msg.tool_results]
+            result.append(Message(role=Role.TOOL, tool_results=new_results))
+        return result
+
+    @staticmethod
+    def _trim_to_budget(messages: List[Message], context_window: int) -> List[Message]:
+        """Drop oldest messages if estimated tokens exceed context budget."""
+        # Reserve 25% for system prompt + new completion
+        budget = int(context_window * 0.75)
+        total = sum(_estimate_tokens(m) for m in messages)
+
+        if total <= budget:
+            return messages
+
+        # Drop messages from the front, keeping at least the last 4
+        result = list(messages)
+        while total > budget and len(result) > 4:
+            removed = result.pop(0)
+            total -= _estimate_tokens(removed)
+            # If we removed a USER msg, also drop the following assistant+tool
+            # to keep message pairs coherent
+            while result and result[0].role != Role.USER and len(result) > 4:
+                removed = result.pop(0)
+                total -= _estimate_tokens(removed)
+
+        return result
 
     def message_count(self) -> int:
         return len(self.messages)

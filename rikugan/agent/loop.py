@@ -280,7 +280,9 @@ class AgentLoop:
         raw_parts: Any = None
 
         stream = self.provider.chat_stream(
-            messages=self.session.get_messages_for_provider(),
+            messages=self.session.get_messages_for_provider(
+                context_window=self.config.provider.context_window,
+            ),
             tools=tools_schema if tools_schema else None,
             temperature=self.config.provider.temperature,
             max_tokens=self.config.provider.max_tokens,
