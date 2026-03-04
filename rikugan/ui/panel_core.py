@@ -18,7 +18,7 @@ from .chat_view import ChatView
 from .input_area import InputArea
 from .context_bar import ContextBar
 from .mutation_log_view import MutationLogPanel
-from .message_widgets import _SharedSpinnerTimer
+from .tool_widgets import _SharedSpinnerTimer
 from .settings_dialog import SettingsDialog, _resolve_auth_cached
 from ..core.config import RikuganConfig
 from ..core.logging import log_error, log_info, log_debug

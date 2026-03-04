@@ -14,9 +14,9 @@ from .qt_compat import (
 from .message_widgets import (
     AssistantMessageWidget, ErrorMessageWidget, ExplorationFindingWidget,
     ExplorationPhaseWidget, QueuedMessageWidget,
-    ThinkingWidget, ToolApprovalWidget, ToolCallWidget,
-    ToolGroupWidget, UserMessageWidget, UserQuestionWidget,
+    ThinkingWidget, UserMessageWidget, UserQuestionWidget,
 )
+from .tool_widgets import ToolApprovalWidget, ToolCallWidget, ToolGroupWidget
 from ..agent.turn import TurnEvent, TurnEventType
 from ..core.types import Message, Role
 from .plan_view import PlanView
