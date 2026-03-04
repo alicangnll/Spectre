@@ -565,6 +565,16 @@ class _SharedSpinnerTimer:
         for w in list(self._widgets):
             w._spin_tick()
 
+    @classmethod
+    def shutdown(cls) -> None:
+        """Stop and discard the singleton so the QTimer doesn't outlive QApplication."""
+        inst = cls._instance
+        if inst is not None:
+            inst._widgets.clear()
+            inst._timer.stop()
+            inst._timer.deleteLater()
+            cls._instance = None
+
 
 class ToolCallWidget(QFrame):
     """Compact tool call display.

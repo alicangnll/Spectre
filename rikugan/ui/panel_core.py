@@ -16,6 +16,7 @@ from .chat_view import ChatView
 from .input_area import InputArea
 from .context_bar import ContextBar
 from .mutation_log_view import MutationLogPanel
+from .message_widgets import _SharedSpinnerTimer
 from .settings_dialog import SettingsDialog, _resolve_auth_cached
 from ..core.config import RikuganConfig
 from ..core.logging import log_error, log_info, log_debug
@@ -567,6 +568,7 @@ class RikuganPanelCore(QWidget):
         try:
             self._stop_poll_timer()
             self._stop_skills_refresh_timer()
+            _SharedSpinnerTimer.shutdown()
             if self._context_bar:
                 self._context_bar.stop()
             for cv in self._chat_views.values():
