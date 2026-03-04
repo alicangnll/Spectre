@@ -2,26 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import io
-import re
-import contextlib
 from typing import Annotated
 
 from ..core.logging import log_debug
 from .base import tool
-
-# Patterns that indicate process execution — blocked for safety.
-_BLOCKED_PATTERNS = [
-    r"\bsubprocess\b",
-    r"\bos\.system\s*\(",
-    r"\bos\.popen\s*\(",
-    r"\bos\.exec\w*\s*\(",
-    r"\bos\.spawn\w*\s*\(",
-    r"\bPopen\s*\(",
-    r"\b__import__\s*\(\s*['\"]subprocess['\"]\s*\)",
-]
-_BLOCKED_RE = re.compile("|".join(_BLOCKED_PATTERNS))
+from .script_guard import BLOCKED_SCRIPT_RE as _BLOCKED_RE
 
 # Cached namespace of common IDA modules — populated once, reused across calls.
 _IDA_MODULE_NAMES = (

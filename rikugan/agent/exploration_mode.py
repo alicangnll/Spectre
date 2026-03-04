@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +207,7 @@ class ExplorationState:
     max_execute_turns: int = 20
     explore_only: bool = False  # /explore mode — no patching
 
-    def can_transition_to(self, target: ExplorationPhase) -> tuple:
+    def can_transition_to(self, target: ExplorationPhase) -> Tuple[bool, str]:
         """Validate whether a phase transition is allowed.
 
         Returns (allowed: bool, reason: str).

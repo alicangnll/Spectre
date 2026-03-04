@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import importlib
-from typing import Optional
+from typing import Any, Optional
 
 from rikugan.ui.qt_compat import QVBoxLayout, QWidget
 from rikugan.ui.panel_core import RikuganPanelCore
@@ -22,7 +22,7 @@ class RikuganPanel(idaapi.PluginForm):
         self._root: Optional[QWidget] = None
         self._core: Optional[RikuganPanelCore] = None
 
-    def OnCreate(self, form):  # noqa: N802
+    def OnCreate(self, form: Any) -> None:  # noqa: N802
         try:
             self._form_widget = self.FormToPyQtWidget(form)
         except Exception:
