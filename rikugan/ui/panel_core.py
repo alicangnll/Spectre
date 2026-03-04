@@ -32,6 +32,11 @@ _SMALL_BTN_STYLE = (
     "border-radius: 6px; padding: 4px; font-size: 11px; }"
     "QPushButton:hover { background: #3c3c3c; }"
 )
+_CANCEL_BTN_STYLE = (
+    "QPushButton { background: #2d2d2d; color: #c42b1c; border: 1px solid #3c3c3c; "
+    "border-radius: 6px; padding: 4px; font-size: 11px; }"
+    "QPushButton:hover { background: #3c3c3c; }"
+)
 
 _TOOL_LANG_MAP = {
     "execute_python": "python",
@@ -321,15 +326,10 @@ class RikuganPanelCore(QWidget):
         self._send_btn.setStyleSheet(_SMALL_BTN_STYLE)
         self._send_btn.clicked.connect(self._on_send_clicked)
         btn_layout.addWidget(self._send_btn)
-
         self._cancel_btn = QPushButton("Stop")
         self._cancel_btn.setObjectName("cancel_button")
         self._cancel_btn.setFixedWidth(64)
-        self._cancel_btn.setStyleSheet(
-            "QPushButton { background: #2d2d2d; color: #c42b1c; border: 1px solid #3c3c3c; "
-            "border-radius: 6px; padding: 4px; font-size: 11px; }"
-            "QPushButton:hover { background: #3c3c3c; }"
-        )
+        self._cancel_btn.setStyleSheet(_CANCEL_BTN_STYLE)
         self._cancel_btn.setVisible(False)
         self._cancel_btn.clicked.connect(self._on_cancel)
         btn_layout.addWidget(self._cancel_btn)
@@ -343,13 +343,11 @@ class RikuganPanelCore(QWidget):
         self._export_btn.setStyleSheet(_SMALL_BTN_STYLE)
         self._export_btn.clicked.connect(self._on_export_current)
         btn_layout.addWidget(self._export_btn)
-
         self._settings_btn = QPushButton("Settings")
         self._settings_btn.setFixedWidth(64)
         self._settings_btn.setStyleSheet(_SMALL_BTN_STYLE)
         self._settings_btn.clicked.connect(self._on_settings)
         btn_layout.addWidget(self._settings_btn)
-
         self._mutations_btn = QPushButton("Mutations")
         self._mutations_btn.setFixedWidth(64)
         self._mutations_btn.setStyleSheet(_SMALL_BTN_STYLE)
