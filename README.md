@@ -74,21 +74,19 @@ Then, instead of doing everything in a single context, it spawns subagents and d
 
 Subagents run in complete isolation from the parent session. They are essentially independent instances of Rikugan with a single task and zero prior knowledge. After finishing, each one reports its findings back to the orchestrator, which synthesizes everything and continues toward your goal.
 
-The result is a much deeper and faster analysis than a single agent could do alone — and it keeps the main context window clean.
+This gives you deeper and faster analysis than a single agent pass, and keeps the main context window clean.
 
 During exploration, it also renames functions when it has high confidence about what a function actually does.
 
 ### Natural Language Patches/modding (Experimental)
 
-This is an feature designed to treat the entire binary as source code. The idea is, binary is code, which means that in some way, it's ***text***, LLMs are great in reading/writing text. 
-
-We know that agentic coding is excellent in reading and editing code, so why not do the same for binaries ? the `/modify` feature is exactly that, it's like code agent now can work on the compiled binary rather the project itself!
+A binary is code, code is text, and LLMs are good at reading and writing text. Agentic coding works well for editing source — `/modify` does the same thing, but on the compiled binary.
 
 `/modify make this maze game easy to me, make me pass thought the walls`
 
 ![alt text](assets/modify_example_01.png)
 
-And that's it. Rikugan will start exploration mode, understand the binary's full context, and systematically apply the necessary patches to achieve your goal. Of course, this can produce issues (segfaults, crashes), but you can feed those back and it will attempt to fix them. 
+That's it. Rikugan runs exploration mode, builds context about the binary, and applies the patches. This can produce issues (segfaults, crashes), but you can feed those back and it will try to fix them.
 
 |![alt text](assets/modify_example_02.png)|
 |:--:|
@@ -114,21 +112,25 @@ Rikugan is inspired by how Claude Code maintains its memory. Every important fin
 
 ![alt text](assets/memory.png)
 
-### Deobfuscation (Binary Ninja)
+### Deobfuscation (Experimental, Binary Ninja only)
 
-The `/deobfuscation` skill gives the agent a structured methodology for cleaning obfuscated binaries. It activates plan mode — the agent reads the IL, understands what the obfuscation is doing, and uses IL write primitives to undo it.
+The `/deobfuscation` skill activates plan mode — the agent reads the IL, figures out what the obfuscation is doing, and uses IL write primitives or byte patching to undo it.
 
-The agent has full IL read/write access:
-- **Read**: `get_il` (any level), `get_cfg` (blocks, edges, dominators, loops), `track_variable_ssa` (def-use chains)
-- **Write**: `il_replace_expr` (swap expressions), `il_set_condition` (force branches), `il_nop_expr` (NOP expressions), `il_remove_block` (kill dead blocks), `patch_branch` / `write_bytes` (byte-level fallback), `install_il_workflow` (register pipeline transforms for batch processing)
+IL read/write tools:
+- **Read**: `get_il`, `get_cfg` (blocks, edges, dominators, loops), `track_variable_ssa` (def-use chains)
+- **Write**: `il_replace_expr`, `il_set_condition`, `il_nop_expr`, `il_remove_block`, `patch_branch` / `write_bytes`, `install_il_workflow` (pipeline transforms)
 
-The skill teaches the agent how to recognize and remove:
-- **Control Flow Flattening (CFF)** — dispatcher loops with state variables, including -O0 memory-store patterns
+The skill teaches the agent to recognize and remove:
+- **Control Flow Flattening (CFF)** — dispatcher loops with state variable
 - **Opaque Predicates** — always-true/false conditions (algebraic and call-based)
 - **Mixed Boolean-Arithmetic (MBA)** — complex expressions that simplify to trivial operations
 - **Junk Code / Dead Stores** — instructions that compute values never used
 
-The agent is the deobfuscator. The tools are its hands — it reads, understands, modifies, and verifies.
+Runs in plan mode, so you can review the plan before the agent starts patching.
+
+|![](assets/cff_remove_example.gif)|
+|:--:|
+|2x speed of the workflow, original process took ~4:30 min
 
 ## Requirements
 
@@ -173,7 +175,7 @@ install_ida.bat "C:\Users\you\AppData\Roaming\Hex-Rays\IDA Pro"
 install_binaryninja.bat "C:\Users\you\AppData\Roaming\Binary Ninja"
 ```
 
-Installers create plugin, install dependencies, and initialize host-specific Rikugan config directories.
+Installers create the plugin symlink, install dependencies, and set up host-specific config directories.
 
 ### Set your API key
 
