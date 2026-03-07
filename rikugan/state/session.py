@@ -76,10 +76,17 @@ class SessionState:
 
     def __post_init__(self) -> None:
         self._lock = threading.Lock()
+        self._token_estimate: int = 0
+
+    @property
+    def token_estimate(self) -> int:
+        """Running O(1) estimate of total token usage across all messages."""
+        return self._token_estimate
 
     def add_message(self, msg: Message) -> None:
         with self._lock:
             self.messages.append(msg)
+            self._token_estimate += _estimate_tokens(msg)
             if msg.token_usage:
                 self.total_usage.prompt_tokens += msg.token_usage.prompt_tokens
                 self.total_usage.completion_tokens += msg.token_usage.completion_tokens
@@ -91,6 +98,7 @@ class SessionState:
     def clear(self) -> None:
         with self._lock:
             self.messages.clear()
+            self._token_estimate = 0
             self.total_usage = TokenUsage()
             self.last_prompt_tokens = 0
             self.current_turn = 0
@@ -108,7 +116,11 @@ class SessionState:
             # Keep messages[0] (system prompt / first user message) + tail
             head = self.messages[:1]
             tail = self.messages[-keep_last_n:]
-            removed = len(self.messages) - len(head) - len(tail)
+            removed_msgs = self.messages[1:-keep_last_n]
+            removed = len(removed_msgs)
+            for m in removed_msgs:
+                self._token_estimate -= _estimate_tokens(m)
+            self._token_estimate = max(0, self._token_estimate)
             self.messages[:] = head + tail
             return removed
 

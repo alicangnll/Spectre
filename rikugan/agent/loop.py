@@ -1262,16 +1262,23 @@ class AgentLoop:
         self, system_prompt: str
     ) -> Tuple[List, int, Optional[TokenUsage]]:
         """Estimate tokens, compact context if needed, return (provider_messages, estimated_tokens, estimated_usage)."""
-        # Estimate full in-memory context so compaction decisions work
-        # even when provider streaming usage is missing.
-        full_messages = minify_messages(
-            self.session.get_messages_for_provider(context_window=0)
-        )
-        full_prompt_tokens = self._estimate_prompt_tokens(full_messages, system_prompt)
-        if full_prompt_tokens > 0:
-            self._context_manager.update_usage(
-                TokenUsage(prompt_tokens=full_prompt_tokens, total_tokens=full_prompt_tokens)
+        # Fast path: use running token counter to skip expensive O(n)
+        # estimation when we're clearly below the compaction threshold.
+        fast_estimate = self.session.token_estimate
+        if fast_estimate > 0 and fast_estimate < int(self._context_manager.max_tokens * 0.5):
+            # Well below threshold — skip full estimation for compaction
+            pass
+        else:
+            # Estimate full in-memory context so compaction decisions work
+            # even when provider streaming usage is missing.
+            full_messages = minify_messages(
+                self.session.get_messages_for_provider(context_window=0)
             )
+            full_prompt_tokens = self._estimate_prompt_tokens(full_messages, system_prompt)
+            if full_prompt_tokens > 0:
+                self._context_manager.update_usage(
+                    TokenUsage(prompt_tokens=full_prompt_tokens, total_tokens=full_prompt_tokens)
+                )
 
         if self._context_manager.should_compact():
             log_info(
