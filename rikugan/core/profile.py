@@ -25,59 +25,6 @@ IOC_FILTER_CATEGORIES: Dict[str, str] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Known tool names — used by the UI to populate the denied-tools picker.
-# Sorted by category for readability. This list covers both IDA and Binary
-# Ninja hosts; tools missing from the active host are silently ignored.
-# ---------------------------------------------------------------------------
-
-KNOWN_TOOL_NAMES: Dict[str, List[str]] = {
-    "Navigation": [
-        "get_cursor_position", "get_current_function", "jump_to",
-        "get_name_at", "get_address_of",
-    ],
-    "Database": [
-        "get_binary_info", "list_segments", "list_imports", "list_exports",
-        "read_bytes",
-    ],
-    "Functions": [
-        "list_functions", "get_function_info", "search_functions",
-    ],
-    "Strings": [
-        "list_strings", "search_strings", "get_string_at",
-    ],
-    "Disassembly": [
-        "read_disassembly", "read_function_disassembly", "get_instruction_info",
-    ],
-    "Decompiler": [
-        "decompile_function", "get_pseudocode", "get_decompiler_variables",
-        "set_pseudocode_comment", "get_pseudocode_comment", "redecompile_function",
-    ],
-    "Cross-References": [
-        "xrefs_to", "xrefs_from", "function_xrefs",
-    ],
-    "Annotations": [
-        "rename_function", "rename_variable", "rename_address",
-        "set_comment", "set_function_comment", "set_type",
-        "set_function_prototype",
-    ],
-    "Types": [
-        "create_struct", "modify_struct", "get_struct_info", "list_structs",
-        "create_enum", "modify_enum", "get_enum_info", "list_enums",
-        "create_typedef", "apply_struct_to_address", "apply_type_to_variable",
-        "import_c_header", "suggest_struct_from_accesses", "propagate_type",
-        "get_type_libraries", "import_type_from_library",
-    ],
-    "Microcode": [
-        "get_microcode", "get_microcode_block", "nop_microcode",
-        "install_microcode_optimizer", "remove_microcode_optimizer",
-        "list_microcode_optimizers",
-    ],
-    "Scripting": [
-        "execute_python",
-    ],
-}
-
 
 @dataclass
 class AnalysisProfile:

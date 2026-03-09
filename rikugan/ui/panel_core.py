@@ -724,7 +724,8 @@ class RikuganPanelCore(QWidget):
 
     def _on_settings(self) -> None:
         try:
-            dlg = SettingsDialog(self._config, registry=self._ctrl.provider_registry)
+            dlg = SettingsDialog(self._config, registry=self._ctrl.provider_registry,
+                                tool_registry=self._ctrl.tool_registry)
             result = dlg.exec_()
             if result:
                 self._config.save()

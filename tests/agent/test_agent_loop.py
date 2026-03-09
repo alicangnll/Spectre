@@ -555,6 +555,43 @@ class TestProfileEnforcement(unittest.TestCase):
         # Default profile does NOT strip IOCs
         self.assertNotIn("[HASH_REDACTED]", tool_result_event.tool_result)
 
+    def test_denied_tool_blocked_at_execution(self):
+        """Denied tools should be blocked at execution time, not just schema filtering."""
+        registry = ToolRegistry()
+        registry.register(ToolDefinition(
+            name="list_functions",
+            description="Lists functions",
+            parameters=[],
+            handler=lambda: "func1\nfunc2\nfunc3",
+            category="functions",
+        ))
+
+        custom_profiles = {
+            "restricted": {
+                "name": "restricted",
+                "denied_tools": ["list_functions"],
+            }
+        }
+
+        # LLM tries to call the denied tool anyway
+        provider = MockProvider(responses=[
+            _tool_call_response("list_functions", {}, call_id="call_denied"),
+            _text_response("Done"),
+        ])
+        loop = self._make_loop_with_profile(
+            "restricted", provider, tools=registry, custom_profiles=custom_profiles,
+        )
+
+        events = list(loop.run("list functions"))
+        tool_result_event = next(
+            (e for e in events if e.type == TurnEventType.TOOL_RESULT),
+            None,
+        )
+        self.assertIsNotNone(tool_result_event)
+        # Tool should be blocked with an error, not executed
+        self.assertIn("denied by the active profile", tool_result_event.tool_result)
+        self.assertNotIn("func1", tool_result_event.tool_result)
+
 
 if __name__ == "__main__":
     unittest.main()

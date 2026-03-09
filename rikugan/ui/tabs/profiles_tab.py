@@ -14,7 +14,7 @@ from ..qt_compat import (
 from ...core.config import RikuganConfig
 from ...core.logging import log_debug
 from ...core.profile import (
-    AnalysisProfile, DEFAULT_PROFILE, IOC_FILTER_CATEGORIES, KNOWN_TOOL_NAMES,
+    AnalysisProfile, DEFAULT_PROFILE, IOC_FILTER_CATEGORIES,
     PRIVATE_PROFILE, _BUILTIN_PROFILES, get_profile, list_profiles,
 )
 
@@ -32,12 +32,27 @@ _GROUP_STYLE = (
 )
 
 
+def _get_tools_by_category(tool_registry) -> Dict[str, List[str]]:
+    """Extract tool names grouped by category from a live ToolRegistry."""
+    by_cat: Dict[str, List[str]] = {}
+    if tool_registry is None:
+        return by_cat
+    for defn in tool_registry.list_tools():
+        cat = (defn.category or "general").capitalize()
+        by_cat.setdefault(cat, []).append(defn.name)
+    # Sort tool names within each category
+    for cat in by_cat:
+        by_cat[cat].sort()
+    return by_cat
+
+
 class ProfilesTab(QWidget):
     """Tab for managing analysis profiles."""
 
-    def __init__(self, config: RikuganConfig, parent: QWidget = None):
+    def __init__(self, config: RikuganConfig, tool_registry=None, parent: QWidget = None):
         super().__init__(parent)
         self._config = config
+        self._tool_registry = tool_registry
         self._custom_profiles: Dict[str, Dict] = copy.deepcopy(config.custom_profiles)
         self._build_ui()
         self._load_profile(self._profile_combo.currentText())
@@ -198,50 +213,63 @@ class ProfilesTab(QWidget):
         rules_lay.addLayout(list_row)
         layout.addWidget(rules_group)
 
-        # ---- Denied Tools ----
+        # ---- Denied Tools (dynamic from tool registry) ----
         tools_group = QGroupBox("Denied Tools")
         tools_group.setStyleSheet(_GROUP_STYLE)
         tools_lay = QVBoxLayout(tools_group)
         tools_lay.setContentsMargins(10, 20, 10, 8)
         tools_lay.setSpacing(4)
 
-        tools_scroll = QScrollArea()
-        tools_scroll.setWidgetResizable(True)
-        tools_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        tools_scroll.setFixedHeight(140)
-        tools_inner = QWidget()
-        tools_grid = QHBoxLayout(tools_inner)
-        tools_grid.setContentsMargins(0, 0, 0, 0)
-        tools_grid.setSpacing(12)
-
         self._denied_tool_cbs: Dict[str, QCheckBox] = {}
-        categories = list(KNOWN_TOOL_NAMES.items())
-        n_cols = 3
-        cols: List[QVBoxLayout] = []
-        for _ in range(n_cols):
-            c = QVBoxLayout()
-            c.setSpacing(2)
-            cols.append(c)
-            tools_grid.addLayout(c)
+        tools_by_cat = _get_tools_by_category(self._tool_registry)
 
-        col_idx = 0
-        for cat_name, tool_names in categories:
-            col = cols[col_idx % n_cols]
-            header = QLabel(f"<b>{cat_name}</b>")
-            header.setStyleSheet("font-size: 10px; color: #888; margin-top: 6px;")
-            col.addWidget(header)
-            for tname in tool_names:
-                cb = QCheckBox(tname)
-                cb.setStyleSheet("font-size: 11px;")
-                self._denied_tool_cbs[tname] = cb
-                col.addWidget(cb)
-            col_idx += 1
+        if tools_by_cat:
+            tools_scroll = QScrollArea()
+            tools_scroll.setWidgetResizable(True)
+            tools_scroll.setFrameShape(QFrame.Shape.NoFrame)
+            tools_scroll.setFixedHeight(140)
+            tools_inner = QWidget()
+            tools_grid = QHBoxLayout(tools_inner)
+            tools_grid.setContentsMargins(0, 0, 0, 0)
+            tools_grid.setSpacing(12)
 
-        for c in cols:
-            c.addStretch()
+            # Distribute categories across 3 columns
+            categories = list(tools_by_cat.items())
+            n_cols = 3
+            cols: List[QVBoxLayout] = []
+            for _ in range(n_cols):
+                c = QVBoxLayout()
+                c.setSpacing(2)
+                cols.append(c)
+                tools_grid.addLayout(c)
 
-        tools_scroll.setWidget(tools_inner)
-        tools_lay.addWidget(tools_scroll)
+            col_idx = 0
+            for cat_name, tool_names in categories:
+                col = cols[col_idx % n_cols]
+                header = QLabel(f"<b>{cat_name}</b>")
+                header.setStyleSheet("font-size: 10px; color: #888; margin-top: 6px;")
+                col.addWidget(header)
+                for tname in tool_names:
+                    cb = QCheckBox(tname)
+                    cb.setStyleSheet("font-size: 11px;")
+                    self._denied_tool_cbs[tname] = cb
+                    col.addWidget(cb)
+                col_idx += 1
+
+            for c in cols:
+                c.addStretch()
+
+            tools_scroll.setWidget(tools_inner)
+            tools_lay.addWidget(tools_scroll)
+        else:
+            # Fallback: free-text input when no registry available
+            self._denied_tools_edit = QPlainTextEdit()
+            self._denied_tools_edit.setMaximumHeight(60)
+            self._denied_tools_edit.setPlaceholderText(
+                "One tool name per line (e.g. list_functions, read_bytes)"
+            )
+            tools_lay.addWidget(self._denied_tools_edit)
+
         layout.addWidget(tools_group)
 
         # ---- Advanced ----
@@ -306,11 +334,15 @@ class ProfilesTab(QWidget):
         self._desc_edit.setPlainText(profile.description or "")
         self._hide_metadata_cb.setChecked(profile.hide_binary_metadata)
 
-        # Denied tools checkboxes
+        # Denied tools — checkboxes or text fallback
         denied_set = set(profile.denied_tools)
-        for tname, cb in self._denied_tool_cbs.items():
-            cb.setChecked(tname in denied_set)
-            cb.setEnabled(not is_builtin)
+        if self._denied_tool_cbs:
+            for tname, cb in self._denied_tool_cbs.items():
+                cb.setChecked(tname in denied_set)
+                cb.setEnabled(not is_builtin)
+        elif hasattr(self, "_denied_tools_edit"):
+            self._denied_tools_edit.setPlainText("\n".join(profile.denied_tools))
+            self._denied_tools_edit.setReadOnly(is_builtin)
 
         self._denied_funcs_edit.setPlainText("\n".join(profile.denied_functions))
         self._custom_filters_edit.setPlainText("\n".join(profile.custom_filters))
@@ -341,6 +373,14 @@ class ProfilesTab(QWidget):
         self._ioc_select_all_btn.setEnabled(not is_builtin)
         self._ioc_deselect_btn.setEnabled(not is_builtin)
 
+    def _get_denied_tools(self) -> List[str]:
+        """Read denied tools from checkboxes or text fallback."""
+        if self._denied_tool_cbs:
+            return [tn for tn, cb in self._denied_tool_cbs.items() if cb.isChecked()]
+        if hasattr(self, "_denied_tools_edit"):
+            return _text_to_lines(self._denied_tools_edit.toPlainText())
+        return []
+
     def _get_current_rules(self) -> List[Dict[str, Any]]:
         name = self._profile_combo.currentText()
         if not name:
@@ -354,14 +394,13 @@ class ProfilesTab(QWidget):
             return
 
         ioc_filters = {key: cb.isChecked() for key, cb in self._ioc_checkboxes.items()}
-        denied_tools = [tn for tn, cb in self._denied_tool_cbs.items() if cb.isChecked()]
         profile = AnalysisProfile(
             name=name,
             description=self._desc_edit.toPlainText().strip(),
             hide_binary_metadata=self._hide_metadata_cb.isChecked(),
             ioc_filters=ioc_filters,
             custom_filter_rules=self._get_current_rules(),
-            denied_tools=denied_tools,
+            denied_tools=self._get_denied_tools(),
             denied_functions=_text_to_lines(self._denied_funcs_edit.toPlainText()),
             custom_filters=_text_to_lines(self._custom_filters_edit.toPlainText()),
         )

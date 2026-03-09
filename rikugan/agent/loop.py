@@ -1060,6 +1060,16 @@ class AgentLoop:
 
     def _execute_single_tool(self, tc: ToolCall) -> Generator[TurnEvent, None, ToolResult]:
         """Handle approval gating, mutation tracking, and execution of a real tool."""
+        # Profile: block denied tools at execution time (defense-in-depth —
+        # the schema filter already hides them, but the LLM may still try)
+        profile = self.config.get_active_profile()
+        if profile.denied_tools and tc.name in profile.denied_tools:
+            content = f"Error: Tool '{tc.name}' is denied by the active profile."
+            log_debug(f"Blocked denied tool: {tc.name} (profile: {profile.name})")
+            tr = ToolResult(tool_call_id=tc.id, name=tc.name, content=content, is_error=True)
+            yield TurnEvent.tool_result_event(tc.id, tc.name, content, True)
+            return tr
+
         # execute_python always requires explicit approval
         if tc.name == "execute_python":
             approved = yield from self._wait_for_approval(tc)

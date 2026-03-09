@@ -226,6 +226,10 @@ class SessionControllerBase:
         return self._provider_registry
 
     @property
+    def tool_registry(self) -> ToolRegistry:
+        return self._tool_registry
+
+    @property
     def skill_slugs(self) -> List[str]:
         if not self._runtime_init_done.is_set():
             return []

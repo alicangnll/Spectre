@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import queue
 import threading
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from .qt_compat import (
     QApplication, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QFormLayout,
@@ -170,11 +170,13 @@ class _AddProviderDialog(QDialog):
 class SettingsDialog(QDialog):
     """Configuration dialog for Rikugan."""
 
-    def __init__(self, config: RikuganConfig, registry: Optional[ProviderRegistry] = None, parent: QWidget = None):
+    def __init__(self, config: RikuganConfig, registry: Optional[ProviderRegistry] = None,
+                 tool_registry: Optional[Any] = None, parent: QWidget = None):
         # Use None parent to avoid lifecycle coupling with IDA PluginForm widgets
         super().__init__(None)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self._config = config
+        self._tool_registry = tool_registry
         self._registry = registry or ProviderRegistry()
         self._registry.register_custom_providers(
             list(self._config.custom_providers.keys())
@@ -233,7 +235,7 @@ class SettingsDialog(QDialog):
         self._tabs.addTab(self._skills_tab, "Skills")
         self._mcp_tab = MCPTab(self._config)
         self._tabs.addTab(self._mcp_tab, "MCP")
-        self._profiles_tab = ProfilesTab(self._config)
+        self._profiles_tab = ProfilesTab(self._config, tool_registry=self._tool_registry)
         self._tabs.addTab(self._profiles_tab, "Profiles")
 
         layout.addWidget(self._tabs)
