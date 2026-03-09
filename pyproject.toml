@@ -10,6 +10,7 @@ ignore = ["E501", "B008", "UP042"]
 "rikugan/binja/**" = ["F401", "E741"]
 "rikugan/ida/**" = ["F401"]
 "rikugan/core/sanitize.py" = ["RUF003"]
+"rikugan/tools/functions.py" = ["RUF001"]
 "rikugan/ui/plan_view.py" = ["RUF001"]
 
 [tool.mypy]
@@ -20,3 +21,4 @@ no_error_summary = true
 [[tool.mypy.overrides]]
 module = ["rikugan.core.*", "rikugan.providers.*"]
 disallow_untyped_defs = true
+
