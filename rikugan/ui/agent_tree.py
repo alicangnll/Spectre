@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .qt_compat import (
+    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -92,7 +93,11 @@ _TREE_STYLE = """
         padding: 2px 4px;
     }
     QTreeWidget::item:selected {
-        background: #2d2d2d;
+        background: #264f78;
+        color: #ffffff;
+    }
+    QTreeWidget::item:hover {
+        background: #2a2d2e;
     }
     QHeaderView::section {
         background: #2d2d2d;
@@ -131,6 +136,7 @@ class AgentInfo:
     turns: int = 0
     elapsed_seconds: float = 0.0
     summary: str = ""
+    category: str = ""
 
 
 class SpawnAgentDialog(QDialog):
@@ -244,6 +250,22 @@ class AgentTreeWidget(QWidget):
         self._kill_btn.clicked.connect(self._on_kill_selected)
         toolbar.addWidget(self._kill_btn)
 
+        self._clean_btn = QPushButton("Clean")
+        self._clean_btn.setStyleSheet(_BTN_STYLE)
+        self._clean_btn.setToolTip("Remove selected finished agents (or all finished if none selected)")
+        self._clean_btn.clicked.connect(self._on_clean)
+        toolbar.addWidget(self._clean_btn)
+
+        self._filter_combo = QComboBox()
+        self._filter_combo.setFixedWidth(130)
+        self._filter_combo.setStyleSheet(
+            "QComboBox { background: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; "
+            "border-radius: 4px; padding: 3px 6px; font-size: 11px; }"
+        )
+        self._filter_combo.addItems(["All Agents", "General", "Bulk Rename"])
+        self._filter_combo.currentTextChanged.connect(self._apply_filter)
+        toolbar.addWidget(self._filter_combo)
+
         toolbar.addStretch()
 
         self._status_label = QLabel("0 running / 0 completed")
@@ -264,6 +286,9 @@ class AgentTreeWidget(QWidget):
         self._tree.setColumnWidth(4, 60)
         self._tree.setAlternatingRowColors(True)
         self._tree.setRootIsDecorated(False)
+        self._tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self._tree.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._tree.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._tree.itemSelectionChanged.connect(self._on_item_selected)
         main_layout.addWidget(self._tree)
 
@@ -303,13 +328,49 @@ class AgentTreeWidget(QWidget):
             )
 
     def _on_kill_selected(self) -> None:
-        """Cancel the currently selected agent."""
+        """Cancel the currently selected agent(s)."""
         items = self._tree.selectedItems()
         if not items:
             return
-        agent_id = items[0].data(0, Qt.ItemDataRole.UserRole)
-        if agent_id:
-            self.cancel_requested.emit(agent_id)
+        for item in items:
+            agent_id = item.data(0, Qt.ItemDataRole.UserRole)
+            if agent_id:
+                info = self._agents.get(agent_id)
+                if info and info.status in ("PENDING", "RUNNING"):
+                    self.cancel_requested.emit(agent_id)
+
+    def _on_clean(self) -> None:
+        """Remove finished agents from the tree.
+
+        If agents are selected, only remove those that are finished.
+        If nothing is selected, remove all finished agents.
+        """
+        _FINISHED = {"COMPLETED", "FAILED", "CANCELLED"}
+        selected = self._tree.selectedItems()
+
+        if selected:
+            to_remove = []
+            for item in selected:
+                agent_id = item.data(0, Qt.ItemDataRole.UserRole)
+                if agent_id:
+                    info = self._agents.get(agent_id)
+                    if info and info.status in _FINISHED:
+                        to_remove.append(agent_id)
+        else:
+            to_remove = [
+                aid for aid, info in self._agents.items()
+                if info.status in _FINISHED
+            ]
+
+        for agent_id in to_remove:
+            item = self._items.pop(agent_id, None)
+            if item is not None:
+                idx = self._tree.indexOfTopLevelItem(item)
+                if idx >= 0:
+                    self._tree.takeTopLevelItem(idx)
+            self._agents.pop(agent_id, None)
+
+        self._update_status_counts()
 
     def update_agent(self, info: AgentInfo) -> None:
         """Add or update a tree item for the given agent."""
@@ -320,6 +381,10 @@ class AgentTreeWidget(QWidget):
         else:
             item = QTreeWidgetItem(self._tree)
             item.setData(0, Qt.ItemDataRole.UserRole, info.agent_id)
+            item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+                | Qt.ItemFlag.ItemIsSelectable
+            )
             self._items[info.agent_id] = item
 
         item.setText(0, info.name)
@@ -334,12 +399,36 @@ class AgentTreeWidget(QWidget):
 
         item.setForeground(2, QColor(color))
 
+        # Apply current category filter to this item
+        filter_text = self._filter_combo.currentText()
+        if filter_text == "Bulk Rename":
+            item.setHidden(info.category != "bulk_rename")
+        elif filter_text == "General":
+            item.setHidden(info.category == "bulk_rename")
+        else:
+            item.setHidden(False)
+
         self._update_status_counts()
 
         # Auto-update preview if this agent is selected
         selected = self._tree.selectedItems()
         if selected and selected[0].data(0, Qt.ItemDataRole.UserRole) == info.agent_id:
             self._preview.setPlainText(info.summary or "(no output yet)")
+
+    def _apply_filter(self, _text: str = "") -> None:
+        """Show/hide tree items based on the selected category filter."""
+        selected = self._filter_combo.currentText()
+        for agent_id, item in self._items.items():
+            info = self._agents.get(agent_id)
+            if info is None:
+                continue
+            if selected == "All Agents":
+                item.setHidden(False)
+            elif selected == "Bulk Rename":
+                item.setHidden(info.category != "bulk_rename")
+            elif selected == "General":
+                item.setHidden(info.category == "bulk_rename")
+        self._update_status_counts()
 
     def _on_item_selected(self) -> None:
         """Show the summary of the selected agent in the preview pane."""

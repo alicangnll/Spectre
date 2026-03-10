@@ -12,10 +12,12 @@ from PySide6.QtCore import QObject, Qt, QTimer, Signal  # noqa: F401
 from PySide6.QtGui import (  # noqa: F401
     QColor,
     QFont,
+    QIntValidator,
     QSyntaxHighlighter,
     QTextCharFormat,
 )
 from PySide6.QtWidgets import (  # noqa: F401
+    QAbstractItemView,
     QApplication,
     QCheckBox,
     QComboBox,

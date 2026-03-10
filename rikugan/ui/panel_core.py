@@ -226,6 +226,7 @@ class RikuganPanelCore(QWidget):
         self,
         controller_factory: Callable[[RikuganConfig], Any],
         ui_hooks_factory: Callable[[Callable[[], Any]], Any] | None = None,
+        tools_form_factory: Callable[..., Any] | None = None,
         parent: QWidget = None,
     ):
         super().__init__(parent)
@@ -241,6 +242,8 @@ class RikuganPanelCore(QWidget):
         self._is_shutdown = False
         self._ui_hooks_factory = ui_hooks_factory
         self._ui_hooks = None
+        self._tools_form_factory = tools_form_factory
+        self._tools_form: Any = None  # IDA PluginForm wrapper (if available)
 
         # Tab-to-ChatView mapping
         self._chat_views: dict[str, ChatView] = {}
@@ -356,13 +359,12 @@ class RikuganPanelCore(QWidget):
         self._mutation_panel.setVisible(False)
         self._main_splitter.addWidget(self._mutation_panel)
 
-        self._tools_panel = ToolsPanel()
-        self._tools_panel.setVisible(False)
-        self._main_splitter.addWidget(self._tools_panel)
-
         self._main_splitter.setStretchFactor(0, 3)
         self._main_splitter.setStretchFactor(1, 1)
-        self._main_splitter.setStretchFactor(2, 1)
+
+        # Tools panel widget (always created; docking is handled by form wrapper)
+        self._tools_panel = ToolsPanel()
+        self._tools_panel.setVisible(False)
 
         layout.addWidget(self._main_splitter, 1)
 
@@ -698,6 +700,10 @@ class RikuganPanelCore(QWidget):
             if self._ui_hooks:
                 self._ui_hooks.unhook()
                 self._ui_hooks = None
+            if self._tools_form is not None:
+                self._tools_form.hide()
+            elif self._tools_panel is not None:
+                self._tools_panel.close()
             self._ctrl.shutdown()
         except Exception as e:
             log_error(f"Panel teardown error: {e}")
@@ -1004,14 +1010,59 @@ class RikuganPanelCore(QWidget):
         self._mutations_btn.setChecked(visible)
 
     def _on_toggle_tools(self) -> None:
-        """Toggle visibility of the tools panel."""
+        """Toggle the Tools view (IDA-docked or standalone window)."""
         if self._tools_panel is None:
             return
-        visible = not self._tools_panel.isVisible()
-        self._tools_panel.setVisible(visible)
-        self._tools_btn.setChecked(visible)
-        if visible:
-            self._ensure_tools_initialized()
+        self._ensure_tools_initialized()
+
+        if self._tools_form is not None:
+            # IDA dockable form
+            if self._tools_form.is_visible:
+                self._tools_form.hide()
+                self._tools_btn.setChecked(False)
+            else:
+                self._tools_form.show()
+                self._tools_btn.setChecked(True)
+        else:
+            # Standalone window (Binary Ninja / headless)
+            if self._tools_panel.isVisible():
+                self._tools_panel.hide()
+                self._tools_btn.setChecked(False)
+            else:
+                self._tools_panel.show()
+                self._tools_panel.raise_()
+                self._tools_panel.activateWindow()
+                self._tools_btn.setChecked(True)
+
+    def show_tools_panel(self, tab_index: int = 0) -> None:
+        """Show the tools view and switch to the given tab.
+
+        Public API used by IDA actions (Open Tools, Send to Bulk Rename).
+        """
+        if self._tools_panel is None:
+            return
+        self._ensure_tools_initialized()
+
+        if self._tools_form is not None:
+            self._tools_form.show()
+            self._tools_form.set_tab(tab_index)
+        else:
+            self._tools_panel.show()
+            self._tools_panel.raise_()
+            self._tools_panel.activateWindow()
+            if hasattr(self._tools_panel, "_tabs"):
+                self._tools_panel._tabs.setCurrentIndex(tab_index)
+        self._tools_btn.setChecked(True)
+
+    def show_tools_with_renamer(self, address: int | None = None) -> None:
+        """Show the tools panel on the Renamer tab.
+
+        If *address* is given, filter and check that function.
+        Called from the IDA "Send to Bulk Rename" right-click action.
+        """
+        self.show_tools_panel(tab_index=0)
+        if address is not None and hasattr(self, "_bulk_renamer"):
+            self._bulk_renamer.select_and_filter_address(address)
 
     def _ensure_tools_initialized(self) -> None:
         """Lazily initialize tools panel contents on first open."""
@@ -1036,6 +1087,7 @@ class RikuganPanelCore(QWidget):
         self._bulk_renamer.pause_requested.connect(self._on_renamer_pause)
         self._bulk_renamer.cancel_requested.connect(self._on_renamer_cancel)
         self._bulk_renamer.undo_requested.connect(self._on_renamer_undo)
+        self._bulk_renamer.seek_requested.connect(lambda addr: self._on_renamer_seek(addr))
         self._tools_panel.set_renamer_widget(self._bulk_renamer)
 
         # A2A bridge
@@ -1044,8 +1096,15 @@ class RikuganPanelCore(QWidget):
         self._a2a_widget.inject_result_requested.connect(self._on_a2a_inject)
         self._tools_panel.set_a2a_widget(self._a2a_widget)
 
+        # Create IDA dockable form wrapper if factory is available
+        if self._tools_form_factory is not None and self._tools_form is None:
+            self._tools_form = self._tools_form_factory(self._tools_panel)
+
         # Discover external agents in background
         self._discover_external_agents()
+
+        # Populate bulk renamer with functions from the binary
+        self._load_renamer_functions()
 
         # Start tools polling timer
         self._tools_poll_timer = QTimer(self)
@@ -1072,7 +1131,7 @@ class RikuganPanelCore(QWidget):
         )
         return self._subagent_manager
 
-    def _get_or_create_renamer_engine(self, mode, batch_size, max_concurrent):
+    def _get_or_create_renamer_engine(self, batch_size: int, max_workers: int):
         """Create a BulkRenamerEngine for the current session."""
         from ..agent.bulk_renamer import BulkRenamerEngine
 
@@ -1085,9 +1144,9 @@ class RikuganPanelCore(QWidget):
             config=self._config,
             host_name=self._ctrl.host_name,
             skill_registry=getattr(self._ctrl, "_skill_registry", None),
-            mode=mode,
             batch_size=batch_size,
-            max_concurrent=max_concurrent,
+            max_workers=max_workers,
+            subagent_manager=self._get_or_create_subagent_manager(),
         )
 
     def _get_or_create_subprocess_bridge(self):
@@ -1103,12 +1162,71 @@ class RikuganPanelCore(QWidget):
         """Discover external agents and populate the A2A widget."""
         from ..agent.a2a.registry import ExternalAgentRegistry
 
-        registry = ExternalAgentRegistry(self._config)
-        agents = registry.discover()
+        registry = ExternalAgentRegistry()
+        registry.discover()
+        agents = registry.list_agents()
         if hasattr(self, "_a2a_widget"):
-            agent_dicts = [{"name": a.name, "transport": a.transport, "endpoint": a.endpoint} for a in agents]
+            agent_dicts = [{"name": a.name, "description": f"{a.transport} agent", "status": "online"} for a in agents]
             self._a2a_widget.set_agents(agent_dicts)
         self._external_registry = registry
+
+    def _load_renamer_functions(self) -> None:
+        """Populate the bulk renamer widget with functions from the binary.
+
+        Calls the list_functions tool handler directly on the main thread
+        (bypasses TPE + idasync to avoid deadlocking) and parses the text
+        output into structured dicts for the widget.
+        """
+        if not hasattr(self, "_bulk_renamer"):
+            return
+
+        tool_registry = self._ctrl.get_tool_registry()
+        defn = tool_registry.get("list_functions")
+        if defn is None or defn.handler is None:
+            log_info("list_functions tool not available — renamer table will be empty")
+            return
+
+        def _fetch_page(offset: int, limit: int) -> str | None:
+            """Call the handler directly (already on main thread)."""
+            try:
+                return defn.handler(offset=offset, limit=limit)
+            except Exception as e:
+                log_error(f"list_functions failed at offset {offset}: {e}")
+                return None
+
+        functions: list[dict] = []
+        offset = 0
+        batch = 500
+        while True:
+            raw = _fetch_page(offset, batch)
+            if not raw:
+                break
+            page_count = 0
+            for line in raw.splitlines():
+                m = re.match(r"\s*0x([0-9a-fA-F]+)\s+(.+)", line)
+                if m:
+                    functions.append(
+                        {
+                            "address": int(m.group(1), 16),
+                            "name": m.group(2).strip(),
+                            "is_import": False,
+                            "instruction_count": 0,
+                        }
+                    )
+                    page_count += 1
+            if page_count < batch:
+                break
+            offset += batch
+
+        # Approximate function size from consecutive addresses
+        for i in range(len(functions) - 1):
+            functions[i]["instruction_count"] = functions[i + 1]["address"] - functions[i]["address"]
+
+        if functions:
+            self._bulk_renamer.load_functions(functions)
+            log_info(f"Loaded {len(functions)} functions into bulk renamer")
+        else:
+            log_info("No functions found for bulk renamer")
 
     # --- Tools panel event handlers ---
 
@@ -1116,6 +1234,7 @@ class RikuganPanelCore(QWidget):
         """Handle agent spawn request from AgentTreeWidget."""
         mgr = self._get_or_create_subagent_manager()
         if mgr is None:
+            log_error("Cannot spawn agent: LLM provider not available")
             return
         mgr.spawn(
             name=params.get("name", "Custom Agent"),
@@ -1149,18 +1268,19 @@ class RikuganPanelCore(QWidget):
         """Handle bulk renamer start request."""
         from ..agent.bulk_renamer import RenameJob
 
-        engine = self._get_or_create_renamer_engine(mode, batch_size, max_concurrent)
+        engine = self._get_or_create_renamer_engine(batch_size, max_concurrent)
         if engine is None:
+            log_error("Cannot start renamer: LLM provider not available")
             return
         rename_jobs = [RenameJob(address=j["address"], current_name=j["current_name"]) for j in jobs]
         engine.enqueue(rename_jobs)
         self._renamer_engine = engine
-        engine.start()
+        engine.start(deep=(mode == "deep"))
 
     def _on_renamer_pause(self) -> None:
         engine = getattr(self, "_renamer_engine", None)
         if engine is not None:
-            if engine._pause_event.is_set():
+            if engine._paused.is_set():
                 engine.pause()
             else:
                 engine.resume()
@@ -1172,8 +1292,17 @@ class RikuganPanelCore(QWidget):
 
     def _on_renamer_undo(self) -> None:
         engine = getattr(self, "_renamer_engine", None)
-        if engine is not None:
-            engine.undo_all()
+        if engine is None:
+            return
+        # undo_all calls tool_registry.execute which goes through
+        # TPE + idasync — must run off the main thread to avoid deadlock.
+        threading.Thread(target=engine.undo_all, daemon=True, name="rikugan-undo-renames").start()
+
+    def _on_renamer_seek(self, address: int) -> None:
+        """Navigate the host disassembly view to the given address."""
+        from ..core.host import navigate_to
+
+        navigate_to(address)
 
     def _on_a2a_task(self, agent_name: str, task: str, include_context: bool) -> None:
         """Handle A2A task delegation request."""
@@ -1184,7 +1313,7 @@ class RikuganPanelCore(QWidget):
         if agent_config is None:
             return
         bridge = self._get_or_create_subprocess_bridge()
-        context = ""
+        prompt = task
         if include_context:
             session = self._ctrl.session
             if session and session.messages:
@@ -1194,7 +1323,8 @@ class RikuganPanelCore(QWidget):
                     if msg.content:
                         parts.append(f"[{msg.role.value}] {msg.content[:200]}")
                 context = "Context from current analysis:\n" + "\n".join(parts)
-        task_id = bridge.run_task(agent_config, task, context_summary=context)
+                prompt = f"{context}\n\n{task}"
+        task_id = bridge.dispatch(agent_config, prompt)
         if hasattr(self, "_a2a_widget"):
             self._a2a_widget.add_task_entry(agent_name, task, task_id)
 
@@ -1217,52 +1347,95 @@ class RikuganPanelCore(QWidget):
                     break
                 # Update agent tree
                 if hasattr(self, "_agent_tree"):
-                    meta = event.metadata
+                    from .agent_tree import AgentInfo
+
+                    meta = event.metadata or {}
                     agent_id = meta.get("agent_id", "")
                     info = mgr.get(agent_id)
                     if info is not None:
+                        elapsed = (info.completed_at or time.time()) - info.created_at
                         self._agent_tree.update_agent(
-                            {
-                                "id": info.id,
-                                "name": info.name,
-                                "agent_type": info.agent_type,
-                                "status": info.status.value,
-                                "turn_count": info.turn_count,
-                                "created_at": info.created_at,
-                                "completed_at": info.completed_at,
-                                "summary": info.summary,
-                            }
+                            AgentInfo(
+                                agent_id=info.id,
+                                name=info.name,
+                                agent_type=info.agent_type,
+                                status=info.status.value.upper(),
+                                turns=info.turn_count,
+                                elapsed_seconds=elapsed,
+                                summary=info.summary,
+                                category=info.category,
+                            )
                         )
-                # Also show in chat for spawned/completed/failed
+                # Show in chat for spawned/completed/failed — but skip
+                # bulk_rename agents to avoid polluting the conversation.
                 if event.type in (
                     TurnEventType.SUBAGENT_SPAWNED,
                     TurnEventType.SUBAGENT_COMPLETED,
                     TurnEventType.SUBAGENT_FAILED,
                 ):
-                    chat_view = self._active_chat_view()
-                    if chat_view is not None:
-                        chat_view.handle_event(event)
+                    is_bulk = info is not None and info.category == "bulk_rename"
+                    if not is_bulk:
+                        chat_view = self._active_chat_view()
+                        if chat_view is not None:
+                            chat_view.handle_event(event)
+
+            # Refresh elapsed time for all RUNNING agents (~1 Hz, not every tick)
+            now = time.time()
+            last_sweep = getattr(self, "_last_agent_sweep", 0.0)
+            if hasattr(self, "_agent_tree") and (now - last_sweep) >= 1.0:
+                self._last_agent_sweep = now
+                from .agent_tree import AgentInfo
+
+                for info in mgr.list_all():
+                    if info.status.value == "running":
+                        elapsed = now - info.created_at
+                        self._agent_tree.update_agent(
+                            AgentInfo(
+                                agent_id=info.id,
+                                name=info.name,
+                                agent_type=info.agent_type,
+                                status=info.status.value.upper(),
+                                turns=info.turn_count,
+                                elapsed_seconds=elapsed,
+                                summary=info.summary,
+                                category=info.category,
+                            )
+                        )
 
         # Poll bulk renamer events
         engine = getattr(self, "_renamer_engine", None)
         if engine is not None:
+            from ..agent.bulk_renamer import RenameEventType
+
             for _ in range(20):
                 rename_event = engine.poll_event()
                 if rename_event is None:
                     break
                 if hasattr(self, "_bulk_renamer"):
-                    job = rename_event.job
-                    if job is not None:
+                    _RENAME_STATUS_MAP = {
+                        RenameEventType.JOB_STARTED: "analyzing",
+                        RenameEventType.JOB_COMPLETED: "renamed",
+                        RenameEventType.JOB_ERROR: "error",
+                    }
+                    if rename_event.type in _RENAME_STATUS_MAP:
+                        status = _RENAME_STATUS_MAP[rename_event.type]
+                        # Undo: JOB_COMPLETED with empty new_name means reverted
+                        if rename_event.type == RenameEventType.JOB_COMPLETED and not rename_event.new_name:
+                            status = "reverted"
                         self._bulk_renamer.update_job(
-                            job.address,
-                            job.new_name,
-                            job.status,
-                            job.error,
+                            rename_event.address,
+                            rename_event.new_name,
+                            status,
+                            rename_event.error,
                         )
-                    self._bulk_renamer.set_progress(
-                        rename_event.progress,
-                        rename_event.total,
-                    )
+                    if rename_event.type in (
+                        RenameEventType.BATCH_PROGRESS,
+                        RenameEventType.ALL_DONE,
+                    ):
+                        self._bulk_renamer.set_progress(
+                            rename_event.completed,
+                            rename_event.total,
+                        )
 
         # Poll A2A subprocess bridge events
         bridge = getattr(self, "_subprocess_bridge", None)
@@ -1271,12 +1444,14 @@ class RikuganPanelCore(QWidget):
                 a2a_event = bridge.poll_event()
                 if a2a_event is None:
                     break
-                if hasattr(self, "_a2a_widget") and a2a_event.task is not None:
-                    self._a2a_widget.update_task_status(
-                        a2a_event.task.id,
-                        a2a_event.task.status.value,
-                        a2a_event.task.result,
-                    )
+                if hasattr(self, "_a2a_widget") and a2a_event.task_id:
+                    task = bridge.get_task(a2a_event.task_id)
+                    if task is not None:
+                        self._a2a_widget.update_task_status(
+                            task.id,
+                            task.status.value,
+                            task.result,
+                        )
 
     def _on_undo_requested(self, count: int) -> None:
         """Handle undo request from the mutation log panel."""

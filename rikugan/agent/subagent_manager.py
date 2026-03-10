@@ -43,6 +43,7 @@ class SubagentInfo:
     turn_count: int = 0
     token_usage: TokenUsage | None = None
     perks: list[str] = field(default_factory=list)
+    category: str = ""  # "bulk_rename", "" (general), etc.
 
 
 class SubagentManager:
@@ -73,6 +74,7 @@ class SubagentManager:
         parent_id: str | None = None,
         perks: list[str] | None = None,
         max_turns: int = 20,
+        category: str = "",
     ) -> str:
         """Spawn a new subagent in a background thread. Returns agent ID."""
         agent_id = uuid.uuid4().hex[:12]
@@ -88,6 +90,7 @@ class SubagentManager:
             created_at=time.time(),
             parent_id=parent_id,
             perks=perks or [],
+            category=category,
         )
         self._agents[agent_id] = info
 
@@ -127,6 +130,94 @@ class SubagentManager:
         log_info(f"Subagent spawned: id={agent_id}, name={name!r}, type={agent_type}")
         return agent_id
 
+    def register(
+        self,
+        name: str,
+        task: str,
+        agent_type: str = "custom",
+        parent_id: str | None = None,
+        perks: list[str] | None = None,
+        category: str = "",
+    ) -> str:
+        """Register an external agent for display without spawning a thread.
+
+        Use this for agents managed outside SubagentManager (e.g. bulk rename
+        deep-mode agents that run their own SubagentRunner).  Returns agent ID.
+        """
+        agent_id = uuid.uuid4().hex[:12]
+
+        info = SubagentInfo(
+            id=agent_id,
+            name=name,
+            task=task,
+            agent_type=agent_type,
+            status=SubagentStatus.PENDING,
+            created_at=time.time(),
+            parent_id=parent_id,
+            perks=perks or [],
+            category=category,
+        )
+        self._agents[agent_id] = info
+
+        if parent_id and parent_id in self._agents:
+            self._agents[parent_id].children.append(agent_id)
+
+        self._event_queue.put(
+            TurnEvent.subagent_spawned(
+                agent_id=agent_id,
+                name=name,
+                agent_type=agent_type,
+                task=task,
+            )
+        )
+        log_info(f"External agent registered: id={agent_id}, name={name!r}")
+        return agent_id
+
+    def update_external(
+        self,
+        agent_id: str,
+        status: SubagentStatus,
+        summary: str = "",
+        turn_count: int = 0,
+    ) -> None:
+        """Update state of an externally managed agent."""
+        info = self._agents.get(agent_id)
+        if info is None:
+            return
+
+        info.status = status
+        info.summary = summary
+        info.turn_count = turn_count
+
+        if status in (SubagentStatus.COMPLETED, SubagentStatus.FAILED, SubagentStatus.CANCELLED):
+            info.completed_at = time.time()
+            elapsed = info.completed_at - info.created_at
+            if status == SubagentStatus.COMPLETED:
+                self._event_queue.put(
+                    TurnEvent.subagent_completed(
+                        agent_id=agent_id,
+                        name=info.name,
+                        summary=summary,
+                        turn_count=turn_count,
+                        elapsed=elapsed,
+                    )
+                )
+            else:
+                self._event_queue.put(
+                    TurnEvent.subagent_failed(
+                        agent_id=agent_id,
+                        name=info.name,
+                        error=summary,
+                    )
+                )
+        elif status == SubagentStatus.RUNNING:
+            self._event_queue.put(
+                TurnEvent.subagent_progress(
+                    agent_id=agent_id,
+                    turn_count=turn_count,
+                )
+            )
+
     def cancel(self, agent_id: str) -> None:
         """Cancel a running or pending subagent."""
         cancel = self._cancel_events.get(agent_id)
@@ -136,6 +227,13 @@ class SubagentManager:
         if info and info.status in (SubagentStatus.PENDING, SubagentStatus.RUNNING):
             info.status = SubagentStatus.CANCELLED
             info.completed_at = time.time()
+            self._event_queue.put(
+                TurnEvent.subagent_failed(
+                    agent_id=agent_id,
+                    name=info.name,
+                    error="Cancelled by user",
+                )
+            )
 
     def get(self, agent_id: str) -> SubagentInfo | None:
         """Look up a subagent by ID."""

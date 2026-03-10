@@ -1,4 +1,7 @@
-"""Tools panel: container for bulk renamer, agent tree, and A2A bridge."""
+"""Tools panel: container for bulk renamer, agent tree, and A2A bridge.
+
+Can be shown as an independent window (QDialog) or embedded in a layout.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +9,7 @@ from .qt_compat import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -14,9 +18,8 @@ from .qt_compat import (
 _HEADER_STYLE = "color: #d4d4d4; font-weight: bold; font-size: 12px;"
 
 _PANEL_STYLE = """
-    QFrame#tools_panel {
+    QWidget#tools_panel {
         background: #1e1e1e;
-        border-left: 1px solid #3c3c3c;
     }
     QTabWidget::pane {
         border: none;
@@ -42,23 +45,32 @@ _PANEL_STYLE = """
     }
 """
 
+_BTN_STYLE = (
+    "QPushButton { background: #2d2d2d; color: #d4d4d4; border: 1px solid #3c3c3c; "
+    "border-radius: 4px; padding: 2px 8px; font-size: 11px; }"
+    "QPushButton:hover { background: #3c3c3c; }"
+)
 
-class ToolsPanel(QFrame):
-    """Side panel containing tools tabs: Renamer, Agents, A2A."""
+
+class ToolsPanel(QWidget):
+    """Standalone tools window containing tabs: Renamer, Agents, A2A."""
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         self.setObjectName("tools_panel")
+        self.setWindowTitle("Rikugan Tools")
         self.setStyleSheet(_PANEL_STYLE)
+        self.setMinimumSize(600, 400)
+        self.resize(800, 600)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Header
-        header = QFrame()
-        header.setObjectName("tools_panel_header")
-        header_layout = QHBoxLayout(header)
+        # Header bar with title (hidden when docked in IDA)
+        self._header = QFrame()
+        self._header.setObjectName("tools_panel_header")
+        header_layout = QHBoxLayout(self._header)
         header_layout.setContentsMargins(12, 8, 12, 8)
 
         title = QLabel("Tools")
@@ -66,7 +78,7 @@ class ToolsPanel(QFrame):
         header_layout.addWidget(title)
         header_layout.addStretch()
 
-        main_layout.addWidget(header)
+        main_layout.addWidget(self._header)
 
         # Tab widget
         self._tabs = QTabWidget()
@@ -109,3 +121,7 @@ class ToolsPanel(QFrame):
     def set_a2a_widget(self, widget: QWidget) -> None:
         """Replace the A2A tab content."""
         self._replace_tab(2, widget, "A2A")
+
+    def hide_header(self) -> None:
+        """Hide the title bar (used when embedded in a dockable form)."""
+        self._header.setVisible(False)
