@@ -1,4 +1,4 @@
-"""Agent tree view and spawn dialog for the Agents tab."""
+"""Agent tree view for the Agents tab (bulk-rename manager)."""
 
 from __future__ import annotations
 
@@ -6,16 +6,10 @@ from dataclasses import dataclass
 
 from .qt_compat import (
     QAbstractItemView,
-    QCheckBox,
     QComboBox,
-    QDialog,
-    QDialogButtonBox,
-    QFormLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QSpinBox,
     Qt,
     QTextEdit,
     QTreeWidget,
@@ -39,47 +33,6 @@ _BTN_STYLE = (
     "QPushButton:hover { background: #3c3c3c; }"
     "QPushButton:disabled { color: #555; }"
 )
-
-_DIALOG_STYLE = """
-    QDialog {
-        background: #1e1e1e;
-        color: #d4d4d4;
-    }
-    QLabel {
-        color: #d4d4d4;
-        font-size: 11px;
-    }
-    QComboBox, QSpinBox, QTextEdit {
-        background: #2d2d2d;
-        color: #d4d4d4;
-        border: 1px solid #3c3c3c;
-        border-radius: 3px;
-        padding: 3px;
-        font-size: 11px;
-    }
-    QGroupBox {
-        color: #d4d4d4;
-        border: 1px solid #3c3c3c;
-        border-radius: 4px;
-        margin-top: 8px;
-        padding-top: 14px;
-        font-size: 11px;
-    }
-    QGroupBox::title {
-        subcontrol-origin: margin;
-        left: 8px;
-        padding: 0 4px;
-    }
-    QCheckBox {
-        color: #d4d4d4;
-        font-size: 11px;
-        spacing: 6px;
-    }
-    QCheckBox::indicator {
-        width: 14px;
-        height: 14px;
-    }
-"""
 
 _TREE_STYLE = """
     QTreeWidget {
@@ -108,22 +61,6 @@ _TREE_STYLE = """
     }
 """
 
-# Perk definitions: (key, display_label)
-_PERK_DEFS: list[tuple[str, str]] = [
-    ("deep_decompilation", "Deep decompilation"),
-    ("string_harvesting", "String harvesting"),
-    ("import_mapping", "Import mapping"),
-    ("memory_layout", "Memory layout"),
-    ("hypothesis_mode", "Hypothesis mode"),
-]
-
-# Agent type presets: which perks to auto-check
-_TYPE_PRESETS: dict[str, list[str]] = {
-    "Network Reconstructor": ["import_mapping", "string_harvesting", "deep_decompilation"],
-    "Report Writer": [],
-    "Custom Task": [],
-}
-
 
 @dataclass
 class AgentInfo:
@@ -139,92 +76,9 @@ class AgentInfo:
     category: str = ""
 
 
-class SpawnAgentDialog(QDialog):
-    """Dialog for configuring and launching a new sub-agent."""
-
-    def __init__(self, parent: QWidget = None):
-        super().__init__(parent)
-        self.setWindowTitle("Spawn Agent")
-        self.setMinimumWidth(420)
-        self.setStyleSheet(_DIALOG_STYLE)
-
-        layout = QVBoxLayout(self)
-        layout.setSpacing(8)
-        layout.setContentsMargins(12, 12, 12, 12)
-
-        form = QFormLayout()
-        form.setSpacing(6)
-
-        # Agent type
-        self._type_combo = QComboBox()
-        self._type_combo.addItems(["Custom Task", "Network Reconstructor", "Report Writer"])
-        self._type_combo.currentTextChanged.connect(self._on_type_changed)
-        form.addRow("Agent Type:", self._type_combo)
-
-        # Task / goal
-        self._task_edit = QTextEdit()
-        self._task_edit.setPlaceholderText("Describe the task or goal for this agent...")
-        self._task_edit.setFixedHeight(80)
-        form.addRow("Task / Goal:", self._task_edit)
-
-        layout.addLayout(form)
-
-        # Perks group
-        perks_group = QGroupBox("Perks")
-        perks_layout = QVBoxLayout(perks_group)
-        perks_layout.setSpacing(4)
-
-        self._perk_checks: dict[str, QCheckBox] = {}
-        for key, label in _PERK_DEFS:
-            cb = QCheckBox(label)
-            cb.setObjectName(f"perk_{key}")
-            self._perk_checks[key] = cb
-            perks_layout.addWidget(cb)
-
-        layout.addWidget(perks_group)
-
-        # Max turns
-        turns_layout = QFormLayout()
-        self._turns_spin = QSpinBox()
-        self._turns_spin.setRange(1, 100)
-        self._turns_spin.setValue(20)
-        turns_layout.addRow("Max turns:", self._turns_spin)
-        layout.addLayout(turns_layout)
-
-        # Buttons
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Launch")
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
-
-    def _on_type_changed(self, agent_type: str) -> None:
-        """Apply perk presets based on agent type."""
-        preset = _TYPE_PRESETS.get(agent_type, [])
-        for key, cb in self._perk_checks.items():
-            cb.setChecked(key in preset)
-
-    @property
-    def agent_type(self) -> str:
-        return self._type_combo.currentText()
-
-    @property
-    def task(self) -> str:
-        return self._task_edit.toPlainText().strip()
-
-    @property
-    def perks(self) -> list[str]:
-        return [key for key, cb in self._perk_checks.items() if cb.isChecked()]
-
-    @property
-    def max_turns(self) -> int:
-        return self._turns_spin.value()
-
-
 class AgentTreeWidget(QWidget):
     """Tree-based view of running and completed sub-agents."""
 
-    spawn_requested = Signal(dict)  # {"name", "task", "agent_type", "perks", "max_turns"}
     cancel_requested = Signal(str)  # agent_id
     inject_summary_requested = Signal(str)  # agent_id
 
@@ -239,11 +93,6 @@ class AgentTreeWidget(QWidget):
         # Toolbar
         toolbar = QHBoxLayout()
         toolbar.setSpacing(4)
-
-        self._new_btn = QPushButton("+ New Agent")
-        self._new_btn.setStyleSheet(_BTN_STYLE)
-        self._new_btn.clicked.connect(self._on_new_agent)
-        toolbar.addWidget(self._new_btn)
 
         self._kill_btn = QPushButton("Kill Selected")
         self._kill_btn.setStyleSheet(_BTN_STYLE)
@@ -308,24 +157,6 @@ class AgentTreeWidget(QWidget):
         self._agents: dict[str, AgentInfo] = {}
         # Map agent_id -> QTreeWidgetItem
         self._items: dict[str, QTreeWidgetItem] = {}
-
-    def _on_new_agent(self) -> None:
-        """Open the spawn dialog and emit spawn_requested if accepted."""
-        dlg = SpawnAgentDialog(self)
-        if dlg.exec() == QDialog.DialogCode.Accepted:
-            if not dlg.task:
-                return
-            agent_count = len(self._agents) + 1
-            name = f"agent-{agent_count}"
-            self.spawn_requested.emit(
-                {
-                    "name": name,
-                    "task": dlg.task,
-                    "agent_type": dlg.agent_type,
-                    "perks": dlg.perks,
-                    "max_turns": dlg.max_turns,
-                }
-            )
 
     def _on_kill_selected(self) -> None:
         """Cancel the currently selected agent(s)."""

@@ -1117,13 +1117,11 @@ class RikuganPanelCore(QWidget):
             return
         self._tools_initialized = True
 
-        from .a2a_widget import A2ABridgeWidget
         from .agent_tree import AgentTreeWidget
         from .bulk_renamer import BulkRenamerWidget
 
         # Agent tree
         self._agent_tree = AgentTreeWidget()
-        self._agent_tree.spawn_requested.connect(self._on_spawn_agent)
         self._agent_tree.cancel_requested.connect(self._on_cancel_agent)
         self._agent_tree.inject_summary_requested.connect(self._on_inject_summary)
         self._tools_panel.set_agents_widget(self._agent_tree)
@@ -1137,18 +1135,9 @@ class RikuganPanelCore(QWidget):
         self._bulk_renamer.seek_requested.connect(lambda addr: self._on_renamer_seek(addr))
         self._tools_panel.set_renamer_widget(self._bulk_renamer)
 
-        # A2A bridge
-        self._a2a_widget = A2ABridgeWidget()
-        self._a2a_widget.task_requested.connect(self._on_a2a_task)
-        self._a2a_widget.inject_result_requested.connect(self._on_a2a_inject)
-        self._tools_panel.set_a2a_widget(self._a2a_widget)
-
         # Create IDA dockable form wrapper if factory is available
         if self._tools_form_factory is not None and self._tools_form is None:
             self._tools_form = self._tools_form_factory(self._tools_panel)
-
-        # Discover external agents in background
-        self._discover_external_agents()
 
         # Populate bulk renamer with functions from the binary.
         # Defer to next event-loop tick so the panel paints first.
@@ -1196,27 +1185,6 @@ class RikuganPanelCore(QWidget):
             max_workers=max_workers,
             subagent_manager=self._get_or_create_subagent_manager(),
         )
-
-    def _get_or_create_subprocess_bridge(self):
-        """Lazily create the SubprocessBridge."""
-        if hasattr(self, "_subprocess_bridge"):
-            return self._subprocess_bridge
-        from ..agent.a2a.subprocess_bridge import SubprocessBridge
-
-        self._subprocess_bridge = SubprocessBridge()
-        return self._subprocess_bridge
-
-    def _discover_external_agents(self) -> None:
-        """Discover external agents and populate the A2A widget."""
-        from ..agent.a2a.registry import ExternalAgentRegistry
-
-        registry = ExternalAgentRegistry()
-        registry.discover()
-        agents = registry.list_agents()
-        if hasattr(self, "_a2a_widget"):
-            agent_dicts = [{"name": a.name, "description": f"{a.transport} agent", "status": "online"} for a in agents]
-            self._a2a_widget.set_agents(agent_dicts)
-        self._external_registry = registry
 
     def _load_renamer_functions(self) -> None:
         """Populate the bulk renamer widget with functions from the binary.
@@ -1299,20 +1267,6 @@ class RikuganPanelCore(QWidget):
 
     # --- Tools panel event handlers ---
 
-    def _on_spawn_agent(self, params: dict) -> None:
-        """Handle agent spawn request from AgentTreeWidget."""
-        mgr = self._get_or_create_subagent_manager()
-        if mgr is None:
-            log_error("Cannot spawn agent: LLM provider not available")
-            return
-        mgr.spawn(
-            name=params.get("name", "Custom Agent"),
-            task=params.get("task", ""),
-            agent_type=params.get("agent_type", "custom"),
-            perks=params.get("perks", []),
-            max_turns=params.get("max_turns", 20),
-        )
-
     def _on_cancel_agent(self, agent_id: str) -> None:
         """Handle agent cancel request from AgentTreeWidget."""
         mgr = self._get_or_create_subagent_manager()
@@ -1372,35 +1326,6 @@ class RikuganPanelCore(QWidget):
         from ..core.host import navigate_to
 
         navigate_to(address)
-
-    def _on_a2a_task(self, agent_name: str, task: str, include_context: bool) -> None:
-        """Handle A2A task delegation request."""
-        registry = getattr(self, "_external_registry", None)
-        if registry is None:
-            return
-        agent_config = registry.get(agent_name)
-        if agent_config is None:
-            return
-        bridge = self._get_or_create_subprocess_bridge()
-        prompt = task
-        if include_context:
-            session = self._ctrl.session
-            if session and session.messages:
-                # Compact summary of recent messages
-                parts = []
-                for msg in session.messages[-10:]:
-                    if msg.content:
-                        parts.append(f"[{msg.role.value}] {msg.content[:200]}")
-                context = "Context from current analysis:\n" + "\n".join(parts)
-                prompt = f"{context}\n\n{task}"
-        task_id = bridge.dispatch(agent_config, prompt)
-        if hasattr(self, "_a2a_widget"):
-            self._a2a_widget.add_task_entry(agent_name, task, task_id)
-
-    def _on_a2a_inject(self, result_text: str) -> None:
-        """Inject A2A task result into the active chat."""
-        if result_text:
-            self._start_agent(result_text)
 
     def _poll_tools_events(self) -> None:
         """Poll all tools subsystems for events."""
@@ -1504,22 +1429,6 @@ class RikuganPanelCore(QWidget):
                         self._bulk_renamer.set_progress(
                             rename_event.completed,
                             rename_event.total,
-                        )
-
-        # Poll A2A subprocess bridge events
-        bridge = getattr(self, "_subprocess_bridge", None)
-        if bridge is not None:
-            for _ in range(10):
-                a2a_event = bridge.poll_event()
-                if a2a_event is None:
-                    break
-                if hasattr(self, "_a2a_widget") and a2a_event.task_id:
-                    task = bridge.get_task(a2a_event.task_id)
-                    if task is not None:
-                        self._a2a_widget.update_task_status(
-                            task.id,
-                            task.status.value,
-                            task.result,
                         )
 
     def _on_undo_requested(self, count: int) -> None:

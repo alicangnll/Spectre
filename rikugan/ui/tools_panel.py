@@ -1,4 +1,4 @@
-"""Tools panel: container for bulk renamer, agent tree, and A2A bridge.
+"""Tools panel: container for bulk renamer and agent tree.
 
 Can be shown as an independent window (QDialog) or embedded in a layout.
 """
@@ -52,7 +52,7 @@ _BTN_STYLE = (
 
 
 class ToolsPanel(QWidget):
-    """Standalone tools window containing tabs: Renamer, Agents, A2A."""
+    """Standalone tools window containing tabs: Renamer, Agents."""
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -94,11 +94,6 @@ class ToolsPanel(QWidget):
         self._agents_placeholder.setWordWrap(True)
         self._tabs.addTab(self._agents_placeholder, "Agents")
 
-        self._a2a_placeholder = QLabel("Not loaded")
-        self._a2a_placeholder.setStyleSheet("color: #808080; padding: 20px;")
-        self._a2a_placeholder.setWordWrap(True)
-        self._tabs.addTab(self._a2a_placeholder, "A2A")
-
         main_layout.addWidget(self._tabs)
 
     def _replace_tab(self, index: int, widget: QWidget, label: str) -> None:
@@ -116,10 +111,6 @@ class ToolsPanel(QWidget):
     def set_agents_widget(self, widget: QWidget) -> None:
         """Replace the Agents tab content."""
         self._replace_tab(1, widget, "Agents")
-
-    def set_a2a_widget(self, widget: QWidget) -> None:
-        """Replace the A2A tab content."""
-        self._replace_tab(2, widget, "A2A")
 
     def hide_header(self) -> None:
         """Hide the title bar (used when embedded in a dockable form)."""
