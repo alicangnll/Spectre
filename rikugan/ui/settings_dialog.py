@@ -196,6 +196,7 @@ class SettingsDialog(QDialog):
         self._model_restore_hint: str = self._config.provider.model.strip()
         self._shown = False
         self._closed = False
+        self.encryption_password: str = ""
         self.setWindowTitle("Rikugan Settings")
         screen = QApplication.primaryScreen()
         if screen:
@@ -423,6 +424,20 @@ class SettingsDialog(QDialog):
             "Enable for deep RE sessions where losing decompilation context is worse than higher token cost."
         )
         behavior_form.addRow(self._preserve_context_cb)
+
+        # --- API key encryption ---
+        from ..core.crypto import is_available as crypto_available
+
+        self._encrypt_keys_cb = QCheckBox("Encrypt API keys with password")
+        self._encrypt_keys_cb.setChecked(self._config.encrypt_api_keys)
+        self._encrypt_keys_cb.setEnabled(crypto_available())
+        self._encrypt_keys_cb.setToolTip(
+            "Encrypt all stored API keys with a password.\n"
+            "You must enter this password each time Rikugan starts."
+            if crypto_available()
+            else "Requires the 'cryptography' package (pip install cryptography)."
+        )
+        behavior_form.addRow(self._encrypt_keys_cb)
 
         return behavior_group
 
@@ -717,6 +732,48 @@ class SettingsDialog(QDialog):
 
     # --- Accept ---
 
+    def _prompt_password(self, title: str, confirm: bool = False) -> str:
+        """Show a modal password dialog. Returns empty string on cancel."""
+        from .qt_compat import QMessageBox
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle(title)
+        dlg.setMinimumWidth(320)
+        layout = QVBoxLayout(dlg)
+
+        pw_edit = QLineEdit()
+        pw_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        pw_edit.setPlaceholderText("Password")
+        layout.addWidget(pw_edit)
+
+        pw_confirm: QLineEdit | None = None
+        if confirm:
+            pw_confirm = QLineEdit()
+            pw_confirm.setEchoMode(QLineEdit.EchoMode.Password)
+            pw_confirm.setPlaceholderText("Confirm password")
+            layout.addWidget(pw_confirm)
+
+        from .qt_compat import QDialogButtonBox
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+        )
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        layout.addWidget(buttons)
+
+        if dlg.exec_() != QDialog.DialogCode.Accepted:
+            return ""
+
+        password = pw_edit.text()
+        if not password:
+            QMessageBox.warning(self, title, "Password cannot be empty.")
+            return ""
+        if confirm and pw_confirm and pw_confirm.text() != password:
+            QMessageBox.warning(self, title, "Passwords do not match.")
+            return ""
+        return password
+
     def _on_accept(self) -> None:
         api_key = self._api_key_edit.text().strip()
 
@@ -750,6 +807,35 @@ class SettingsDialog(QDialog):
         self._config.silent_retry_mode = self._silent_retry_cb.isChecked()
         self._config.preserve_context = self._preserve_context_cb.isChecked()
         self._config.oauth_consent_accepted = self._oauth_cb.isChecked()
+
+        # --- API key encryption handling ---
+        wants_encrypt = self._encrypt_keys_cb.isChecked()
+        password = ""
+        if wants_encrypt:
+            if self._config.encrypt_api_keys:
+                # Already encrypted — need current password to re-encrypt
+                password = self._prompt_password("Enter encryption password", confirm=False)
+            else:
+                # Newly enabling — prompt for new password with confirmation
+                password = self._prompt_password("Set encryption password", confirm=True)
+            if not password:
+                return  # user cancelled
+        elif self._config.encrypt_api_keys:
+            # Disabling encryption — need current password to verify ownership
+            password = self._prompt_password("Enter current password to disable encryption", confirm=False)
+            if not password:
+                return
+            # Verify the password is correct before disabling
+            if self._config.has_encrypted_keys():
+                if not self._config.decrypt_stored_keys(password):
+                    from .qt_compat import QMessageBox
+
+                    QMessageBox.warning(self, "Wrong Password", "Incorrect password.")
+                    return
+            password = ""  # save unencrypted
+
+        self._config.encrypt_api_keys = wants_encrypt
+        self.encryption_password = password  # consumed by caller's save()
 
         # Apply new tab settings
         self._skills_tab.apply_to_config(self._config)

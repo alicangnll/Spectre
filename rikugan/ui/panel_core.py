@@ -236,6 +236,8 @@ class RikuganPanelCore(QWidget):
         log_debug(
             f"Config loaded: provider={self._config.provider.name} model={self._config.provider.model}",
         )
+        if self._config.has_encrypted_keys():
+            self._prompt_decryption_password()
         self._ctrl = controller_factory(self._config)
         self._poll_timer: QTimer | None = None
         self._polling = False
@@ -263,6 +265,35 @@ class RikuganPanelCore(QWidget):
 
         threading.Thread(target=_warm_oauth, daemon=True).start()
         self._build_ui()
+
+    def _prompt_decryption_password(self) -> None:
+        """Prompt for the encryption password at session start."""
+        from .qt_compat import QDialog, QDialogButtonBox, QLabel, QLineEdit, QMessageBox, QVBoxLayout
+
+        for attempt in range(3):
+            dlg = QDialog()
+            dlg.setWindowTitle("Rikugan — Encrypted API Keys")
+            dlg.setMinimumWidth(350)
+            layout = QVBoxLayout(dlg)
+            layout.addWidget(QLabel("Enter password to decrypt API keys:"))
+            pw_edit = QLineEdit()
+            pw_edit.setEchoMode(QLineEdit.EchoMode.Password)
+            pw_edit.setPlaceholderText("Password")
+            layout.addWidget(pw_edit)
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            )
+            buttons.accepted.connect(dlg.accept)
+            buttons.rejected.connect(dlg.reject)
+            layout.addWidget(buttons)
+
+            if dlg.exec_() != QDialog.DialogCode.Accepted:
+                break  # user cancelled — keys stay empty
+            if self._config.decrypt_stored_keys(pw_edit.text()):
+                log_debug("API keys decrypted successfully")
+                return
+            QMessageBox.warning(None, "Wrong Password", "Incorrect password. Please try again.")
+        log_debug("API key decryption skipped or failed — keys will be empty")
 
     def _check_oauth_consent(self) -> None:
         """Apply persisted OAuth consent to the auth cache.
@@ -847,7 +878,7 @@ class RikuganPanelCore(QWidget):
             )
             result = dlg.exec_()
             if result:
-                self._config.save()
+                self._config.save(password=dlg.encryption_password)
                 self._ctrl.update_settings()
                 self._ctrl.reload_mcp()
                 if self._context_bar is not None:
