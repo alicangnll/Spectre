@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.config import RikuganConfig
 from ...core.logging import log_debug
-from ...skills.loader import SkillDefinition
+from...skills.loader import SkillDefinition
 from ..qt_compat import (
     QCheckBox,
     QGroupBox,
@@ -14,6 +15,7 @@ from ..qt_compat import (
     QLabel,
     QPushButton,
     QScrollArea,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -31,11 +33,13 @@ class SkillsTab(QWidget):
         self._service = service
         self._rikugan_checks: dict[str, QCheckBox] = {}
         self._external_checks: dict[str, QCheckBox] = {}
+        self._skill_details: dict[str, SkillDefinition] = {}  # Store full skill data
         self._build_ui()
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
 
+        # Skills list on top
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         container = QWidget()
@@ -53,6 +57,19 @@ class SkillsTab(QWidget):
         layout.addStretch()
         scroll.setWidget(container)
         outer.addWidget(scroll)
+
+        # Skill description text area at bottom
+        desc_label = QLabel("Skill Description:")
+        desc_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        outer.addWidget(desc_label)
+
+        self._description_text = QTextEdit()
+        self._description_text.setReadOnly(True)
+        self._description_text.setMaximumHeight(150)
+        self._description_text.setPlaceholderText(
+            "Click on a skill checkbox above to view its full description here..."
+        )
+        outer.addWidget(self._description_text)
 
     def _build_rikugan_group(self, skills: list[SkillDefinition]) -> QGroupBox:
         """Build the Rikugan skills group box."""
@@ -81,6 +98,10 @@ class SkillsTab(QWidget):
         for skill in sorted(skills, key=lambda s: s.slug):
             cb = QCheckBox(f"{skill.slug}  —  {skill.description or '(no description)'}")
             cb.setChecked(skill.slug not in disabled_set)
+            # Store skill data for later retrieval
+            self._skill_details[skill.slug] = skill
+            # Connect click event to show description
+            cb.clicked.connect(lambda checked, s=skill.slug: self._on_skill_clicked(s, checked))
             self._rikugan_checks[skill.slug] = cb
             layout.addWidget(cb)
 
@@ -126,6 +147,10 @@ class SkillsTab(QWidget):
             ext_id = f"{source_key}:{skill.slug}"
             cb = QCheckBox(f"{skill.slug}  —  {skill.description or '(no description)'}")
             cb.setChecked(ext_id in enabled_set)
+            # Store skill data for later retrieval
+            self._skill_details[ext_id] = skill
+            # Connect click event to show description
+            cb.clicked.connect(lambda checked, s=ext_id: self._on_skill_clicked(s, checked))
             self._external_checks[ext_id] = cb
             layout.addWidget(cb)
 
@@ -136,6 +161,35 @@ class SkillsTab(QWidget):
         for ext_id, checkbox in self._external_checks.items():
             if ext_id.startswith(f"{source_key}:"):
                 checkbox.setChecked(checked)
+
+    def _on_skill_clicked(self, skill_id: str, checked: bool) -> None:
+        """Handle skill checkbox click - show skill description in text area."""
+        skill = self._skill_details.get(skill_id)
+        if not skill:
+            return
+
+        # Build description text
+        desc_lines = []
+        desc_lines.append(f"## {skill.name}")
+        desc_lines.append(f"**Tags:** {', '.join(skill.tags)}")
+        desc_lines.append(f"**Slug:** {skill.slug}")
+        desc_lines.append("")
+        desc_lines.append(skill.description)
+        desc_lines.append("")
+
+        # Try to read skill body if available
+        skill_path = getattr(skill, 'path', None)
+        if skill_path and Path(skill_path).exists():
+            try:
+                with open(skill_path, 'r') as f:
+                    body = f.read()
+                    if body.strip():
+                        desc_lines.append("---")
+                        desc_lines.append(body)
+            except Exception:
+                pass
+
+        self._description_text.setText("\n".join(desc_lines))
 
     def apply_to_config(self, config: RikuganConfig) -> None:
         """Write checkbox state back to config fields."""
