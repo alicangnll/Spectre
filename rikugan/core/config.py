@@ -81,6 +81,9 @@ class RikuganConfig:
     encrypt_api_keys: bool = False
     _encryption_block: dict = field(default_factory=dict, repr=False)
 
+    # Token limiter
+    token_limiter: dict[str, Any] = field(default_factory=dict)
+
     _config_dir: str = field(default_factory=_default_config_dir, repr=False)
 
     @property

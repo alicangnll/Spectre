@@ -6,19 +6,14 @@ Checks for updates from GitHub and provides one-click update functionality.
 from __future__ import annotations
 
 import json
-import os
-import platform
 import subprocess
-import sys
 import tempfile
 import urllib.request
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
 
 from ..core.config import RikuganConfig
-from ..core.errors import ProviderError
 from ..core.logging import log_debug, log_error, log_info, log_warn
 
 
@@ -54,6 +49,7 @@ class Updater:
         # Try to get from constants
         try:
             from ..constants import PLUGIN_VERSION
+
             return PLUGIN_VERSION
         except ImportError:
             pass
@@ -65,7 +61,7 @@ class Updater:
         # Fallback to hardcoded version
         return "1.2.2"
 
-    def check_for_updates(self, timeout: int = 10) -> Optional[UpdateInfo]:
+    def check_for_updates(self, timeout: int = 10) -> UpdateInfo | None:
         """Check for updates from GitHub.
 
         Args:
@@ -78,10 +74,7 @@ class Updater:
             log_info("Checking for updates...")
             log_debug(f"Fetching update info from {self.UPDATE_URL}")
 
-            request = urllib.request.Request(
-                self.UPDATE_URL,
-                headers={"User-Agent": f"Rikugan/{self.current_version}"}
-            )
+            request = urllib.request.Request(self.UPDATE_URL, headers={"User-Agent": f"Rikugan/{self.current_version}"})
 
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 data = json.loads(response.read().decode())
@@ -120,7 +113,7 @@ class Updater:
             log_error(f"Error checking for updates: {e}")
             return None
 
-    def download_update(self, update_info: UpdateInfo, dest_dir: Optional[Path] = None) -> Optional[Path]:
+    def download_update(self, update_info: UpdateInfo, dest_dir: Path | None = None) -> Path | None:
         """Download update package.
 
         Args:
@@ -142,8 +135,7 @@ class Updater:
             log_info(f"Downloading update from {update_info.download_url}")
 
             request = urllib.request.Request(
-                update_info.download_url,
-                headers={"User-Agent": f"Rikugan/{self.current_version}"}
+                update_info.download_url, headers={"User-Agent": f"Rikugan/{self.current_version}"}
             )
 
             with urllib.request.urlopen(request, timeout=300) as response:
@@ -194,8 +186,7 @@ class Updater:
             log_info(f"Creating backup: {backup_file}")
 
             subprocess.run(
-                ["tar", "-czf", str(backup_file), "-C", str(source_dir.parent),
-                    source_dir.name],
+                ["tar", "-czf", str(backup_file), "-C", str(source_dir.parent), source_dir.name],
                 check=True,
                 capture_output=True,
             )
@@ -257,12 +248,14 @@ class Updater:
             plugin_src = extracted_root / "rikugan_plugin.py"
             if plugin_src.exists():
                 import shutil
+
                 shutil.copy2(plugin_src, source_dir / "rikugan_plugin.py")
 
             # Copy update.json
             update_src = extracted_root / "update.json"
             if update_src.exists():
                 import shutil
+
                 shutil.copy2(update_src, source_dir / "update.json")
 
             log_info("Update installed successfully")
@@ -299,6 +292,7 @@ class Updater:
         Returns:
             Positive if v1 > v2, negative if v1 < v2, 0 if equal.
         """
+
         def parse_version(v: str) -> tuple[int, ...]:
             return tuple(map(int, v.split(".")))
 
@@ -358,7 +352,7 @@ class Updater:
             return False
 
 
-def check_for_updates() -> Optional[UpdateInfo]:
+def check_for_updates() -> UpdateInfo | None:
     """Check for Rikugan updates.
 
     Returns:

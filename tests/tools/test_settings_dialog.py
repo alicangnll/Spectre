@@ -29,6 +29,7 @@ for _mod_name in [
         "log_debug",
         "log_error",
         "log_info",
+        "log_warn",
         "ModelInfo",
         "resolve_anthropic_auth",
         "resolve_auth_cached",

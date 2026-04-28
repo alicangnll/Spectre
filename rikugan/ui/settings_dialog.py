@@ -8,7 +8,9 @@ from typing import Any
 
 from ..core.config import RikuganConfig
 from ..core.logging import log_debug, log_error
+from ..core.token_limiter import TokenLimit, get_token_limiter
 from ..core.types import ModelInfo
+from ..core.updater import UpdateInfo, Updater
 from ..providers.auth_cache import resolve_auth_cached
 from ..providers.ollama_provider import DEFAULT_OLLAMA_URL
 from ..providers.registry import ProviderRegistry
@@ -32,8 +34,6 @@ from .qt_compat import (
     QVBoxLayout,
     QWidget,
 )
-from ..core.updater import Updater, UpdateInfo
-from ..core.token_limiter import TokenLimiter, TokenLimit, get_token_limiter
 
 _DEFAULT_MINIMAX_URL = "https://api.minimax.io/anthropic"
 _CUSTOM_PROVIDER_URL_PLACEHOLDER = "https://api.example.com/v1"
@@ -1009,7 +1009,7 @@ class SettingsDialog(QDialog):
         self.encryption_password = password  # consumed by caller's save()
 
         # Save token limiter settings
-        if hasattr(self, '_token_limiter_enabled_cb'):
+        if hasattr(self, "_token_limiter_enabled_cb"):
             try:
                 token_limiter_config = TokenLimit(
                     max_input_tokens=self._max_input_tokens_spin.value(),
@@ -1052,13 +1052,13 @@ class SettingsDialog(QDialog):
         try:
             limiter = get_token_limiter()
             config = limiter.config
-            
+
             self._token_limiter_enabled_cb.setChecked(config.enabled)
             self._max_input_tokens_spin.setValue(config.max_input_tokens)
             self._max_output_tokens_spin.setValue(config.max_output_tokens)
             self._max_total_tokens_spin.setValue(config.max_total_tokens)
             self._token_limiter_action_combo.setCurrentText(config.action)
-            
+
             # Update session usage display
             self._update_token_usage_display()
         except Exception as e:
@@ -1074,46 +1074,20 @@ class SettingsDialog(QDialog):
             self._current_version_label.setText("Unknown")
             log_error(f"Failed to load version: {e}")
 
-    def _load_token_limiter_settings(self) -> None:
-        """Load token limiter settings from config."""
-        try:
-            limiter = get_token_limiter()
-            config = limiter.config
-            
-            self._token_limiter_enabled_cb.setChecked(config.enabled)
-            self._max_input_tokens_spin.setValue(config.max_input_tokens)
-            self._max_output_tokens_spin.setValue(config.max_output_tokens)
-            self._max_total_tokens_spin.setValue(config.max_total_tokens)
-            self._token_limiter_action_combo.setCurrentText(config.action)
-            
-            # Update session usage display
-            self._update_token_usage_display()
-            
-        except Exception as e:
-            log_error(f"Failed to load token limiter settings: {e}")
-
     def _update_token_usage_display(self) -> None:
         """Update the token usage display."""
         try:
             limiter = get_token_limiter()
             session_tokens = limiter.get_session_tokens()
             remaining_tokens = limiter.get_remaining_tokens()
-            
+
             from ..core.token_limiter import TokenType
-            
-            self._session_input_tokens_label.setText(
-                f"{session_tokens[TokenType.INPUT]:,}"
-            )
-            self._session_output_tokens_label.setText(
-                f"{session_tokens[TokenType.OUTPUT]:,}"
-            )
-            self._session_total_tokens_label.setText(
-                f"{sum(session_tokens.values()):,}"
-            )
-            self._session_remaining_tokens_label.setText(
-                f"{remaining_tokens[TokenType.TOTAL]:,}"
-            )
-            
+
+            self._session_input_tokens_label.setText(f"{session_tokens[TokenType.INPUT]:,}")
+            self._session_output_tokens_label.setText(f"{session_tokens[TokenType.OUTPUT]:,}")
+            self._session_total_tokens_label.setText(f"{sum(session_tokens.values()):,}")
+            self._session_remaining_tokens_label.setText(f"{remaining_tokens[TokenType.TOTAL]:,}")
+
         except Exception as e:
             log_error(f"Failed to update token usage display: {e}")
 
@@ -1131,66 +1105,67 @@ class SettingsDialog(QDialog):
         """Check for Rikugan updates."""
         self._check_update_btn.setEnabled(False)
         self._update_status_label.setText("Checking...")
-        
+
         # Run update check in background thread
         def _check_in_thread():
             try:
                 updater = Updater()
                 update_info = updater.check_for_updates()
-                
-                # Update UI on main thread using QTimer
-                if update_info and update_info.is_newer:
-                    self._update_check_result(update_info, None)
-                else:
-                    self._update_check_result(update_info, None if update_info else "No update info available")
+                error = None if update_info else "No update info available"
+
+                # Schedule UI update on main thread
+                QTimer.singleShot(0, lambda ui=update_info, er=error: self._update_check_result(ui, er))
             except Exception as e:
-                log_error(f"Failed to check for updates: {e}")
-                self._update_check_result(None, str(e))
-        
+                error_msg = str(e)
+                log_error(f"Failed to check for updates: {error_msg}")
+                QTimer.singleShot(0, lambda msg=error_msg: self._update_check_result(None, msg))
+
         threading.Thread(target=_check_in_thread, daemon=True).start()
 
     def _on_update(self) -> None:
         """Install Rikugan update."""
         self._update_btn.setEnabled(False)
         self._update_status_label.setText("Downloading update...")
-        
+
         # Run update in background thread
         def _update_in_thread():
             try:
                 updater = Updater()
                 update_info = updater.check_for_updates()
-                
+
                 if update_info is None:
-                    self._update_install_result(None, "No update info available")
+                    QTimer.singleShot(0, lambda: self._update_install_result(None, "No update info available"))
                     return
-                
-                self._update_install_result(update_info, "Downloading...")
-                
+
+                ui = update_info  # Capture for lambda
+                QTimer.singleShot(0, lambda: self._update_install_result(ui, "Downloading..."))
+
                 download_path = updater.download_update(update_info)
                 if download_path is None:
-                    self._update_install_result(None, "Download failed")
+                    QTimer.singleShot(0, lambda: self._update_install_result(None, "Download failed"))
                     return
-                
-                self._update_install_result(update_info, "Installing...")
-                
+
+                QTimer.singleShot(0, lambda: self._update_install_result(ui, "Installing..."))
+
                 success = updater.install_update(download_path)
-                
+
                 if success:
-                    self._update_install_result(update_info, "Update installed successfully")
-                    self._load_current_version()
+                    QTimer.singleShot(0, lambda: self._update_install_result(ui, "Update installed successfully"))
+                    QTimer.singleShot(0, lambda: self._load_current_version())
                 else:
-                    self._update_install_result(None, "Installation failed")
-                    
+                    QTimer.singleShot(0, lambda: self._update_install_result(None, "Installation failed"))
+
             except Exception as e:
-                log_error(f"Failed to install update: {e}")
-                self._update_install_result(None, str(e))
-        
+                error_msg = str(e)
+                log_error(f"Failed to install update: {error_msg}")
+                QTimer.singleShot(0, lambda msg=error_msg: self._update_install_result(None, msg))
+
         threading.Thread(target=_update_in_thread, daemon=True).start()
 
     def _update_check_result(self, update_info: UpdateInfo | None, error: str | None) -> None:
         """Handle update check result (called from background thread)."""
         self._check_update_btn.setEnabled(True)
-        
+
         if error:
             self._update_status_label.setText(f"Error: {error}")
             self._update_btn.setEnabled(False)
@@ -1200,7 +1175,7 @@ class SettingsDialog(QDialog):
                     f"Update available: {update_info.current_version} → {update_info.latest_version}"
                 )
                 self._update_btn.setEnabled(True)
-                
+
                 # Display changelog
                 changelog_text = "\n".join(f"  • {item}" for item in update_info.changelog)
                 self._changelog_text.setText(changelog_text)
@@ -1214,11 +1189,9 @@ class SettingsDialog(QDialog):
     def _update_install_result(self, update_info: UpdateInfo | None, message: str) -> None:
         """Handle update installation result (called from background thread)."""
         if update_info and message == "Update installed successfully":
-            self._update_status_label.setText(
-                f"Updated to {update_info.latest_version}! Please restart IDA Pro."
-            )
+            self._update_status_label.setText(f"Updated to {update_info.latest_version}! Please restart IDA Pro.")
             self._update_btn.setEnabled(False)
-        elif error:
+        elif "failed" in message.lower() or "error" in message.lower():
             self._update_status_label.setText(f"Error: {message}")
             self._update_btn.setEnabled(True)
         else:

@@ -6,7 +6,7 @@ rotation policy, host integration, or telemetry format do not
 propagate to importers of this module.
 
 Public API:
-    get_logger, log_info, log_warning, log_error, log_debug, log_trace
+    get_logger, log_info, log_warning, log_warn, log_error, log_debug, log_trace
     register_host_sink   (re-exported from log_sinks)
     HostOutputHandler, IDAHandler, _FlushFileHandler  (for tests)
 """
@@ -82,6 +82,11 @@ def log_info(msg: str) -> None:
 
 def log_warning(msg: str) -> None:
     get_logger().warning(msg)
+
+
+def log_warn(msg: str) -> None:
+    """Alias for log_warning for consistency."""
+    log_warning(msg)
 
 
 def log_error(msg: str) -> None:

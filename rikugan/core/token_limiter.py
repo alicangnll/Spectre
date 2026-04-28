@@ -7,9 +7,8 @@ Raises an error when limits are exceeded.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 from ..core.errors import ProviderError
 from ..core.logging import log_debug, log_error, log_warn
@@ -45,7 +44,7 @@ class TokenLimiter:
     Can be configured via settings or environment variables.
     """
 
-    def __init__(self, config: Optional[TokenLimit] = None):
+    def __init__(self, config: TokenLimit | None = None):
         """Initialize token limiter.
 
         Args:
@@ -54,8 +53,12 @@ class TokenLimiter:
         if config is None:
             config = self._load_config()
         self.config = config
-        self._session_tokens = {TokenType.INPUT: 0, TokenType.OUTPUT: 0,
-                             TokenType.CACHE_READ: 0, TokenType.CACHE_CREATION: 0}
+        self._session_tokens = {
+            TokenType.INPUT: 0,
+            TokenType.OUTPUT: 0,
+            TokenType.CACHE_READ: 0,
+            TokenType.CACHE_CREATION: 0,
+        }
 
     def _load_config(self) -> TokenLimit:
         """Load token limit configuration from settings or environment."""
@@ -93,8 +96,9 @@ class TokenLimiter:
             action=action,
         )
 
-    def check_tokens(self, input_tokens: int = 0, output_tokens: int = 0,
-                    cache_read_tokens: int = 0, cache_creation_tokens: int = 0) -> None:
+    def check_tokens(
+        self, input_tokens: int = 0, output_tokens: int = 0, cache_read_tokens: int = 0, cache_creation_tokens: int = 0
+    ) -> None:
         """Check if token usage is within limits.
 
         Args:
@@ -141,10 +145,7 @@ class TokenLimiter:
         Raises:
             ProviderError: If action is "error".
         """
-        msg = (
-            f"Token limit exceeded: {token_type.value} tokens "
-            f"({used:,} > {limit:,})"
-        )
+        msg = f"Token limit exceeded: {token_type.value} tokens ({used:,} > {limit:,})"
 
         if self.config.action == "error":
             log_error(msg)
@@ -182,13 +183,14 @@ class TokenLimiter:
             TokenType.INPUT: self.config.max_input_tokens - self._session_tokens[TokenType.INPUT],
             TokenType.OUTPUT: self.config.max_output_tokens - self._session_tokens[TokenType.OUTPUT],
             TokenType.CACHE_READ: self.config.max_cache_read_tokens - self._session_tokens[TokenType.CACHE_READ],
-            TokenType.CACHE_CREATION: self.config.max_cache_creation_tokens - self._session_tokens[TokenType.CACHE_CREATION],
+            TokenType.CACHE_CREATION: self.config.max_cache_creation_tokens
+            - self._session_tokens[TokenType.CACHE_CREATION],
             TokenType.TOTAL: self.config.max_total_tokens - sum(self._session_tokens.values()),
         }
 
 
 # Global token limiter instance
-_token_limiter: Optional[TokenLimiter] = None
+_token_limiter: TokenLimiter | None = None
 
 
 def get_token_limiter() -> TokenLimiter:
