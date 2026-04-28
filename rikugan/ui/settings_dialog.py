@@ -1061,15 +1061,19 @@ class SettingsDialog(QDialog):
     def _load_token_limiter_settings(self) -> None:
         """Load token limiter settings from config."""
         try:
+            print(f"[Rikugan] _load_token_limiter_settings called")
+            print(f"[Rikugan] Config has token_limiter: {hasattr(self._config, 'token_limiter')}")
+
             # Read directly from config, not from limiter instance
             # to avoid cache issues
-            if hasattr(self._config, 'token_limiter') and self._config.token_limiter:
+            if hasattr(self._config, 'token_limiter') and self._config.token_limiter and len(self._config.token_limiter) > 0:
                 tl_config = self._config.token_limiter
                 enabled = tl_config.get('enabled', False)
                 max_input = tl_config.get('max_input_tokens', 100000)
                 max_output = tl_config.get('max_output_tokens', 50000)
                 max_total = tl_config.get('max_total_tokens', 200000)
                 action = tl_config.get('action', 'error')
+                print(f"[Rikugan] Config token_limiter: {tl_config}")
             else:
                 # Default values
                 enabled = False
@@ -1077,7 +1081,9 @@ class SettingsDialog(QDialog):
                 max_output = 50000
                 max_total = 200000
                 action = 'error'
+                print(f"[Rikugan] Using default values")
 
+            print(f"[Rikugan] Setting checkbox to: enabled={enabled}")
             self._token_limiter_enabled_cb.setChecked(enabled)
             self._max_input_tokens_spin.setValue(max_input)
             self._max_output_tokens_spin.setValue(max_output)
@@ -1085,12 +1091,15 @@ class SettingsDialog(QDialog):
             self._token_limiter_action_combo.setCurrentText(action)
 
             print(f"[Rikugan] Loaded token limiter settings: enabled={enabled}, action={action}")
+            print(f"[Rikugan] Checkbox state after load: {self._token_limiter_enabled_cb.isChecked()}")
 
             # Update session usage display
             self._update_token_usage_display()
         except Exception as e:
             log_error(f"Failed to load token limiter settings: {e}")
             print(f"[Rikugan] Error loading token limiter settings: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _load_current_version(self) -> None:
         """Load and display current Rikugan version."""
