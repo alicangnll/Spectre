@@ -74,6 +74,13 @@ class Updater:
             log_info("Checking for updates...")
             log_debug(f"Fetching update info from {self.UPDATE_URL}")
 
+            # Try to use IDA's msg function if available
+            try:
+                import ida_kernwin
+                ida_kernwin.msg(f"[Rikugan] Checking for updates...\n")
+            except ImportError:
+                pass
+
             request = urllib.request.Request(self.UPDATE_URL, headers={"User-Agent": f"Rikugan/{self.current_version}"})
 
             with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -99,18 +106,38 @@ class Updater:
 
             if is_newer:
                 log_info(f"Update available: {self.current_version} → {latest_version}")
+                try:
+                    import ida_kernwin
+                    ida_kernwin.msg(f"[Rikugan] Update available: {self.current_version} → {latest_version}\n")
+                except ImportError:
+                    pass
                 for item in changelog:
                     log_debug(f"  - {item}")
             else:
                 log_info("Already up to date")
+                try:
+                    import ida_kernwin
+                    ida_kernwin.msg(f"[Rikugan] Already up to date\n")
+                except ImportError:
+                    pass
 
             return update_info
 
         except urllib.error.URLError as e:
             log_error(f"Failed to check for updates: {e}")
+            try:
+                import ida_kernwin
+                ida_kernwin.msg(f"[Rikugan] Update check failed: {e}\n")
+            except ImportError:
+                pass
             return None
         except Exception as e:
             log_error(f"Error checking for updates: {e}")
+            try:
+                import ida_kernwin
+                ida_kernwin.msg(f"[Rikugan] Update error: {e}\n")
+            except ImportError:
+                pass
             return None
 
     def download_update(self, update_info: UpdateInfo, dest_dir: Path | None = None) -> Path | None:

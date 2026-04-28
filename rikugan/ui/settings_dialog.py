@@ -1079,19 +1079,34 @@ class SettingsDialog(QDialog):
     def _update_token_usage_display(self) -> None:
         """Update the token usage display."""
         try:
+            from ..core.token_limiter import TokenType
+
             limiter = get_token_limiter()
             session_tokens = limiter.get_session_tokens()
             remaining_tokens = limiter.get_remaining_tokens()
 
-            from ..core.token_limiter import TokenType
+            # Try to get real usage from config
+            input_tokens = session_tokens.get(TokenType.INPUT, 0)
+            output_tokens = session_tokens.get(TokenType.OUTPUT, 0)
+            total_tokens = input_tokens + output_tokens
 
-            self._session_input_tokens_label.setText(f"{session_tokens[TokenType.INPUT]:,}")
-            self._session_output_tokens_label.setText(f"{session_tokens[TokenType.OUTPUT]:,}")
-            self._session_total_tokens_label.setText(f"{sum(session_tokens.values()):,}")
-            self._session_remaining_tokens_label.setText(f"{remaining_tokens[TokenType.TOTAL]:,}")
+            # Check if there's saved usage in config
+            if hasattr(self._config, 'session_token_usage'):
+                saved_usage = self._config.session_token_usage
+                input_tokens = saved_usage.get('input', input_tokens)
+                output_tokens = saved_usage.get('output', output_tokens)
+                total_tokens = input_tokens + output_tokens
+
+            self._session_input_tokens_label.setText(f"{input_tokens:,}")
+            self._session_output_tokens_label.setText(f"{output_tokens:,}")
+            self._session_total_tokens_label.setText(f"{total_tokens:,}")
+            self._session_remaining_tokens_label.setText(f"{remaining_tokens.get(TokenType.TOTAL, 0):,}")
+
+            print(f"[Rikugan] Token usage display: Input={input_tokens:,}, Output={output_tokens:,}, Total={total_tokens:,}")
 
         except Exception as e:
             log_error(f"Failed to update token usage display: {e}")
+            print(f"[Rikugan] Error updating token display: {e}")
 
     def _on_reset_token_usage(self) -> None:
         """Reset session token usage."""
