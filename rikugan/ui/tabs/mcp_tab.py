@@ -10,7 +10,9 @@ from ...mcp.config import MCPServerConfig
 from ..qt_compat import (
     QCheckBox,
     QGroupBox,
+    QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -62,6 +64,19 @@ class MCPTab(QWidget):
             layout.addWidget(QLabel("No MCP servers configured"))
             return group
 
+        # Add "Select All" button row
+        button_row = QHBoxLayout()
+        select_all_btn = QPushButton("Select All")
+        select_all_btn.setToolTip("Enable all Rikugan MCP servers")
+        select_all_btn.clicked.connect(lambda: self._select_all_rikugan_mcp(True))
+        deselect_all_btn = QPushButton("Deselect All")
+        deselect_all_btn.setToolTip("Disable all Rikugan MCP servers")
+        deselect_all_btn.clicked.connect(lambda: self._select_all_rikugan_mcp(False))
+        button_row.addWidget(select_all_btn)
+        button_row.addWidget(deselect_all_btn)
+        button_row.addStretch()
+        layout.addLayout(button_row)
+
         for server in sorted(self._rikugan_servers, key=lambda s: s.name):
             cb = QCheckBox(f"{server.name}  —  {server.command}")
             cb.setChecked(server.enabled)
@@ -69,6 +84,11 @@ class MCPTab(QWidget):
             layout.addWidget(cb)
 
         return group
+
+    def _select_all_rikugan_mcp(self, checked: bool) -> None:
+        """Select or deselect all Rikugan MCP servers."""
+        for checkbox in self._rikugan_checks.values():
+            checkbox.setChecked(checked)
 
     def _build_external_group(self, source_key: str, servers: list[MCPServerConfig]) -> QGroupBox:
         """Build a group box for external MCP servers from one source."""
@@ -88,6 +108,19 @@ class MCPTab(QWidget):
 
         enabled_set = set(self._config.enabled_external_mcp)
 
+        # Add "Select All" button row for this source
+        button_row = QHBoxLayout()
+        select_all_btn = QPushButton("Select All")
+        select_all_btn.setToolTip(f"Enable all {source_key} MCP servers")
+        select_all_btn.clicked.connect(lambda: self._select_all_external_mcp(source_key, True))
+        deselect_all_btn = QPushButton("Deselect All")
+        deselect_all_btn.setToolTip(f"Disable all {source_key} MCP servers")
+        deselect_all_btn.clicked.connect(lambda: self._select_all_external_mcp(source_key, False))
+        button_row.addWidget(select_all_btn)
+        button_row.addWidget(deselect_all_btn)
+        button_row.addStretch()
+        layout.addLayout(button_row)
+
         for server in sorted(servers, key=lambda s: s.name):
             ext_id = f"{source_key}:{server.name}"
             cb = QCheckBox(f"{server.name}  —  {server.command}")
@@ -96,6 +129,12 @@ class MCPTab(QWidget):
             layout.addWidget(cb)
 
         return group
+
+    def _select_all_external_mcp(self, source_key: str, checked: bool) -> None:
+        """Select or deselect all external MCP servers from a specific source."""
+        for ext_id, checkbox in self._external_checks.items():
+            if ext_id.startswith(f"{source_key}:"):
+                checkbox.setChecked(checked)
 
     def apply_to_config(self, config: RikuganConfig) -> None:
         """Write checkbox state back to config fields."""
