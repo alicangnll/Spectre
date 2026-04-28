@@ -207,10 +207,15 @@ class Updater:
                 # We're in the repository root
                 source_dir = current_dir
 
+            # Resolve symlinks to backup the actual installation, not the symlink
+            if source_dir.is_symlink():
+                source_dir = source_dir.resolve()
+
             backup_name = f"backup_{self.current_version}"
             backup_file = backup_path / f"{backup_name}.tar.gz"
 
             log_info(f"Creating backup: {backup_file}")
+            log_info(f"Backing up directory: {source_dir}")
 
             subprocess.run(
                 ["tar", "-czf", str(backup_file), "-C", str(source_dir.parent), source_dir.name],
@@ -263,7 +268,15 @@ class Updater:
             else:
                 source_dir = current_dir
 
+            # Resolve symlinks to get the real installation directory
+            # This is crucial because the plugin might be installed via symlinks
+            original_source_dir = source_dir
+            if source_dir.is_symlink():
+                source_dir = source_dir.resolve()
+                log_info(f"Resolved symlink: {original_source_dir} -> {source_dir}")
+
             log_info(f"Installing to {source_dir}...")
+            log_info(f"Source directory type: {'symlink' if original_source_dir.is_symlink() else 'regular'}")
 
             # Copy rikugan directory
             rikugan_src = extracted_root / "rikugan"
@@ -304,10 +317,29 @@ class Updater:
         """
         import shutil
 
-        if dst.exists():
-            shutil.rmtree(dst)
+        log_info(f"Copying directory: {src} -> {dst}")
+        log_info(f"Source exists: {src.exists()}, Destination exists: {dst.exists()}")
 
-        shutil.copytree(src, dst)
+        # Handle symlinks properly
+        if dst.exists():
+            log_info(f"Destination type: symlink={dst.is_symlink()}, dir={dst.is_dir()}, file={dst.is_file()}")
+            # If it's a symlink, remove it directly
+            if dst.is_symlink():
+                log_info(f"Removing symlink: {dst}")
+                dst.unlink()
+            # If it's a directory, remove it
+            elif dst.is_dir():
+                log_info(f"Removing directory: {dst}")
+                shutil.rmtree(dst)
+            # If it's a file, remove it
+            else:
+                log.info(f"Removing file: {dst}")
+                dst.unlink()
+
+        # Copy the directory
+        log_info(f"Starting copytree from {src} to {dst}")
+        shutil.copytree(src, dst, symlinks=True)
+        log_info(f"Copy completed successfully")
 
     def _compare_versions(self, v1: str, v2: str) -> int:
         """Compare two version strings.
@@ -362,6 +394,12 @@ class Updater:
                 source_dir = current_dir.parent
             else:
                 source_dir = current_dir
+
+            # Resolve symlinks to restore to the actual location
+            if source_dir.is_symlink():
+                source_dir = source_dir.resolve()
+
+            log_info(f"Restoring to: {source_dir}")
 
             # Extract backup
             subprocess.run(
