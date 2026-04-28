@@ -1,12 +1,12 @@
 # ──────────────────────────────────────────────────────────────────────
 # Rikugan — universal installer (Windows)
 #
-#   irm https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1 | iex
 #
 # Or with arguments:
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.ps1))) -Target ida
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.ps1))) -Target binja
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.ps1))) -Target both
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target ida
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target binja
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target both
 #
 # Environment variables:
 #   RIKUGAN_DIR     — where to clone the repo   (default: ~\.rikugan)
@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$RepoUrl = "https://github.com/buzzer-re/Rikugan.git"
+$RepoUrl = "https://github.com/alicangnll/Rikugan.git"
 $InstallDir = if ($env:RIKUGAN_DIR) { $env:RIKUGAN_DIR } else { Join-Path $HOME ".rikugan" }
 $Branch = if ($env:RIKUGAN_BRANCH) { $env:RIKUGAN_BRANCH } else { "main" }
 

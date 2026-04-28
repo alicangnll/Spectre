@@ -2,10 +2,10 @@
 # ──────────────────────────────────────────────────────────────────────
 # Rikugan — universal installer (Linux / macOS)
 #
-#   curl -fsSL https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.sh | bash -s -- --ida
-#   curl -fsSL https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.sh | bash -s -- --binja
-#   curl -fsSL https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.sh | bash -s -- --both
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --ida
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --binja
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --both
 #
 # Environment variables:
 #   RIKUGAN_DIR     — where to clone the repo   (default: ~/.rikugan)
@@ -16,7 +16,7 @@
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-REPO_URL="https://github.com/buzzer-re/Rikugan.git"
+REPO_URL="https://github.com/alicangnll/Rikugan.git"
 INSTALL_DIR="${RIKUGAN_DIR:-$HOME/.rikugan}"
 BRANCH="${RIKUGAN_BRANCH:-main}"
 
@@ -49,7 +49,7 @@ for arg in "$@"; do
         --binja|--bn) TARGET="binja" ;;
         --both)      TARGET="both"  ;;
         --help|-h)
-            echo "Usage: curl -fsSL https://raw.githubusercontent.com/buzzer-re/Rikugan/main/install.sh | bash -s -- [OPTIONS]"
+            echo "Usage: curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --ida       Install for IDA Pro only"

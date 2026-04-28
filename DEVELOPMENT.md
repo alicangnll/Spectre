@@ -24,15 +24,15 @@ Clone the repo and symlink it into the host's plugin directory so changes take e
 **Binary Ninja**
 ```bash
 # macOS
-git clone https://github.com/buzzer-re/rikugan
+git clone https://github.com/alicangnll/Rikugan
 ln -s "$(pwd)/rikugan" ~/Library/Application\ Support/Binary\ Ninja/plugins/rikugan
 
 # Linux
-git clone https://github.com/buzzer-re/rikugan
+git clone https://github.com/alicangnll/Rikugan
 ln -s "$(pwd)/rikugan" ~/.binaryninja/plugins/rikugan
 
 # Windows (run as Administrator)
-git clone https://github.com/buzzer-re/rikugan
+git clone https://github.com/alicangnll/Rikugan
 mklink /D "%APPDATA%\Binary Ninja\plugins\rikugan" "<full path to cloned repo>"
 ```
 
@@ -183,4 +183,4 @@ Format: `type(scope): short description`
 ## Getting Help
 
 - Read [AGENTS.md](AGENTS.md) for deep technical documentation on internals, architecture decisions, and coding rules
-- Open an issue at https://github.com/buzzer-re/rikugan/issues
+- Open an issue at https://github.com/alicangnll/Rikugan/issues
