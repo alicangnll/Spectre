@@ -324,14 +324,30 @@ class BulkRenamerWidget(QWidget):
         """Toggle all visible row checkboxes based on header checkbox."""
         # Qt 6 compatibility: compare integer values directly
         checked = int(state) == int(Qt.CheckState.Checked)
-        self._table.itemChanged.disconnect(self._on_item_changed)
+
+        # Disconnect with error handling for Qt 6 compatibility
+        try:
+            self._table.itemChanged.disconnect(self._on_item_changed)
+        except TypeError:
+            # Signal not connected, ignore
+            pass
+
         for row in range(self._table.rowCount()):
             if not self._table.isRowHidden(row):
                 item = self._table.item(row, _COL_CHECK)
                 if item:
                     item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+
         self._table.itemChanged.connect(self._on_item_changed)
         self._update_selection_count()
+
+    def _disconnect_item_changed(self) -> None:
+        """Safely disconnect itemChanged signal for Qt 6 compatibility."""
+        try:
+            self._table.itemChanged.disconnect(self._on_item_changed)
+        except TypeError:
+            # Signal not connected, ignore
+            pass
 
     # Rows to insert per timer tick during chunked loading.
     _LOAD_CHUNK_SIZE = 200
@@ -349,7 +365,7 @@ class BulkRenamerWidget(QWidget):
 
         self._loading = True
         self._table.setSortingEnabled(False)
-        self._table.itemChanged.disconnect(self._on_item_changed)
+        self._disconnect_item_changed()
         self._table.setRowCount(0)
         self._entries.clear()
         self._addr_to_entry.clear()
@@ -519,7 +535,7 @@ class BulkRenamerWidget(QWidget):
                 if clicked_item is None:
                     return
                 new_state = clicked_item.checkState()
-                self._table.itemChanged.disconnect(self._on_item_changed)
+                self._disconnect_item_changed()
                 for r in selected_rows:
                     item = self._table.item(r, _COL_CHECK)
                     if item:
@@ -671,7 +687,7 @@ class BulkRenamerWidget(QWidget):
 
         row = self._find_row_for_address(address)
         if row is not None:
-            self._table.itemChanged.disconnect(self._on_item_changed)
+            self._disconnect_item_changed()
             item = self._table.item(row, _COL_CHECK)
             if item:
                 item.setCheckState(Qt.CheckState.Checked)
