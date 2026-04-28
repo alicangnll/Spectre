@@ -322,7 +322,8 @@ class BulkRenamerWidget(QWidget):
 
     def _on_header_check_changed(self, state: int) -> None:
         """Toggle all visible row checkboxes based on header checkbox."""
-        checked = state == Qt.CheckState.Checked.value
+        # Qt 6 compatibility: compare integer values directly
+        checked = int(state) == int(Qt.CheckState.Checked)
         self._table.itemChanged.disconnect(self._on_item_changed)
         for row in range(self._table.rowCount()):
             if not self._table.isRowHidden(row):

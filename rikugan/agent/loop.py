@@ -393,6 +393,12 @@ class AgentLoop:
 
         # Exploration mode state (populated when /modify or /explore is used)
         self._exploration_state: ExplorationState | None = None
+
+        # Session token usage tracking
+        self._session_input_tokens: int = 0
+        self._session_output_tokens: int = 0
+        self._session_cache_read_tokens: int = 0
+        self._session_cache_creation_tokens: int = 0
         self._last_knowledge_base: KnowledgeBase | None = None
 
         # Research mode state (populated when /research is used)
@@ -440,6 +446,46 @@ class AgentLoop:
     def cancel(self) -> None:
         """Cancel the current run."""
         self._cancelled.set()
+
+    def _accumulate_token_usage(self, usage: TokenUsage | None) -> None:
+        """Accumulate token usage from a provider response.
+
+        Args:
+            usage: Token usage info from provider, or None if not available.
+        """
+        if usage is None:
+            return
+
+        self._session_input_tokens += usage.prompt_tokens
+        self._session_output_tokens += usage.completion_tokens
+        self._session_cache_read_tokens += usage.cache_read_tokens
+        self._session_cache_creation_tokens += usage.cache_creation_tokens
+
+        log_debug(f"Session tokens: input={self._session_input_tokens}, "
+                  f"output={self._session_output_tokens}, "
+                  f"cache_read={self._session_cache_read_tokens}, "
+                  f"cache_creation={self._session_cache_creation_tokens}")
+
+    def _save_session_token_usage(self) -> None:
+        """Save session token usage to config for UI display."""
+        try:
+            if not hasattr(self.config, 'session_token_usage'):
+                self.config.session_token_usage = {}
+
+            self.config.session_token_usage = {
+                'input': self._session_input_tokens,
+                'output': self._session_output_tokens,
+                'cache_read': self._session_cache_read_tokens,
+                'cache_creation': self._session_cache_creation_tokens,
+                'total': self._session_input_tokens + self._session_output_tokens +
+                        self._session_cache_read_tokens + self._session_cache_creation_tokens,
+                'last_updated': time.time()
+            }
+
+            log_info(f"Session token usage saved: {self.config.session_token_usage['total']:,} total tokens")
+
+        except Exception as e:
+            log_error(f"Failed to save session token usage: {e}")
 
     def _drain_queue(self, q: queue.Queue[str]) -> None:
         """Remove any stale item from a maxsize=1 queue (non-blocking)."""
@@ -971,6 +1017,10 @@ class AgentLoop:
 
         assistant_text = "".join(assistant_text_parts)
         log_debug(f"Stream done: {chunk_count} chunks, {len(assistant_text)} chars, {len(tool_calls)} tool calls")
+
+        # Accumulate token usage for session tracking
+        self._accumulate_token_usage(last_usage)
+
         return (assistant_text, tool_calls, last_usage, raw_parts)
 
     @staticmethod
@@ -1559,6 +1609,9 @@ class AgentLoop:
         finally:
             self._running = False
             self.session.is_running = False
+
+            # Save session token usage to config
+            self._save_session_token_usage()
 
 
 _EVENT_QUEUE_MAXSIZE = 500
