@@ -1,16 +1,18 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "release_date": "2026-04-29",
   "changelog": [
-    "Added token limiter with configurable thresholds",
-    "Added auto-update mechanism with one-click update",
-    "Added mobile pentest skills (Android/iOS) with ADB/SSH automation",
-    "Added cloud mobile security assessment",
-    "Added automated exploit generation from crashes",
-    "Added application shielding bypass",
-    "Added mobile malware analysis",
-    "Updated GitHub repository to alicangnll/Rikugan",
-    "Added 9 new security skills for vulnerability hunting"
+    "Added 9 new analysis profiles for different RE scenarios",
+    "Added model preferences per profile (exploit-dev, malware-analysis, etc.)",
+    "Improved token limiter with better UI controls and debug output",
+    "Fixed update mechanism symlink handling",
+    "Fixed profile persistence in settings dialog",
+    "Enhanced mobile pentest profile with Dalvik/ART bytecode analysis",
+    "Added crypto-analysis profile with mathematical precision mode",
+    "Added deep-reverse profile for comprehensive analysis sessions",
+    "Added firmware-analysis profile for embedded systems",
+    "Added network-analysis profile for protocol reverse engineering",
+    "Added binary-patching profile for modification workflows"
   ],
   "download_url": "https://github.com/alicangnll/Rikugan/archive/refs/heads/main.zip",
   "min_compatible_version": "1.0.0",
