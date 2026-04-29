@@ -1,0 +1,241 @@
+/* ═══════════════════════════════════════════════════
+   CODE BLOCK COPY BUTTON — Enhanced functionality
+   ═══════════════════════════════════════════════════ */
+
+/* Code block container with relative positioning */
+pre {
+  position: relative;
+  margin: 1.5em 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+/* Copy button styling */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(124, 106, 239, 0.15);
+  border: 1px solid rgba(124, 106, 239, 0.4);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-4px);
+  font-family: var(--font);
+  z-index: 10;
+}
+
+/* Show button on hover */
+pre:hover .copy-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hover effects */
+.copy-btn:hover {
+  background: rgba(124, 106, 239, 0.25);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 106, 239, 0.2);
+}
+
+.copy-btn:active {
+  transform: translateY(0);
+}
+
+/* Success state */
+.copy-btn.copied {
+  background: rgba(80, 200, 120, 0.2) !important;
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+}
+
+.copy-btn.copied::before {
+  content: "✓ ";
+}
+
+/* Loading state */
+.copy-btn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.copy-btn.loading::after {
+  content: "⏳";
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Code block enhancements */
+pre code {
+  display: block;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+/* Syntax highlighting improvements */
+pre code .keyword { color: #ff79c6; }
+pre code .string { color: #f1fa8c; }
+pre code .comment { color: #6272a4; }
+pre code .function { color: #50fa7b; }
+pre code .number { color: #bd93f9; }
+pre code .operator { color: #ff79c6; }
+pre code .class { color: #8be9fd; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .copy-btn {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    top: 6px;
+    right: 6px;
+  }
+
+  pre code {
+    padding: 12px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark mode specific enhancements */
+@media (prefers-color-scheme: dark) {
+  .copy-btn {
+    background: rgba(124, 106, 239, 0.2);
+    border-color: rgba(124, 106, 239, 0.5);
+  }
+
+  .copy-btn:hover {
+    background: rgba(124, 106, 239, 0.3);
+    box-shadow: 0 4px 16px rgba(124, 106, 239, 0.3);
+  }
+}
+
+/* Tooltip for copy button */
+.copy-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  margin-bottom: 8px;
+}
+
+.copy-btn:hover::after {
+  opacity: 1;
+}
+
+/* Multiple code blocks support */
+.code-block-wrapper {
+  position: relative;
+  margin: 1.5em 0;
+}
+
+.code-block-wrapper .copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+/* Inline code styling */
+:not(pre) > code {
+  background: rgba(124, 106, 239, 0.1);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  border: 1px solid rgba(124, 106, 239, 0.2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+:not(pre) > code:hover {
+  background: rgba(124, 106, 239, 0.2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 106, 239, 0.2);
+}
+
+:not(pre) > code:active {
+  transform: translateY(0);
+}
+
+/* Accessibility improvements */
+.copy-btn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.copy-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Animation for successful copy */
+@keyframes copySuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.copy-btn.copied {
+  animation: copySuccess 0.3s ease;
+}
+
+/* Long press support for mobile */
+.copy-btn.long-press {
+  background: rgba(124, 106, 239, 0.3);
+}
+
+/* Copy all blocks button */
+.copy-all-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 16px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copy-all-btn:hover {
+  background: var(--pink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(224, 96, 144, 0.3);
+}
+
+.copy-all-btn:active {
+  transform: translateY(0);
+}

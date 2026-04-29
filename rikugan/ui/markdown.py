@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import html
 import re
+import uuid
 
 # -- Colors matching the dark theme --
 _CODE_BG = "#2d2d2d"
@@ -36,7 +37,8 @@ _MARKDOWN_HINT_RE = re.compile(
 
 _INLINE_CODE_STYLE = (
     f"background-color:{_CODE_BG}; color:{_CODE_FG}; "
-    f"padding:1px 4px; border-radius:3px; font-family:monospace; font-size:12px;"
+    f"padding:1px 4px; border-radius:3px; font-family:monospace; font-size:12px; "
+    f"cursor:pointer; transition:all 0.2s;"  # Add cursor and transition
 )
 
 _BLOCK_CODE_STYLE = (
@@ -44,6 +46,7 @@ _BLOCK_CODE_STYLE = (
     f"border:1px solid {_CODE_BORDER}; border-radius:4px; "
     f"padding:8px; font-family:monospace; font-size:12px; "
     f"white-space:pre-wrap; word-break:break-all;"
+    f"position:relative;"  # Add relative positioning for copy button
 )
 
 
@@ -65,11 +68,51 @@ def md_to_html(text: str) -> str:
 
     def _stash_block(m: re.Match) -> str:
         lang = m.group(1) or ""
-        code = html.escape(m.group(2).strip("\n"))
+        raw_code = m.group(2).strip("\n")
+        code = html.escape(raw_code)
+
+        # Generate unique ID for this code block
+        block_id = f"code_{uuid.uuid4().hex[:8]}"
+
+        # Create copy button HTML
+        copy_btn = f'''
+        <button
+            onclick="RikuganCopyBlock('{block_id}')"
+            style="
+                position: absolute;
+                top: 6px;
+                right: 6px;
+                background: rgba(86, 156, 214, 0.2);
+                border: 1px solid rgba(86, 156, 214, 0.4);
+                color: #569cd6;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-family: sans-serif;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s;
+                z-index: 10;
+            "
+            onmouseover="this.style.opacity='1'"
+            onmouseout="this.style.opacity='0'"
+            data-block-id="{block_id}"
+        >📋</button>
+        '''
+
+        # Add hover effect to the container
+        container_style = _BLOCK_CODE_STYLE + "; cursor: pointer;"
+        container_style += " transition: box-shadow 0.2s;"
+        container_style += " margin: 12px 0;"
+
         lang_tag = f'<span style="color:#808080;font-size:10px;">{html.escape(lang)}</span><br>' if lang else ""
-        block_html = f'<div style="{_BLOCK_CODE_STYLE}">{lang_tag}{code}</div>'
+        block_html = f'<div id="{block_id}" style="{container_style}" onmouseover="this.style.boxShadow=&apos;0 4px 12px rgba(86,156,214,0.15)&apos;">{copy_btn}{lang_tag}{code}</div>'
+
+        # Store raw code for copying
         blocks.append(block_html)
-        return f"\x00BLOCK{len(blocks) - 1}\x00"
+        blocks.append(f"__RAW_CODE_{block_id}:{raw_code}__")
+
+        return f"\x00BLOCK{len(blocks) // 2}\x00"
 
     text = re.sub(r"```(\w*)\n(.*?)```", _stash_block, text, flags=re.DOTALL)
 
@@ -157,7 +200,9 @@ def _inline(text: str) -> str:
     code_spans: list[str] = []
 
     def _stash_code(m: re.Match) -> str:
-        code_spans.append(f'<span style="{_INLINE_CODE_STYLE}">{m.group(1)}</span>')
+        code_id = f"inline_{uuid.uuid4().hex[:8]}"
+        raw_code = m.group(1)
+        code_spans.append(f'<span id="{code_id}" style="{_INLINE_CODE_STYLE}" onclick="RikuganCopyInline(\'{code_id}\')">{raw_code}</span>')
         return f"\x01CODE{len(code_spans) - 1}\x01"
 
     text = re.sub(r"`([^`]+)`", _stash_code, text)
@@ -190,3 +235,145 @@ def _inline_formatting(text: str) -> str:
     )
 
     return text
+
+
+# ═══════════════════════════════════════════════════
+# COPY FUNCTIONALITY FOR IDA PRO UI
+# ═══════════════════════════════════════════════════
+
+def generate_copy_script() -> str:
+    """Generate JavaScript for copy functionality."""
+    return '''
+<script>
+(function() {
+    // Store raw code for copying
+    window.rikuganCodeStore = {};
+
+    // Copy block code function
+    window.RikuganCopyBlock = function(blockId) {
+        const element = document.getElementById(blockId);
+        if (!element) return;
+
+        // Find stored raw code
+        const rawCodeKey = `__RAW_CODE_${blockId}__`;
+        const code = window.rikuganCodeStore[rawCodeKey] || element.textContent;
+
+        // Copy to clipboard
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(() => {
+                showSuccess(blockId);
+            }).catch(err => {
+                fallbackCopy(code, blockId);
+            });
+        } else {
+            fallbackCopy(code, blockId);
+        }
+    };
+
+    // Copy inline code function
+    window.RikuganCopyInline = function(codeId) {
+        const element = document.getElementById(codeId);
+        if (!element) return;
+
+        const code = element.textContent;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(() => {
+                // Visual feedback
+                const originalStyle = element.getAttribute('style');
+                element.style.background = 'rgba(80, 200, 120, 0.3)';
+                element.style.borderColor = '#50c878';
+
+                setTimeout(() => {
+                    element.setAttribute('style', originalStyle);
+                }, 500);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        } else {
+            // Fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = code;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+
+        // Prevent event propagation
+        event.stopPropagation();
+        event.preventDefault();
+    };
+
+    // Fallback copy method
+    function fallbackCopy(text, elementId) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showSuccess(elementId);
+            }
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+        } finally {
+            document.body.removeChild(textArea);
+        }
+    }
+
+    // Show success state
+    function showSuccess(elementId) {
+        const button = document.querySelector(`[data-block-id="${elementId}"]`);
+        if (button) {
+            button.innerHTML = '✓';
+            button.style.background = 'rgba(80, 200, 120, 0.3)';
+            button.style.borderColor = '#50c878';
+
+            setTimeout(() => {
+                button.innerHTML = '📋';
+                button.style.background = '';
+                button.style.borderColor = '';
+            }, 1500);
+        }
+    }
+
+    // Initialize code store from page content
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scan for raw code markers
+        const bodyText = document.body.innerHTML;
+        const codeRegex = /__RAW_CODE_([^_]+)__:([^<]+)__/g;
+        let match;
+
+        while ((match = codeRegex.exec(bodyText)) !== null) {
+            const blockId = match[1];
+            const rawCode = match[2];
+            // Decode HTML entities
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = rawCode;
+            window.rikuganCodeStore[blockId] = textarea.value;
+        }
+
+        // Clean up markers from DOM
+        document.body.innerHTML = document.body.innerHTML.replace(/__RAW_CODE_[^_]+__:([^<]+)__/g, '');
+
+        console.log('Rikugan copy functionality initialized');
+    });
+})();
+</script>
+'''
+
+
+def get_copy_script() -> str:
+    """Get the copy script (can be called externally)."""
+    return generate_copy_script()
+
+
+# Export for use in other modules
+__all__ = ['md_to_html', 'get_copy_script', 'generate_copy_script']

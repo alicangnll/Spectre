@@ -545,6 +545,25 @@ Contributions are welcome! Areas where you can help:
 - Make your changes with tests
 - Submit a pull request
 
+## 📋 Documentation Features
+
+**Enhanced Code Copy:**
+- ✅ **One-click copy** for all code blocks
+- ✅ **Inline code copy** - Click directly on code snippets
+- ✅ **Visual feedback** - Success/error animations
+- ✅ **Keyboard shortcuts** - `Ctrl/Cmd + Shift + C` to copy
+- ✅ **Mobile support** - Touch-friendly copy buttons
+- ✅ **Multi-language detection** - Automatic language recognition
+- ✅ **Batch operations** - Copy all code blocks at once
+
+**Usage:**
+- **Desktop**: Hover over code blocks and click the copy button
+- **Inline code**: Click directly on the code snippet
+- **Mobile**: Tap the copy button above code blocks
+- **Keyboard**: Focus code block + `Ctrl/Cmd + Shift + C`
+
+See [COPY_BUTTON_FEATURE.md](COPY_BUTTON_FEATURE.md) for details.
+
 **Documentation:**
 - Improve documentation
 - Add examples and tutorials

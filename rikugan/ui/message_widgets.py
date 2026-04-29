@@ -8,9 +8,11 @@ from typing import ClassVar
 
 from .markdown import md_to_html
 from .qt_compat import (
+    QAction,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QSizePolicy,
     Qt,
@@ -240,6 +242,7 @@ class AssistantMessageWidget(QFrame):
         self.setObjectName("message_assistant")
         self._full_text = ""
         self._pending_delta = 0
+        self._code_blocks = []  # Store extracted code blocks for copying
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 6, 8, 6)
@@ -263,6 +266,9 @@ class AssistantMessageWidget(QFrame):
         )
         self._content.setOpenExternalLinks(True)
         self._content.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+        # Enable context menu for copy functionality
+        self._content.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._content.customContextMenuRequested.connect(self._show_context_menu)
         # Prevent the label from requesting more width than its parent
         self._content.setMinimumWidth(0)
         self._content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -275,8 +281,123 @@ class AssistantMessageWidget(QFrame):
             self._thinking_block.set_thinking(thinking, in_progress=in_progress)
         else:
             self._thinking_block.hide()
+        # Extract code blocks before rendering
+        self._extract_code_blocks(visible)
         self._content.setText(md_to_html(visible))
         self._pending_delta = 0
+
+    def _extract_code_blocks(self, text: str) -> None:
+        """Extract code blocks from markdown text for copying."""
+        import re
+        self._code_blocks = []
+        # Match fenced code blocks: ```lang ... ```
+        pattern = r'```(\w*)\n(.*?)```'
+        for match in re.finditer(pattern, text, re.DOTALL):
+            lang = match.group(1) or ""
+            code = match.group(2).strip()
+            self._code_blocks.append({'language': lang, 'code': code})
+
+    def copy_last_code_block(self) -> bool:
+        """Copy the last code block to clipboard.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self._code_blocks:
+            return False
+
+        try:
+            from .copy_utils import add_copy_to_clipboard
+            last_block = self._code_blocks[-1]
+            add_copy_to_clipboard(last_block['code'])
+            return True
+        except Exception as e:
+            print(f"Failed to copy code block: {e}")
+            return False
+
+    def copy_all_code_blocks(self) -> bool:
+        """Copy all code blocks to clipboard, separated by newlines.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self._code_blocks:
+            return False
+
+        try:
+            from .copy_utils import add_copy_to_clipboard
+            all_code = '\n\n'.join(block['code'] for block in self._code_blocks)
+            add_copy_to_clipboard(all_code)
+            return True
+        except Exception as e:
+            print(f"Failed to copy code blocks: {e}")
+            return False
+
+    def has_code_blocks(self) -> bool:
+        """Check if this message contains any code blocks."""
+        return len(self._code_blocks) > 0
+
+    def _show_context_menu(self, pos) -> None:
+        """Show context menu with copy options."""
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+            }
+            QMenu::item {
+                padding: 6px 24px;
+            }
+            QMenu::item:selected {
+                background-color: #3c3c3c;
+            }
+        """)
+
+        if self._code_blocks:
+            # Add copy options for code blocks
+            if len(self._code_blocks) == 1:
+                copy_action = QAction("📋 Copy Code", menu)
+                copy_action.triggered.connect(self.copy_last_code_block)
+                menu.addAction(copy_action)
+            else:
+                copy_last_action = QAction("📋 Copy Last Code Block", menu)
+                copy_last_action.triggered.connect(self.copy_last_code_block)
+                menu.addAction(copy_last_action)
+
+                copy_all_action = QAction("📋 Copy All Code Blocks", menu)
+                copy_all_action.triggered.connect(self.copy_all_code_blocks)
+                menu.addAction(copy_all_action)
+
+            menu.addSeparator()
+
+        # Add standard copy action
+        copy_action = QAction("Copy Selection", menu)
+        copy_action.setShortcut("Ctrl+C")
+        # Let Qt handle the standard copy
+        menu.addAction(copy_action)
+
+        menu.exec_(self._content.mapToGlobal(pos))
+
+    def keyPressEvent(self, event) -> None:
+        """Handle keyboard shortcuts for copying code blocks."""
+        # Ctrl+Shift+C to copy the last code block
+        if (event.key() == Qt.Key.Key_C and
+            event.modifiers() & Qt.KeyboardModifier.ControlModifier and
+            event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
+            if self.copy_last_code_block():
+                # Show brief feedback
+                self._show_copy_feedback()
+                return
+        # Let parent handle other keys
+        super().keyPressEvent(event)
+
+    def _show_copy_feedback(self) -> None:
+        """Show brief visual feedback when code is copied."""
+        original_style = self._content.styleSheet()
+        self._content.setStyleSheet(original_style + " background-color: rgba(80, 200, 120, 0.1);")
+        # Reset after 300ms
+        QTimer.singleShot(300, lambda: self._content.setStyleSheet(original_style))
 
     def append_text(self, delta: str) -> None:
         self._full_text += delta
