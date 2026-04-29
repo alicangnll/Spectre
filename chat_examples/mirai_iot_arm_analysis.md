@@ -2463,7 +2463,7 @@ Here's the complete teardown:
 
 ---
 
-# 🔴 Mirai-Variant IoT Botnet — Full Analysis
+# [CRITICAL] Mirai-Variant IoT Botnet — Full Analysis
 
 ## Classification
 **Mirai variant** with significantly upgraded encryption. ARM Linux ELF, statically linked (no imports), targeting IoT/embedded devices (routers, DVRs, cameras).
@@ -2527,7 +2527,7 @@ This is a **major upgrade** over original Mirai's trivial XOR obfuscation — th
 
 ---
 
-## 🔍 Propagation
+## [INVESTIGATION] Propagation
 
 - **Mirai-style Telnet scanner** (`TelnetScanner` at `0xCB34`)
 - Scans random IPs on 37+ ports (two port lists in encrypted strings)
@@ -2536,7 +2536,7 @@ This is a **major upgrade** over original Mirai's trivial XOR obfuscation — th
 
 ---
 
-## 📊 Kill Chain
+## [ANALYSIS] Kill Chain
 
 ```
 1. Infection → Telnet brute-force (scanner reports to C2)
@@ -2606,4 +2606,4 @@ Thanks! That was a fun one to tear apart.
 
 This Mirai variant is notably more sophisticated than the original — the **ChaCha20 + XXTEA + HMAC-SHA256** crypto stack for C2 comms is a real step up from Mirai's classic single-byte XOR, and the **dual encrypted string tables** with intentionally mangled strings (`sockit:`, `/div/shm/`, `memjh:`) show the author actively trying to dodge YARA rules.
 
-All the key functions are renamed in your IDB now, and findings are saved to persistent memory for future sessions. If you ever want to go deeper — decrypt the string tables, trace the scanner's credential list, or reverse the DDoS packet builders — just say the word. 🎯
+All the key functions are renamed in your IDB now, and findings are saved to persistent memory for future sessions. If you ever want to go deeper — decrypt the string tables, trace the scanner's credential list, or reverse the DDoS packet builders — just say the word.

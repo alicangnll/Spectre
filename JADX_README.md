@@ -296,7 +296,7 @@ manifest = analyzer.find_android_manifest(decompiled_dir)
 
 # Check debuggable
 if manifest.get("debuggable"):
-    print("⚠️  WARNING: App is debuggable!")
+    print("[!] WARNING: App is debuggable!")
 
 # Check dangerous permissions
 dangerous_perms = [
@@ -307,12 +307,12 @@ dangerous_perms = [
 
 for perm in manifest.get("permissions", []):
     if perm in dangerous_perms:
-        print(f"⚠️  DANGEROUS: {perm}")
+        print(f"[!] DANGEROUS: {perm}")
 
 # Search for hardcoded secrets
 secrets = analyzer.search_string_in_sources(decompiled_dir, "password")
 if secrets:
-    print(f"⚠️  Found {len(secrets)} potential hardcoded passwords")
+    print(f"[!] Found {len(secrets)} potential hardcoded passwords")
 ```
 
 ## Requirements

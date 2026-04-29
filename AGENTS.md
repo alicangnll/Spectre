@@ -641,7 +641,7 @@ BulkRenamerWidget (QWidget)
 │   │  Columns: [☐] Address | Current Name | New Name | Status
 │   │  - checkbox per row
 │   │  - "New Name" starts empty, filled by agent
-│   │  - Status: ⏳ queued | 🔄 analyzing | ✅ renamed | ⚠ skipped | ❌ error
+│   │  - Status: [QUEUED] queued | [ANALYZING] analyzing | [DONE] renamed | [SKIP] skipped | [ERROR] error
 │   └── (sortable by address, name, status)
 ├── QHBoxLayout (analysis controls)
 │   ├── QRadioButton "Quick Analysis" (default, checked)

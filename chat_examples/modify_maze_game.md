@@ -2486,12 +2486,12 @@ label_100000990:
 ```
 
 This is exactly what we wanted:
-- ✅ **No wall check** — `WALL_BITS` and grid cell access are completely gone
-- ✅ **Bounds check on X** — `new_x >= 0 && new_x < width`
-- ✅ **Bounds check on Y** — `new_y >= 0 && new_y < height`
-- ✅ **Position stored and steps incremented** only when in bounds
-- ✅ **Player can walk through any wall** in all 4 directions
-- ✅ **Cannot walk off the grid** — bounds checks prevent crash
+- [OK] **No wall check** — `WALL_BITS` and grid cell access are completely gone
+- [OK] **Bounds check on X** — `new_x >= 0 && new_x < width`
+- [OK] **Bounds check on Y** — `new_y >= 0 && new_y < height`
+- [OK] **Position stored and steps incremented** only when in bounds
+- [OK] **Player can walk through any wall** in all 4 directions
+- [OK] **Cannot walk off the grid** — bounds checks prevent crash
 
 The game is safe to run. The player will be able to move freely through all walls while staying within the grid boundaries.
 
@@ -2617,25 +2617,25 @@ Now let me trace all four boundary cases through the patched code:
 - `ecx = 0 << 2 = 0`
 - `esi = player_x + DX[0] = player_x + 0` → X unchanged, passes X bounds
 - `edx = 0 + DY[0] = 0 + (-1) = -1` → **negative!**
-- `js 0x1000009da` → ✅ **JUMPS — movement blocked**
+- `js 0x1000009da` → [OK] **JUMPS — movement blocked**
 
 **Case 2: Column 0, press Left (West, dir=3)**
 - `ecx = 3 << 2 = 12`
 - `esi = 0 + DX[3] = 0 + (-1) = -1` → **negative!**
-- `js 0x1000009a0` → ✅ **JUMPS — movement blocked**
+- `js 0x1000009a0` → [OK] **JUMPS — movement blocked**
 
 **Case 3: Max row (height-1), press Down (South, dir=1)**
 - `ecx = 1 << 2 = 4`
 - `esi = player_x + DX[1] = player_x + 0` → X unchanged, passes X bounds
 - `edx = (height-1) + DY[1] = (height-1) + 1 = height`
 - `cmp edx, [rbx+4]` → `height == height`
-- `jge 0x1000009da` → ✅ **JUMPS — movement blocked** (height ≥ height)
+- `jge 0x1000009da` → [OK] **JUMPS — movement blocked** (height ≥ height)
 
 **Case 4: Max column (width-1), press Right (East, dir=2)**
 - `ecx = 2 << 2 = 8`
 - `esi = (width-1) + DX[2] = (width-1) + 1 = width`
 - `cmp esi, [rbx]` → `width == width`
-- `jge 0x1000009da` → ✅ **JUMPS — movement blocked** (width ≥ width)
+- `jge 0x1000009da` → [OK] **JUMPS — movement blocked** (width ≥ width)
 
 All four boundary cases are correctly blocked.
 
@@ -2669,10 +2669,10 @@ All four boundary cases verified statically — the bounds checks are airtight:
 
 | Scenario | Direction | Computed value | Check triggered | Result |
 |---|---|---|---|---|
-| Row 0, press Up | North (dir=0) | new_y = -1 | `js` (negative) | ✅ Blocked |
-| Col 0, press Left | West (dir=3) | new_x = -1 | `js` (negative) | ✅ Blocked |
-| Max row, press Down | South (dir=1) | new_y = height | `jge` (≥ height) | ✅ Blocked |
-| Max col, press Right | East (dir=2) | new_x = width | `jge` (≥ width) | ✅ Blocked |
+| Row 0, press Up | North (dir=0) | new_y = -1 | `js` (negative) | [OK] Blocked |
+| Col 0, press Left | West (dir=3) | new_x = -1 | `js` (negative) | [OK] Blocked |
+| Max row, press Down | South (dir=1) | new_y = height | `jge` (≥ height) | [OK] Blocked |
+| Max col, press Right | East (dir=2) | new_x = width | `jge` (≥ width) | [OK] Blocked |
 
 No additional patches needed. The player is safely contained within the grid.
 
@@ -2811,9 +2811,9 @@ Now let me trace the win condition logic:
 This code is at `0x100000a40`, well outside our patched region (`0x100000990–0x1000009d9`). It's completely untouched.
 
 **Static verification of win condition:**
-- `[rbx+0x30]` = player_x (same field our patch writes to ✅)
-- `[rbx+0x34]` = player_y (same field our patch writes to ✅)
-- `[rbx+0x40]` = goal_x, `[rbx+0x44]` = goal_y (never modified by our patch ✅)
+- `[rbx+0x30]` = player_x (same field our patch writes to [OK])
+- `[rbx+0x34]` = player_y (same field our patch writes to [OK])
+- `[rbx+0x40]` = goal_x, `[rbx+0x44]` = goal_y (never modified by our patch [OK])
 - When player reaches goal, the game does a final draw, prints `*** MAZE SOLVED! ***` in green, then prints step/hint counts
 
 The win condition is intact and will trigger correctly when the player walks to the bottom-right corner.
@@ -2848,11 +2848,11 @@ Win condition verified — completely untouched by our patch:
 
 | Component | Address | Field | Status |
 |---|---|---|---|
-| Player X store (our patch) | `0x1000009c8` | `[rbx+0x30]` | ✅ Writes correctly |
-| Player Y store (our patch) | `0x1000009cb` | `[rbx+0x34]` | ✅ Writes correctly |
-| Win check: player_x == goal_x | `0x100000a43` | `[rbx+0x30] vs [rbx+0x40]` | ✅ Untouched |
-| Win check: player_y == goal_y | `0x100000a50` | `[rbx+0x34] vs [rbx+0x44]` | ✅ Untouched |
-| Victory message | `0x100000a80` | `"*** MAZE SOLVED! ***"` | ✅ Untouched |
+| Player X store (our patch) | `0x1000009c8` | `[rbx+0x30]` | [OK] Writes correctly |
+| Player Y store (our patch) | `0x1000009cb` | `[rbx+0x34]` | [OK] Writes correctly |
+| Win check: player_x == goal_x | `0x100000a43` | `[rbx+0x30] vs [rbx+0x40]` | [OK] Untouched |
+| Win check: player_y == goal_y | `0x100000a50` | `[rbx+0x34] vs [rbx+0x44]` | [OK] Untouched |
+| Victory message | `0x100000a80` | `"*** MAZE SOLVED! ***"` | [OK] Untouched |
 
 The player can walk straight down and right through walls to the goal, and "MAZE SOLVED!" will appear as expected.
 
@@ -3069,13 +3069,13 @@ The yellow dot string `\x1b[33m..` is at `0x10000355f` — this is used by `Term
 
 | Component | Address | Status |
 |---|---|---|
-| 'H'/'h' key dispatch | `0x100000960` (switch table) | ✅ Untouched |
-| Hint counter increment | `0x100000a0f` `inc [rbx+0x3c]` | ✅ Untouched |
-| BFS call with player→goal args | `0x100000a2d` `call PathFinder::bfs` | ✅ Untouched |
-| PathFinder::bfs marks cells | `0x1000019d0` sets byte 2 = 1 | ✅ Untouched |
-| Renderer checks byte 2 | `0x100001730` `TerminalRenderer::draw` | ✅ Untouched |
-| Yellow dot string | `0x10000355f` `\x1b[33m..` | ✅ Untouched |
-| Clear previous hints | `0x100000a00` sets byte 2 = 0 | ✅ Untouched |
+| 'H'/'h' key dispatch | `0x100000960` (switch table) | [OK] Untouched |
+| Hint counter increment | `0x100000a0f` `inc [rbx+0x3c]` | [OK] Untouched |
+| BFS call with player→goal args | `0x100000a2d` `call PathFinder::bfs` | [OK] Untouched |
+| PathFinder::bfs marks cells | `0x1000019d0` sets byte 2 = 1 | [OK] Untouched |
+| Renderer checks byte 2 | `0x100001730` `TerminalRenderer::draw` | [OK] Untouched |
+| Yellow dot string | `0x10000355f` `\x1b[33m..` | [OK] Untouched |
+| Clear previous hints | `0x100000a00` sets byte 2 = 0 | [OK] Untouched |
 
 **Tool call**: `exploration_report`
 
