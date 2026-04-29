@@ -79,4 +79,30 @@ This is required for the Phase 4 save gate to know what was applied.
 - Always backup before patching
 - Always verify after patching
 - Revert on failure (write back original bytes)
+
+## Rikugan Analysis Features
+
+Leverage Rikugan's security and navigation features during binary modification:
+
+**Suspicious API Highlighting:**
+- When patching security checks, highlighted APIs help identify validation functions
+- Critical APIs (red) indicate security mechanisms that may need patching
+- Medium severity APIs (yellow) show helper functions used by target logic
+
+**Findings Bookmarking:**
+- Bookmark modification targets: `[FINDING:0x401000|Score multiplier constant]`
+- Track multiple patch locations with categories: Interesting, Verified, Question
+- Export findings as report to document all modifications made
+- Use finding links to jump between related patch locations
+
+**Hex Address Navigation:**
+- All addresses in exploration reports are clickable
+- Jump directly to candidate functions during exploration
+- Navigate quickly between string references and their usage sites
+- Use finding links to create a navigation map of the modification
+
+**Development Workflow:**
+- Use auto-reload during development to test changes quickly
+- Enable with `Ctrl+Shift+R` in IDA when iterating on patches
+- Rikugan automatically reloads when you modify plugin code
 - Minimal changes only — patch the fewest bytes possible

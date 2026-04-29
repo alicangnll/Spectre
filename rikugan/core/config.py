@@ -70,6 +70,9 @@ class RikuganConfig:
     # Context management
     preserve_context: bool = False  # disable tool result truncation + context compaction
 
+    # Development mode
+    auto_reload: bool = False  # automatically reload Rikugan on source file changes
+
     # OAuth consent — user must accept risk before keychain autoload
     oauth_consent_accepted: bool = False
 

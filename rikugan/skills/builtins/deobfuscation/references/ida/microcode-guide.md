@@ -18,14 +18,14 @@ Returns one block's instructions with full operand detail: types (`mop_r`, `mop_
 
 | Value | Name | Safe to Modify? | Best For |
 |---|---|---|---|
-| 0 | MMAT_GENERATED | ✅ Yes | Raw patterns, initial junk |
-| 1 | MMAT_PREOPTIMIZED | ✅ Yes | CFF dispatchers still fully visible |
-| 2 | MMAT_LOCOPT | ✅ **Best** | CFG ready, blocks structured, CFF + opaque predicates clear |
-| 3 | MMAT_CALLS | ✅ Yes | Call arguments resolved |
-| 4 | MMAT_GLBOPT1 | ✅ Yes | First global optimization |
-| 5 | MMAT_GLBOPT2 | ✅ Yes | Most global optimization done |
-| 6 | MMAT_GLBOPT3 | ❌ Never | Optimization fixed |
-| 7 | MMAT_LVARS | ❌ **Never** | Local variables allocated — causes internal errors |
+| 0 | MMAT_GENERATED | [Yes] | Raw patterns, initial junk |
+| 1 | MMAT_PREOPTIMIZED | [Yes] | CFF dispatchers still fully visible |
+| 2 | MMAT_LOCOPT | [Yes] **Best** | CFG ready, blocks structured, CFF + opaque predicates clear |
+| 3 | MMAT_CALLS | [Yes] | Call arguments resolved |
+| 4 | MMAT_GLBOPT1 | [Yes] | First global optimization |
+| 5 | MMAT_GLBOPT2 | [Yes] | Most global optimization done |
+| 6 | MMAT_GLBOPT3 | [Never] | Optimization fixed |
+| 7 | MMAT_LVARS | [Never] **Never** | Local variables allocated — causes internal errors |
 
 **Always guard with:** `if blk.mba.maturity >= 6: return 0` (in block optimizer) or check `ins` context.
 

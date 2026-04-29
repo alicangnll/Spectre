@@ -105,7 +105,7 @@ Type.array(Type.int(4, False), 8)         # uint32_t[8]
 ```python
 from binaryninja import Type, StructureBuilder
 
-# ✅ Correct — always use Type.* for field types, never strings
+# [OK] Correct — always use Type.* for field types, never strings
 s = StructureBuilder.create()
 s.append(Type.int(4, False), "a_type")      # uint32_t a_type
 s.append(Type.int(8, False), "a_val")       # uint64_t a_val
@@ -113,7 +113,7 @@ s.append(Type.pointer(bv.arch, Type.char()), "name")  # char* name
 s.append(Type.array(Type.int(1, False), 16), "buf")   # uint8_t buf[16]
 bv.define_user_type("MyStruct", Type.structure_type(s))
 
-# ❌ WRONG — string types silently fail (fields are dropped without error!)
+# [X] WRONG — string types silently fail (fields are dropped without error!)
 s.append("uint32_t", "field")         # SILENT DROP
 s.append("uint8_t[16]", "buf")        # PARSER ERROR or SILENT DROP
 

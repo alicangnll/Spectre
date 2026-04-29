@@ -51,6 +51,34 @@ Depth guidance:
 - Use `set_comment` and `set_function_comment` to document non-obvious logic
 - Naming conventions: PascalCase for functions, g_ prefix for globals, PascalCase for structs
 
+## Security & Malware Analysis Features
+
+When analyzing potentially malicious code, use Rikugan's security-focused features:
+
+**Findings Bookmarking:**
+- Bookmark important addresses with notes, tags, and categories
+- Use `[FINDING:0x401000]` or `[FINDING:0x401000|Description]` to create clickable finding links
+- Categories: Critical, Suspicious, Verified, Interesting, False Positive, Question
+- Export findings as markdown report for documentation
+
+**Suspicious API Detection:**
+- Rikugan automatically highlights dangerous APIs with color-coded severity
+- Critical APIs (red): CreateRemoteThread, WriteProcessMemory, VirtualAllocEx
+- High severity APIs (orange): VirtualProtect, GetProcAddress
+- Medium severity APIs (yellow): LoadLibrary, InternetConnect, socket
+- Each API includes MITRE ATT&CK technique references
+
+**Anti-Debugging Detection:**
+- Windows API checks: IsDebuggerPresent, CheckRemoteDebuggerPresent
+- PEB checks: fs:[30h]/gs:[60h] BeingDebugged access
+- Assembly instructions: rdtsc, int 2d, int 3
+- Exception handlers: SetUnhandledExceptionFilter
+
+**Hex Address Navigation:**
+- All hex addresses (0x401000, 00401000, 401000h) are clickable links
+- Click any address to jump to that location in IDA
+- Use `[FINDING:0x401000]` for bookmarked locations
+
 ## Output
 
 Deliver what the user asks for:
@@ -58,3 +86,5 @@ Deliver what the user asks for:
 - Architectural overview
 - Data structure definitions (C-style)
 - Specific answers about behavior
+- Security findings with bookmarked addresses for critical code
+- Suspicious API calls with severity ratings and MITRE references

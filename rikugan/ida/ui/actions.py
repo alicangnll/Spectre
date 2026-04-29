@@ -9,7 +9,7 @@ import importlib
 from collections.abc import Callable
 from typing import Any
 
-from ...core.logging import log_debug
+from ...core.logging import log_debug, log_info, log_warning
 from ...ui.action_handlers import (
     handle_annotate,
     handle_clean,
@@ -113,6 +113,20 @@ if _HAS_IDA:
 
         def update(self, ctx) -> int:
             return idaapi.AST_ENABLE_ALWAYS
+
+def _handle_toggle_auto_reload(ctx: dict[str, Any]) -> None:
+    """Toggle auto-reload for development."""
+    try:
+        from ...core.auto_reload import is_watching, enable_auto_reload, disable_auto_reload
+
+        if is_watching():
+            disable_auto_reload()
+            log_info("Auto-reload disabled")
+        else:
+            enable_auto_reload()
+            log_info("Auto-reload enabled - Rikugan will reload on source changes")
+    except Exception as e:
+        log_warning(f"Failed to toggle auto-reload: {e}")
 
     class _SendToBulkRenameAction(idaapi.action_handler_t):
         """Send the current function to the Bulk Renamer."""
@@ -241,6 +255,15 @@ if _HAS_IDA:
             "",
             "Deep cross-reference analysis on the current function",
             {"disasm", "pseudo"},
+        ),
+        (
+            "rikugan:toggle_auto_reload",
+            "Toggle auto-reload",
+            _handle_toggle_auto_reload,
+            False,
+            "Ctrl+Shift+R",
+            "Toggle automatic reloading when source files change (development mode)",
+            {"disasm", "pseudo", "widgets"},
         ),
     ]
 

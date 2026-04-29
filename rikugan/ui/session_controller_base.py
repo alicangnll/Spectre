@@ -111,6 +111,16 @@ class SessionControllerBase:
             if self._runtime_shutdown.is_set():
                 return
             self._mcp_manager.start_servers(self._tool_registry)
+
+            # Enable auto-reload for development if configured
+            if self._should_enable_auto_reload():
+                try:
+                    from ..core.auto_reload import enable_auto_reload
+                    enable_auto_reload()
+                    log_info("Development mode: Auto-reload enabled")
+                except Exception as e:
+                    log_warning(f"Failed to enable auto-reload: {e}")
+
         except Exception as e:
             log_error(f"Background runtime initialization failed: {e}")
         finally:
@@ -134,6 +144,25 @@ class SessionControllerBase:
         # Standalone or write failure — use an ephemeral ID (won't persist)
         log_debug("Could not persist database instance ID, using ephemeral")
         return new_id
+
+    @staticmethod
+    def _should_enable_auto_reload() -> bool:
+        """Check if auto-reload should be enabled for development."""
+        # Check environment variable
+        import os
+        if os.getenv("RIKUGAN_AUTO_RELOAD", "").lower() in ("1", "true", "yes"):
+            return True
+
+        # Check config setting
+        from ..core.config import get_global_config
+        try:
+            config = get_global_config()
+            if hasattr(config, "auto_reload") and config.auto_reload:
+                return True
+        except Exception:
+            pass
+
+        return False
 
     # --- Tab / multi-session management ---
 

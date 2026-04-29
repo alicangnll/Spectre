@@ -579,11 +579,15 @@ class AssistantMessageWidget(QFrame):
             log_debug(f"Failed to show address tooltip: {e}")
 
     def _on_link_clicked(self, url: str) -> None:
-        """Handle link clicks - IDA address jumps and external links."""
+        """Handle link clicks - IDA address jumps, findings, and external links."""
         if url.startswith("ida://"):
             # Extract address from ida://0x401000 format
             address_str = url[6:]  # Remove "ida://" prefix
             self._jump_to_address(address_str)
+        elif url.startswith("finding://"):
+            # Extract address from finding://0x401000 format
+            address_str = url[10:]  # Remove "finding://" prefix
+            self._jump_to_finding(address_str)
         else:
             # External link - open in browser
             from ..core.logging import log_debug
@@ -634,6 +638,70 @@ class AssistantMessageWidget(QFrame):
         except Exception as e:
             from ..core.logging import log_error
             log_error(f"Failed to jump to address {address_str}: {e}")
+
+    def _jump_to_finding(self, address_str: str) -> None:
+        """Jump to finding and display bookmark details."""
+        try:
+            from ..core.host import navigate_to_address, is_ida
+            from ..core.logging import log_info, log_debug, log_error
+            from ..tools.findings_bookmark import get_findings_manager
+            import re
+
+            # Parse address
+            clean_addr = address_str.strip()
+            match = re.search(
+                r"0[xX]([0-9a-fA-F]+)|:([0-9a-fA-F]{8})|([0-9a-fA-F]+)h?|(?:sub|loc)_([0-9a-fA-F]+)",
+                clean_addr
+            )
+
+            if match:
+                # Extract hex value
+                hex_value = None
+                for group in match.groups():
+                    if group:
+                        hex_value = group
+                        break
+
+                if hex_value:
+                    # Convert to integer
+                    address = int(hex_value, 16)
+
+                    # Get finding details
+                    if is_ida():
+                        manager = get_findings_manager()
+                        finding = manager.get_finding(address)
+
+                        if finding:
+                            # Log finding details
+                            from ..tools.findings_bookmark import FINDING_CATEGORIES
+                            category_info = FINDING_CATEGORIES.get(finding.category, {})
+                            category_name = category_info.get("name", finding.category)
+                            category_icon = category_info.get("icon", "[FINDING]")
+
+                            log_info(f"{category_icon} Finding: {finding.title}")
+                            log_info(f"  Address: 0x{address:X}")
+                            log_info(f"  Category: {category_name}")
+                            if finding.notes:
+                                log_info(f"  Notes: {finding.notes}")
+                            if finding.tags:
+                                log_info(f"  Tags: {', '.join(finding.tags)}")
+                        else:
+                            log_debug(f"No finding found at 0x{address:X}")
+
+                    # Jump to address
+                    log_info(f"Jumping to finding at 0x{address:X}")
+                    success = navigate_to_address(address)
+
+                    if not success:
+                        log_debug(f"Failed to jump to finding at 0x{address:X}")
+                else:
+                    log_debug(f"Could not parse finding address from: {address_str}")
+            else:
+                log_debug(f"Invalid finding address format: {address_str}")
+
+        except Exception as e:
+            from ..core.logging import log_error
+            log_error(f"Failed to jump to finding {address_str}: {e}")
 
     def append_text(self, delta: str) -> None:
         self._full_text += delta

@@ -623,7 +623,7 @@ def format_suspicious_api_report(apis: list[dict[str, Any]]) -> str:
         by_category[category].append(api)
 
     # Format report
-    report_lines = ["## 🚨 Suspicious API Detection Report\n"]
+    report_lines = ["## Suspicious API Detection Report\n"]
     report_lines.append(f"**Total suspicious APIs:** {len(apis)}\n")
 
     # Sort categories by severity
@@ -638,15 +638,15 @@ def format_suspicious_api_report(apis: list[dict[str, Any]]) -> str:
         category_apis = by_category[category]
         category_title = category.replace("_", " ").title()
 
-        report_lines.append(f"### 📋 {category_title}\n")
+        report_lines.append(f"### {category_title}\n")
 
         for api in sorted(category_apis, key=lambda x: x["address"]):
             severity_icon = {
-                "critical": "🔴",
-                "high": "🟠",
-                "medium": "🟡",
-                "low": "🟢"
-            }.get(api["severity"], "⚪")
+                "critical": "[CRIT]",
+                "high": "[HIGH]",
+                "medium": "[MED]",
+                "low": "[LOW]"
+            }.get(api["severity"], "[?]")
 
             mitre_ref = f" (MITRE:{api['mitre']})" if api.get("mitre") else ""
 
@@ -672,10 +672,10 @@ API_CATEGORY_COLORS = {
 }
 
 API_SEVERITY_ICONS = {
-    "critical": "🔴",
-    "high": "🟠",
-    "medium": "🟡",
-    "low": "🟢",
+    "critical": "[CRIT]",
+    "high": "[HIGH]",
+    "medium": "[MED]",
+    "low": "[LOW]",
 }
 
 

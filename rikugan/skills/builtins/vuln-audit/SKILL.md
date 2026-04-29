@@ -77,4 +77,31 @@ Impact: <what an attacker can achieve>
 Evidence: <relevant decompiled code snippet>
 ```
 
+## Security Analysis Tools Integration
+
+Rikugan provides specialized security analysis features to support vulnerability auditing:
+
+**Suspicious API Highlighting:**
+- Dangerous APIs are automatically highlighted with color-coded severity
+- Critical (red): Memory manipulation APIs (memcpy, strcpy, sprintf)
+- High (orange): Format string functions (printf, syslog)
+- Medium (yellow): File I/O (fopen, read) and network APIs (recv, recvfrom)
+- Each API includes MITRE ATT&CK technique references
+
+**Findings Bookmarking:**
+- Bookmark vulnerability locations with `[FINDING:0x401000]` syntax
+- Categorize findings by severity: Critical, Suspicious, Verified
+- Add notes and tags for each vulnerability
+- Export findings as markdown report for documentation
+
+**Anti-Debugging Detection:**
+- Detect anti-analysis techniques that may indicate malicious intent
+- Identify PEB checks, timing checks, and exception handlers
+- Useful for distinguishing between bugs and intentional backdoors
+
+**Hex Address Navigation:**
+- All addresses in reports are clickable links
+- Jump directly to vulnerable code locations in IDA
+- Use finding links to navigate between related vulnerabilities
+
 Severity levels: CRITICAL (remote code execution), HIGH (local code execution, info leak), MEDIUM (DoS, limited info leak), LOW (theoretical, requires unlikely conditions).

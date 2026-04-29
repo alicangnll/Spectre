@@ -177,4 +177,27 @@ Not reversible with IL-level tools.
 - **Iterative approach:** complex obfuscation needs multiple passes — install optimizer/transform, redecompile, check, refine.
 - **If IL-level approach fails, fall back to byte-level patching.**
 - **Never draw conclusions from obfuscated code.**
+
+## Security Analysis Integration
+
+When analyzing obfuscated malware, leverage Rikugan's security-focused features:
+
+**Suspicious API Detection:**
+- Obfuscated code often contains malicious APIs that get highlighted
+- Look for process injection APIs even in obfuscated functions
+- Crypto APIs may indicate string/traffic encryption routines
+
+**Findings Bookmarking:**
+- Bookmark key deobfuscation functions: string decryptors, dispatchers, VM handlers
+- Use `[FINDING:0x401000|String decryptor]` for navigation
+- Track deobfuscation progress with categories: Verified, Question, Interesting
+
+**Anti-Debugging Detection:**
+- Obfuscated malware frequently uses anti-debug techniques
+- Detect timing checks (rdtsc) and PEB access patterns
+- Remove anti-debug as part of deobfuscation process
+
+**Hex Address Navigation:**
+- Jump quickly between dispatcher states and handler functions
+- Use clickable addresses to trace control flow through obfuscated code
 - **Check the host-specific reference files** for tool-specific rules (maturity guards, operand comparison, dirty marking).

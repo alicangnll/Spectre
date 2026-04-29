@@ -304,16 +304,16 @@ def format_anti_debug_report(results: dict[str, list[dict[str, Any]]]) -> str:
     if not results:
         return "No anti-debugging techniques detected."
 
-    report_lines = ["## 🔍 Anti-Debugging Detection Report\n"]
+    report_lines = ["## Anti-Debugging Detection Report\n"]
 
     total_count = sum(len(v) for v in results.values())
     report_lines.append(f"**Total findings:** {total_count}\n")
 
     # API calls
     if results["api_calls"]:
-        report_lines.append("### 📡 Anti-Debug API Calls\n")
+        report_lines.append("### Anti-Debug API Calls\n")
         for item in results["api_calls"]:
-            severity_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(item["severity"], "⚪")
+            severity_icon = {"high": "[HIGH]", "medium": "[MED]", "low": "[LOW]"}.get(item["severity"], "[?]")
             report_lines.append(
                 f"- {severity_icon} **{item['function']}** at `{item['address']:X}`\n"
                 f"  - *{item['description']}*\n"
@@ -321,9 +321,9 @@ def format_anti_debug_report(results: dict[str, list[dict[str, Any]]]) -> str:
 
     # Instructions
     if results["instructions"]:
-        report_lines.append("\n### ⚠️ Suspicious Instructions\n")
+        report_lines.append("\n### Suspicious Instructions\n")
         for item in results["instructions"]:
-            severity_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(item["severity"], "⚪")
+            severity_icon = {"high": "[HIGH]", "medium": "[MED]", "low": "[LOW]"}.get(item["severity"], "[?]")
             report_lines.append(
                 f"- {severity_icon} `{item['instruction']}` at `{item['address']:X}`\n"
                 f"  - *{item['description']}*\n"
@@ -331,10 +331,10 @@ def format_anti_debug_report(results: dict[str, list[dict[str, Any]]]) -> str:
 
     # PEB checks
     if results["peb_checks"]:
-        report_lines.append("\n### 🧠 PEB Checks\n")
+        report_lines.append("\n### PEB Checks\n")
         for item in results["peb_checks"]:
             report_lines.append(
-                f"- 🔴 **{item['function']}** at `{item['address']:X}`\n"
+                f"- [HIGH] **{item['function']}** at `{item['address']:X}`\n"
                 f"  - *{item['description']}*\n"
             )
 

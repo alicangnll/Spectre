@@ -67,6 +67,16 @@ _DIAGRAM_STYLE = (
     f"font-size:11px; line-height:1.2; white-space:pre; overflow-x:auto;"
 )
 
+# Finding bookmark styles
+_FINDING_STYLES = {
+    "critical": f"background-color:#3d1f1f; color:#ff6b6b; border:1px solid #ff6b6b; border-radius:3px; padding:2px 6px; font-weight:bold;",
+    "suspicious": f"background-color:#3d2a1f; color:#ffa07a; border:1px solid #ffa07a; border-radius:3px; padding:2px 6px;",
+    "verified": f"background-color:#1f3d2a; color:#6bff98; border:1px solid #6bff98; border-radius:3px; padding:2px 6px;",
+    "interesting": f"background-color:#3d3a1f; color:#ffd93d; border:1px solid #ffd93d; border-radius:3px; padding:2px 6px;",
+    "question": f"background-color:#1f2a3d; color:#569cd6; border:1px solid #569cd6; border-radius:3px; padding:2px 6px;",
+    "false_positive": f"background-color:#2a2a2a; color:#808080; border:1px solid #808080; border-radius:3px; padding:2px 6px;",
+}
+
 _BLOCK_CODE_STYLE = (
     f"background-color:{_BLOCK_BG}; color:{_BLOCK_FG}; "
     f"border:1px solid {_CODE_BORDER}; border-radius:4px; "
@@ -538,6 +548,39 @@ def _inline_formatting(text: str) -> str:
     text = re.sub(r"\b[0-9a-fA-F]+h\b", _make_address_link, text)
     # :00401000 (IDA format)
     text = re.sub(r":[0-9a-fA-F]{8}\b", _make_address_link, text)
+
+    # Finding bookmarks: [FINDING:0x401000] or [FINDING:0x401000|custom text]
+    # Do this FIRST to avoid conflicts with hex address linking
+    def _make_finding_link(m: re.Match) -> str:
+        full_match = m.group(0)  # [FINDING:0x401000] or [FINDING:0x401000|text]
+
+        # Extract the part after [FINDING:
+        content = full_match[9:]  # Remove "[FINDING:"
+
+        # Split by | if present
+        if "|" in content:
+            addr_part, custom_text = content.split("|", 1)
+            custom_text = custom_text.rstrip("]")
+        else:
+            addr_part = content.rstrip("]")
+            custom_text = None
+
+        # Parse address (remove common hex prefixes to avoid double-linking)
+        clean_addr = addr_part.strip()
+        # Remove 0x, 0X, : prefix, h suffix
+        clean_addr = re.sub(r"^(0[xX]|:)?([0-9a-fA-F]+)h?$", r"\2", clean_addr)
+
+        try:
+            address = int(clean_addr, 16)
+            display_text = custom_text if custom_text else f"0x{address:X}"
+            # Make it clickable like a link
+            return f'<a style="color:#ffd93d; text-decoration:underline; font-weight:bold;" href="finding://{address:X}">[FINDING] {display_text}</a>'
+        except ValueError:
+            # If not a valid hex address, return original
+            return full_match
+
+    # Match [FINDING:...] format specifically
+    text = re.sub(r"\[FINDING:[^\]]+\]", _make_finding_link, text)
 
     # Links: [text](url)
     text = re.sub(
