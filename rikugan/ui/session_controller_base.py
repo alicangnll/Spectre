@@ -178,22 +178,20 @@ class SessionControllerBase:
         return new_tab_id
 
     def close_tab(self, tab_id: str) -> None:
-        """Save and remove a tab's session."""
+        """Remove a tab's session WITHOUT saving."""
         session = self._sessions.get(tab_id)
         if session is None:
             return
-        if self.config.checkpoint_auto_save and session.messages:
-            try:
-                history = SessionHistory(self.config)
-                history.save_session(session)
-            except (OSError, ValueError) as e:
-                log_error(f"Failed to save session on tab close: {e}")
+        # NOTE: We do NOT save the session on close to prevent tab persistence
+        # User explicitly closed the tab, so we don't want it to persist
         del self._sessions[tab_id]
+        # Clean up queue for this tab
+        self._pending_messages.pop(tab_id, None)
         # Clean up runner for this tab
         runner = self._runners.pop(tab_id, None)
         if runner:
             runner.cancel()
-        log_debug(f"Closed tab {tab_id}")
+        log_debug(f"Closed tab {tab_id} (not persisted)")
 
     def switch_tab(self, tab_id: str) -> None:
         """Switch active tab. No longer cancels running agent - each tab runs independently."""
@@ -373,36 +371,13 @@ class SessionControllerBase:
         log_info("Started new chat session (active tab)")
 
     def restore_sessions(self) -> list[tuple[str, SessionState]]:
-        """Load ALL saved sessions for the current idb_path and return (tab_id, session) pairs."""
-        results: list[tuple[str, SessionState]] = []
-        if not self._idb_path:
-            log_debug("Skipping session restore: no database path available")
-            return results
-        try:
-            history = SessionHistory(self.config)
-            summaries = history.list_sessions(
-                idb_path=self._idb_path,
-                db_instance_id=self._db_instance_id,
-            )
-            summaries.sort(key=lambda s: s.get("created_at", 0))
-            for summary in summaries:
-                session = history.load_session(summary["id"])
-                if session and session.messages:
-                    tab_id = uuid.uuid4().hex[:8]
-                    self._sessions[tab_id] = session
-                    results.append((tab_id, session))
-                    log_debug(f"Restored session {session.id} as tab {tab_id}")
-        except (OSError, ValueError, KeyError) as e:
-            log_error(f"Failed to restore sessions: {e}")
-        if results:
-            # Remove the default empty session that was created in __init__
-            # and set the first restored tab as active
-            if self._active_tab_id in self._sessions:
-                default_session = self._sessions[self._active_tab_id]
-                if not default_session.messages:
-                    del self._sessions[self._active_tab_id]
-            self._active_tab_id = results[-1][0]  # most recent
-        return results
+        """Load ALL saved sessions for the current idb_path and return (tab_id, session) pairs.
+
+        NOTE: Session auto-restore disabled to prevent closed tabs from reappearing.
+              Users want manual tab control - if they close a tab, it should stay closed.
+        """
+        # Disabled to prevent closed tabs from being restored
+        return []
 
     def restore_session(self) -> SessionState | None:
         """Legacy: restore only the latest session into the active tab."""
