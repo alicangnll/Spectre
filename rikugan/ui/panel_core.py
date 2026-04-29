@@ -740,6 +740,9 @@ class RikuganPanelCore(QWidget):
         """Handle tab switch."""
         if index < 0 or self._is_shutdown:
             return
+        # Guard against early calls during initialization
+        if not hasattr(self, '_input_area') or not hasattr(self, '_send_btn'):
+            return
         tab_id = self._tab_id_at_index(index)
         if tab_id is None:
             return
@@ -827,18 +830,19 @@ class RikuganPanelCore(QWidget):
         if hasattr(self, '_cancel_btn'):
             self._cancel_btn.setVisible(is_running)
 
-        # Update input placeholder text
-        if self._awaiting_button_approval:
-            self._input_area.set_enabled(False)
-            self._input_area.setPlaceholderText("Use the Approve/Reject buttons above to continue.")
-        else:
-            self._input_area.set_enabled(True)
-            if is_running:
-                self._input_area.setPlaceholderText(
-                    "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
-                )
+        # Update input placeholder text (if input area exists)
+        if hasattr(self, '_input_area'):
+            if self._awaiting_button_approval:
+                self._input_area.set_enabled(False)
+                self._input_area.setPlaceholderText("Use the Approve/Reject buttons above to continue.")
             else:
-                self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
+                self._input_area.set_enabled(True)
+                if is_running:
+                    self._input_area.setPlaceholderText(
+                        "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
+                    )
+                else:
+                    self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
 
     # --- Public API ---
 
@@ -1599,17 +1603,18 @@ class RikuganPanelCore(QWidget):
 
         # Keep input enabled so users can queue follow-up messages while
         # running — UNLESS we're waiting for a button-only approval.
-        if self._awaiting_button_approval:
-            self._input_area.set_enabled(False)
-            self._input_area.setPlaceholderText("Use the Approve/Reject buttons above to continue.")
-        else:
-            self._input_area.set_enabled(True)
-            if running:
-                self._input_area.setPlaceholderText(
-                    "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
-                )
+        if hasattr(self, '_input_area'):
+            if self._awaiting_button_approval:
+                self._input_area.set_enabled(False)
+                self._input_area.setPlaceholderText("Use the Approve/Reject buttons above to continue.")
             else:
-                self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
+                self._input_area.set_enabled(True)
+                if running:
+                    self._input_area.setPlaceholderText(
+                        "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
+                    )
+                else:
+                    self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
 
         # Update buttons (if they exist)
         if hasattr(self, '_send_btn'):
