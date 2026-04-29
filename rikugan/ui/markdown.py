@@ -193,29 +193,34 @@ def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
 
     Args:
         text: Markdown text to convert
-        return_code_blocks: If True, returns (html, code_blocks) tuple where
-                           code_blocks is a list of (lang, code) tuples.
+        return_code_blocks: If True, returns (html, code_blocks, diagram_blocks) tuple where
+                           code_blocks is a list of (lang, code) tuples and
+                           diagram_blocks is a list of diagram strings.
 
     Returns:
-        HTML string, or (html, code_blocks) tuple if return_code_blocks=True.
+        HTML string, or (html, code_blocks, diagram_blocks) tuple if return_code_blocks=True.
     """
     if not text:
-        return "" if not return_code_blocks else ("", [])
+        return "" if not return_code_blocks else ("", [], [])
 
     # Check for ASCII art diagrams first
     if _is_ascii_art_diagram(text):
-        escaped = html.escape(text)
-        diagram_html = f'<div style="{_DIAGRAM_STYLE}">{escaped}</div>'
-        return diagram_html if not return_code_blocks else (diagram_html, [])
+        if not return_code_blocks:
+            escaped = html.escape(text)
+            diagram_html = f'<div style="{_DIAGRAM_STYLE}">{escaped}</div>'
+            return diagram_html
+        else:
+            return ('', [], [(text,)])  # (diagram_text,) tuple for consistency
 
     if not _has_markdown_syntax(text):
         escaped = html.escape(text).replace("\n", "<br>")
         result = re.sub(r"(<br>\s*){3,}", "<br><br>", escaped)
-        return result if not return_code_blocks else (result, [])
+        return result if not return_code_blocks else (result, [], [])
 
-    # Phase 1: extract fenced code blocks to protect them from inline processing
+    # Phase 1: extract fenced code blocks and ASCII diagrams to protect them from inline processing
     blocks: list[str] = []
     code_blocks: list[tuple[str, str]] = []  # (lang, code) tuples
+    diagram_blocks: list[tuple[str]] = []  # (diagram,) tuples
 
     def _stash_block(m: re.Match) -> str:
         lang = m.group(1) or ""
@@ -232,6 +237,49 @@ def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
 
     text = re.sub(r"```(\w*)\n(.*?)```", _stash_block, text, flags=re.DOTALL)
 
+    # Extract ASCII art diagrams as well
+    def _stash_diagram(diagram_text: str) -> str:
+        diagram_blocks.append((diagram_text,))
+
+        diagram_escaped = html.escape(diagram_text)
+        diagram_html = f'<div style="{_DIAGRAM_STYLE}">{diagram_escaped}</div>'
+        blocks.append(diagram_html)
+        return f"\x00DIAGRAM{len(blocks) - 1}\x00"
+
+    # Check for diagrams line by line
+    lines = text.split("\n")
+    i = 0
+    processed_lines = []
+    while i < len(lines):
+        line = lines[i]
+
+        # Look ahead to check if we have a diagram starting here
+        if _is_ascii_art_diagram(line):
+            # Collect consecutive diagram lines
+            diagram_lines = [line]
+            j = i + 1
+            while j < len(lines):
+                next_line = lines[j]
+                # Continue if next line also has diagram characters or is empty/indented
+                if _is_ascii_art_diagram(next_line) or not next_line.strip() or next_line.startswith(" "):
+                    diagram_lines.append(next_line)
+                    j += 1
+                else:
+                    break
+
+            # If we have 3+ lines, it's likely a diagram
+            if len(diagram_lines) >= 3:
+                diagram_text = "\n".join(diagram_lines)
+                placeholder = _stash_diagram(diagram_text)
+                processed_lines.append(placeholder)
+                i = j
+                continue
+
+        processed_lines.append(line)
+        i += 1
+
+    text = "\n".join(processed_lines)
+
     # Phase 2: process line-by-line for block-level elements
     lines = text.split("\n")
     out_lines: list[str] = []
@@ -240,8 +288,8 @@ def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
         line = lines[i]
         stripped = line.strip()
 
-        # Block placeholder — pass through
-        if re.match(r"^\x00BLOCK\d+\x00$", stripped):
+        # Block/Diagram placeholder — pass through
+        if re.match(r"^\x00(BLOCK|DIAGRAM)\d+\x00$", stripped):
             # Close any open paragraph before the block
             out_lines.append(stripped)
             i += 1
@@ -307,16 +355,23 @@ def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
 
     result = "<br>".join(out_lines)
 
-    # Phase 3: restore code blocks (only if not returning code blocks for widget rendering)
+    # Phase 3: restore code blocks and diagrams (only if not returning for widget rendering)
     if not return_code_blocks:
+        # Blocks are stored in order: first code blocks, then diagrams
+        # Placeholders are created sequentially, so we can just iterate
         for idx, block_html in enumerate(blocks):
-            result = result.replace(f"\x00BLOCK{idx}\x00", block_html)
+            if idx < len(code_blocks):
+                # This is a code block placeholder
+                result = result.replace(f"\x00BLOCK{idx}\x00", block_html)
+            else:
+                # This is a diagram placeholder - idx continues from code blocks
+                result = result.replace(f"\x00DIAGRAM{idx}\x00", block_html)
 
     # Clean up double <br> from paragraph joins
     result = re.sub(r"(<br>\s*){3,}", "<br><br>", result)
 
     if return_code_blocks:
-        return result, code_blocks
+        return result, code_blocks, diagram_blocks
     return result
 
 

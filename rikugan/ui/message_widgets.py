@@ -231,6 +231,83 @@ class _ThinkingBlock(QFrame):
 # ---------------------------------------------------------------------------
 
 
+class DiagramWidget(QFrame):
+    """Displays an ASCII art diagram with copy button."""
+
+    def __init__(self, diagram: str, parent: QWidget = None):
+        super().__init__(parent)
+        self.setObjectName("diagram_block")
+        self.setStyleSheet(
+            "QFrame#diagram_block { background: #1a1a1a; border: 1px solid #3c3c3c; border-radius: 4px; }"
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Header with label and copy button
+        header = QHBoxLayout()
+        header.setContentsMargins(8, 4, 4, 4)
+
+        self._label = QLabel("Diagram")
+        self._label.setStyleSheet("color: #808080; font-size: 10px; font-weight: bold;")
+        header.addWidget(self._label)
+
+        header.addStretch()
+
+        self._copy_btn = QPushButton("Copy")
+        self._copy_btn.setStyleSheet(
+            "QPushButton { background: #2d4a6e; color: #9cdcfe; border: 1px solid #4a7ab5; "
+            "border-radius: 3px; padding: 2px 8px; font-size: 10px; }"
+            "QPushButton:hover { background: #3a5a8a; }"
+            "QPushButton:pressed { background: #1a3a5e; }"
+        )
+        self._copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._copy_btn.clicked.connect(lambda: self._copy_to_clipboard(diagram))
+        header.addWidget(self._copy_btn)
+
+        layout.addLayout(header)
+
+        # Diagram content
+        self._diagram_label = QLabel(diagram)
+        self._diagram_label.setWordWrap(True)
+        self._diagram_label.setTextInteractionFlags(
+            qt_flags(
+                Qt.TextInteractionFlag.TextSelectableByMouse,
+                Qt.TextInteractionFlag.TextSelectableByKeyboard,
+            )
+        )
+        self._diagram_label.setStyleSheet(
+            "color: #d4d4d4; font-size: 11px; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; "
+            "line-height: 1.2; padding: 8px; background: transparent;"
+        )
+        layout.addWidget(self._diagram_label)
+
+    def _copy_to_clipboard(self, text: str) -> None:
+        """Copy text to clipboard and update button."""
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+
+        self._copy_btn.setText("Copied!")
+        self._copy_btn.setStyleSheet(
+            "QPushButton { background: #4a6a4a; color: #9cdcfe; border: 1px solid #5a8a5a; "
+            "border-radius: 3px; padding: 2px 8px; font-size: 10px; }"
+        )
+
+        # Reset button after 2 seconds
+        QTimer.singleShot(2000, self._reset_copy_button)
+
+    def _reset_copy_button(self) -> None:
+        """Reset copy button to original state."""
+        self._copy_btn.setText("Copy")
+        self._copy_btn.setStyleSheet(
+            "QPushButton { background: #2d4a6e; color: #9cdcfe; border: 1px solid #4a7ab5; "
+            "border-radius: 3px; padding: 2px 8px; font-size: 10px; }"
+            "QPushButton:hover { background: #3a5a8a; }"
+            "QPushButton:pressed { background: #1a3a5e; }"
+        )
+
+
 class CodeBlockWidget(QFrame):
     """Displays a code block with language label and copy button."""
 
@@ -363,11 +440,12 @@ class AssistantMessageWidget(QFrame):
             widget.deleteLater()
         self._content_widgets.clear()
 
-        # Check if content has code blocks
+        # Check if content has code blocks or diagrams
         has_code = "```" in visible
+        has_diagram = self._has_diagram(visible)
 
-        if not has_code:
-            # No code blocks - use simple QLabel with HTML
+        if not has_code and not has_diagram:
+            # No code blocks or diagrams - use simple QLabel with HTML
             html_content = md_to_html(visible)
             label = QLabel()
             label.setWordWrap(True)
@@ -387,65 +465,81 @@ class AssistantMessageWidget(QFrame):
             self._content_layout.insertWidget(self._content_layout.count() - 1, label)
             self._content_widgets.append(label)
         else:
-            # Has code blocks - extract and render with copy buttons
-            html_content, code_blocks = md_to_html(visible, return_code_blocks=True)
+            # Has code blocks and/or diagrams - extract and render with copy buttons
+            html_content, code_blocks, diagram_blocks = md_to_html(visible, return_code_blocks=True)
 
             # Split HTML by block placeholders and interleave content
-            parts = html_content.split("\x00BLOCK")
-            for idx, part in enumerate(parts):
-                if not part:
-                    continue
+            # Support both BLOCK (code) and DIAGRAM (ASCII art) placeholders
+            import re as _re
+            placeholder_pattern = _re.compile(r"\x00(BLOCK|DIAGRAM)(\d+)\x00")
 
-                # Check if this part is just a block index
-                if part[0].isdigit() and part[1] == "\x00":
-                    block_idx = int(part[0])
-                    if block_idx < len(code_blocks):
-                        lang, code = code_blocks[block_idx]
-                        code_widget = CodeBlockWidget(lang, code)
-                        self._content_layout.insertWidget(self._content_layout.count() - 1, code_widget)
-                        self._content_widgets.append(code_widget)
-
-                    # Render any remaining content after the block
-                    remaining = part[2:]
-                    if remaining.strip():
-                        label = QLabel()
-                        label.setWordWrap(True)
-                        label.setTextFormat(Qt.TextFormat.RichText)
-                        label.setTextInteractionFlags(
-                            qt_flags(
-                                Qt.TextInteractionFlag.TextSelectableByMouse,
-                                Qt.TextInteractionFlag.TextSelectableByKeyboard,
-                                Qt.TextInteractionFlag.LinksAccessibleByMouse,
-                            )
-                        )
-                        label.setOpenExternalLinks(True)
-                        label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
-                        label.setMinimumWidth(0)
-                        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-                        label.setText(remaining)
+            last_end = 0
+            for match in placeholder_pattern.finditer(html_content):
+                # Render content before this placeholder
+                if match.start() > last_end:
+                    content_before = html_content[last_end:match.start()]
+                    if content_before.strip():
+                        label = self._create_html_label(content_before)
                         self._content_layout.insertWidget(self._content_layout.count() - 1, label)
                         self._content_widgets.append(label)
-                elif part.strip():
-                    # Regular HTML content (not a block)
-                    label = QLabel()
-                    label.setWordWrap(True)
-                    label.setTextFormat(Qt.TextFormat.RichText)
-                    label.setTextInteractionFlags(
-                        qt_flags(
-                            Qt.TextInteractionFlag.TextSelectableByMouse,
-                            Qt.TextInteractionFlag.TextSelectableByKeyboard,
-                            Qt.TextInteractionFlag.LinksAccessibleByMouse,
-                        )
-                    )
-                    label.setOpenExternalLinks(True)
-                    label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
-                    label.setMinimumWidth(0)
-                    label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-                    label.setText(part)
+
+                # Render the placeholder (code block or diagram)
+                block_type = match.group(1)
+                block_idx = int(match.group(2))
+
+                if block_type == "BLOCK" and block_idx < len(code_blocks):
+                    lang, code = code_blocks[block_idx]
+                    code_widget = CodeBlockWidget(lang, code)
+                    self._content_layout.insertWidget(self._content_layout.count() - 1, code_widget)
+                    self._content_widgets.append(code_widget)
+                elif block_type == "DIAGRAM":
+                    # Diagram index in diagram_blocks list
+                    # block_idx is the overall index in blocks list
+                    # diagram_blocks contains only diagrams, so we need to find the correct diagram
+                    diagram_idx_in_blocks = block_idx - len(code_blocks)
+                    if 0 <= diagram_idx_in_blocks < len(diagram_blocks):
+                        diagram_text = diagram_blocks[diagram_idx_in_blocks][0]
+                        diagram_widget = DiagramWidget(diagram_text)
+                        self._content_layout.insertWidget(self._content_layout.count() - 1, diagram_widget)
+                        self._content_widgets.append(diagram_widget)
+
+                last_end = match.end()
+
+            # Render any remaining content after the last placeholder
+            if last_end < len(html_content):
+                remaining_content = html_content[last_end:]
+                if remaining_content.strip():
+                    label = self._create_html_label(remaining_content)
                     self._content_layout.insertWidget(self._content_layout.count() - 1, label)
                     self._content_widgets.append(label)
 
         self._pending_delta = 0
+
+    def _has_diagram(self, text: str) -> bool:
+        """Check if text contains ASCII art diagram characters."""
+        if not text:
+            return False
+        diagram_chars = set('┌─┐│└┘▽▼▲△╔╗╚╝║═╟┤┬┴├┤┼┴┬╭╮╰╯╱╲╳▀▄■▴▸▶►◄↕↔↖↗↘↙→←↑↓⇐⇑⇒⇔⇕⇖⇗⇘⇙⌈⌉⌊⌋⌌⌍⌎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙␟␠␡␢␣␤␥␦␧␨␩␪␫␬␭␮␯␰␱␲␳␴␵␶␷␸␹␺␻␼␽␾␿⏀⏁⏂⏃⏄⏅⏆⏇⏈⏉⏊⏋⏌⏍⏎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙⏚⏛⏜⏝⏞⏟⏠')
+        return any(char in diagram_chars for char in text)
+
+    def _create_html_label(self, html_text: str) -> QLabel:
+        """Helper to create a QLabel for HTML content."""
+        label = QLabel()
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setTextInteractionFlags(
+            qt_flags(
+                Qt.TextInteractionFlag.TextSelectableByMouse,
+                Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                Qt.TextInteractionFlag.LinksAccessibleByMouse,
+            )
+        )
+        label.setOpenExternalLinks(True)
+        label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+        label.setMinimumWidth(0)
+        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        label.setText(html_text)
+        return label
 
     def append_text(self, delta: str) -> None:
         self._full_text += delta
