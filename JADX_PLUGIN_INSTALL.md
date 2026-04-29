@@ -1,0 +1,669 @@
+# Rikugan JADX Plugin Installation Guide
+
+Complete installation guide for Rikugan's hybrid JADX plugin system that works in 4 different modes.
+
+## Table of Contents
+
+1. [Quick Start](#quick-start)
+2. [Installation Modes](#installation-modes)
+3. [Platform-Specific Setup](#platform-specific-setup)
+4. [Configuration](#configuration)
+5. [Verification](#verification)
+6. [Troubleshooting](#troubleshooting)
+
+## Quick Start
+
+### Automated Installation (Recommended)
+
+```bash
+# Clone or download Rikugan
+cd /path/to/Rikugan
+
+# Run universal installer
+python install_jadx_plugin.py
+```
+
+**What this does:**
+- Detects installed platforms (JADX, IDA Pro, Binary Ninja)
+- Installs Rikugan as JADX native plugin
+- Enables integration with IDA/Binary Ninja (if available)
+- Sets up configuration files
+- Installs Python dependencies
+- Creates launcher scripts
+
+**Alternative one-liner:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install_jadx_plugin.py | python3
+```
+
+## Installation Modes
+
+### Mode 1: JADX Native Plugin
+
+**Best for:** Daily APK analysis workflow, JADX GUI users
+
+#### Prerequisites
+- JADX 1.4.7+ installed
+- Python 3.10+
+- 50MB free disk space
+
+#### Installation Steps
+
+**macOS:**
+```bash
+# Install JADX
+brew install jadx
+
+# Verify installation
+jadx --version
+
+# Install Rikugan plugin
+cd /path/to/Rikugan
+python install_jadx_plugin.py
+
+# Verify plugin installation
+ls -la ~/.jadx/plugins/rikugan/
+```
+
+**Linux:**
+```bash
+# Install JADX
+wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
+unzip jadx-1.4.7.zip
+cd jadx-1.4.7
+sudo ln -s $(pwd)/bin/jadx /usr/local/bin/jadx
+
+# Verify
+jadx --version
+
+# Install Rikugan plugin
+cd /path/to/Rikugan
+python install_jadx_plugin.py
+```
+
+**Windows:**
+```powershell
+# Download JADX from https://github.com/skylot/jadx/releases
+# Extract to C:\jadx
+
+# Add to PATH
+setx PATH "%PATH%;C:\jadx\bin"
+
+# Install Rikugan plugin
+cd C:\path\to\Rikugan
+python install_jadx_plugin.py
+```
+
+#### Verification
+```bash
+# Check plugin is installed
+python rikugan_jadx.py plugin-info
+
+# Should show:
+# Environment: JADX
+# Rikugan available: True
+```
+
+#### Usage
+```bash
+# From JADX GUI
+Tools → Rikugan → Analyze APK
+
+# From JADX CLI
+jadx --plugin rikugan app.apk -d output
+
+# Direct plugin call
+python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
+```
+
+### Mode 2: Standalone CLI Tool
+
+**Best for:** Batch processing, CI/CD, scripting, quick analysis
+
+#### Installation
+
+```bash
+cd /path/to/Rikugan
+
+# Make executable
+chmod +x rikugan_jadx.py
+
+# Copy to PATH (optional)
+sudo cp rikugan_jadx.py /usr/local/bin/rikugan-jadx
+# Or
+cp rikugan_jadx.py ~/.local/bin/rikugan-jadx
+```
+
+#### Usage
+```bash
+# Direct execution
+python rikugan_jadx.py analyze app.apk -o ./decompiled
+
+# From PATH
+rikugan-jadx analyze app.apk -o ./decompiled
+
+# All commands
+rikugan-jadx analyze app.apk -o ./decompiled
+rikugan-jadx search app.apk "API_KEY"
+rikugan-jadx structure app.apk
+rikugan-jadx class app.apk com.example.MainActivity
+rikugan-jadx interactive app.apk
+```
+
+### Mode 3: IDA Pro Integration
+
+**Best for:** Deep reverse engineering, combining APK analysis with binary analysis
+
+#### Prerequisites
+- IDA Pro 7.5+ installed
+- Rikugan plugin for IDA installed
+- JADX installed (for decompilation)
+
+#### Installation
+
+```bash
+# Rikugan should already be installed in IDA Pro
+# JADX integration is automatic via /jadx skill
+
+# Verify in IDA Pro:
+# 1. Open IDA Pro
+# 2. Press Ctrl+Shift+I to open Rikugan
+# 3. Type: /jadx Analyze this APK at /path/to/app.apk
+```
+
+#### Usage in IDA Pro
+
+```
+# In Rikugan chat panel (Ctrl+Shift+I):
+
+# Analyze APK
+/jadx Analyze this APK at /path/to/malware.apk
+
+# Security assessment
+/jadx What permissions does this app request?
+/jadx Find suspicious permissions
+
+# Deep analysis
+/jadx Check for hardcoded API keys
+/jadx Analyze network communication
+/jadx Find native libraries and their architectures
+```
+
+### Mode 4: Binary Ninja Integration
+
+**Best for:** Modern binary analysis, cross-platform compatibility, API analysis
+
+#### Prerequisites
+- Binary Ninja 3.4+ installed
+- Rikugan plugin for Binary Ninja installed
+- JADX installed (for decompilation)
+
+#### Installation
+
+```bash
+# Rikugan should already be installed in Binary Ninja
+# JADX integration is automatic via /jadx skill
+
+# Verify in Binary Ninja:
+# 1. Open Binary Ninja
+# 2. Tools → Rikugan → Open Chat
+# 3. Type: /jadx Analyze this APK at /path/to/app.apk
+```
+
+#### Usage in Binary Ninja
+
+```
+# In Rikugan chat panel (Ctrl+Shift+I):
+
+# Analyze APK
+/jadx Analyze this APK at /path/to/app.apk
+
+# Interactive exploration
+/jadx What are the main entry points?
+/jadx Show me the manifest permissions
+/jadx Find all exported activities
+```
+
+## Platform-Specific Setup
+
+### macOS
+
+```bash
+# Install dependencies
+brew install jadx python3
+
+# Install Rikugan plugin
+cd /path/to/Rikugan
+python install_jadx_plugin.py
+
+# Add to PATH (optional)
+echo 'export PATH="$PATH:~/.local/bin"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Linux
+
+```bash
+# Install dependencies
+sudo apt-get install python3 python3-pip
+
+# Install JADX
+wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
+unzip jadx-1.4.7.zip
+sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
+
+# Install Rikugan plugin
+cd /path/to/Rikugan
+python install_jadx_plugin.py
+```
+
+### Windows
+
+```powershell
+# Install Python 3.10+ from python.org
+
+# Install JADX
+# Download from https://github.com/skylot/jadx/releases
+# Extract to C:\jadx
+# Add C:\jadx\bin to system PATH
+
+# Install Rikugan plugin
+cd C:\path\to\Rikugan
+python install_jadx_plugin.py
+```
+
+## Configuration
+
+### Plugin Configuration File
+
+**Location:** `~/.jadx/plugins/rikugan/config.json`
+
+**Default Configuration:**
+```json
+{
+  "auto_analyze": true,
+  "ai_provider": "anthropic",
+  "api_key": "",
+  "max_tokens": 8192,
+  "model": "claude-sonnet-4-20250514",
+  "temperature": 0.2,
+  "security_checks": {
+    "permissions": true,
+    "hardcoded_secrets": true,
+    "network_security": true,
+    "native_libraries": true,
+    "debuggable_check": true,
+    "backup_check": true,
+    "exported_components": true,
+    "certificate_validation": true
+  },
+  "output_formats": {
+    "json": true,
+    "markdown": true,
+    "xml": false,
+    "html": false
+  },
+  "analysis_options": {
+    "decompile_debug": false,
+    "show_bad_code": true,
+    "export_resources": true,
+    "timeout_seconds": 300
+  }
+}
+```
+
+### Environment Variables
+
+```bash
+# Set AI provider
+export RIKUGAN_AI_PROVIDER="anthropic"  # or "openai", "local"
+
+# Set API key
+export RIKUGAN_API_KEY="your-api-key"
+
+# Set model
+export RIKUGAN_MODEL="claude-sonnet-4-20250514"
+
+# Set output directory
+export RIKUGAN_OUTPUT_DIR="/path/to/analysis"
+```
+
+### JADX Integration Settings
+
+**For JADX GUI:**
+1. Open JADX
+2. File → Settings → Plugins → Rikugan
+3. Configure:
+   - Enable on startup: Yes
+   - Auto-analyze: Yes
+   - Show in menu: Yes
+
+**For JADX CLI:**
+```bash
+# Add to ~/.jadx/jadx.cfg
+plugin.rikugan.enabled=true
+plugin.rikugan.auto_analyze=true
+plugin.rikugan.config_path=/home/user/.jadx/plugins/rikugan/config.json
+```
+
+## Verification
+
+### Test Installation
+
+```bash
+# Test 1: Check plugin info
+python rikugan_jadx.py plugin-info
+
+# Expected output:
+# {
+#   "name": "Rikugan",
+#   "version": "1.2.5",
+#   "environment": "standalone",
+#   "rikugan_available": true
+# }
+
+# Test 2: Analyze sample APK
+python rikugan_jadx.py analyze test.apk -o /tmp/test_analysis
+
+# Test 3: Search functionality
+python rikugan_jadx.py search test.apk "API_KEY"
+
+# Test 4: Interactive mode
+echo "quit" | python rikugan_jadx.py interactive test.apk
+```
+
+### Verify JADX Integration
+
+```bash
+# Check if JADX detects Rikugan plugin
+jadx --list-plugins | grep rikugan
+
+# Or manually check plugin directory
+ls -la ~/.jadx/plugins/rikugan/
+
+# Expected files:
+# rikugan_jadx.py
+# rikugan/ (module directory)
+# plugin.json
+# config.json
+# README.md
+```
+
+### Verify IDA Pro Integration
+
+```bash
+# In IDA Pro Python console:
+import rikugan.jadx
+print(rikugan.jadx.__file__)
+
+# Should show path to jadx/api.py
+```
+
+### Verify Binary Ninja Integration
+
+```bash
+# In Binary Ninja Python console:
+import rikugan.jadx
+print(rikugan.jadx.__file__)
+
+# Should show path to jadx/api.py
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Issue 1: "JADX not found"
+
+**Solution:**
+```bash
+# Check if JADX is in PATH
+which jadx
+
+# If not found, install JADX:
+# macOS
+brew install jadx
+
+# Linux
+wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
+unzip jadx-1.4.7.zip
+sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
+
+# Or specify jadx path explicitly
+python rikugan_jadx.py analyze app.apk --jadx /path/to/jadx
+```
+
+#### Issue 2: "Rikugan core not available"
+
+**Solution:**
+```bash
+# Check if rikugan module is accessible
+python -c "import rikugan; print(rikugan.__version__)"
+
+# If not found, add to PYTHONPATH
+export PYTHONPATH="/path/to/Rikugan:$PYTHONPATH"
+
+# Or install Rikugan dependencies
+pip install anthropic httpx cryptography
+```
+
+#### Issue 3: Plugin not loading in JADX
+
+**Solution:**
+```bash
+# Check plugin directory permissions
+ls -la ~/.jadx/plugins/rikugan/
+
+# Ensure plugin.json exists and is valid
+cat ~/.jadx/plugins/rikugan/plugin.json | python -m json.tool
+
+# Reinstall plugin
+rm -rf ~/.jadx/plugins/rikugan
+python install_jadx_plugin.py
+```
+
+#### Issue 4: Environment detection wrong
+
+**Solution:**
+```bash
+# Force specific environment
+python rikugan_jadx.py analyze app.apk --env standalone
+
+# Check detected environment
+python rikugan_jadx.py plugin-info
+```
+
+#### Issue 5: Permission errors
+
+**Solution:**
+```bash
+# Make script executable
+chmod +x rikugan_jadx.py
+
+# Fix plugin directory permissions
+chmod -R 755 ~/.jadx/plugins/rikugan/
+```
+
+### Debug Mode
+
+```bash
+# Enable debug logging
+export RIKUGAN_DEBUG=1
+export RIKUGAN_LOG_LEVEL=debug
+
+# Run with verbose output
+python rikugan_jadx.py analyze app.apk -o ./output --verbose
+```
+
+### Getting Help
+
+```bash
+# Show help
+python rikugan_jadx.py --help
+
+# Show version
+python rikugan_jadx.py --version
+
+# Check plugin status
+python rikugan_jadx.py plugin-info
+```
+
+## Advanced Installation
+
+### Custom Installation Directory
+
+```bash
+# Install to custom location
+export JADX_PLUGIN_DIR="/opt/rikugan/plugins"
+mkdir -p "$JADX_PLUGIN_DIR"
+
+# Copy files
+cp rikugan_jadx.py "$JADX_PLUGIN_DIR/"
+cp -r rikugan "$JADX_PLUGIN_DIR/"
+
+# Create symlink
+ln -s "$JADX_PLUGIN_DIR/rikugan_jadx.py" ~/.local/bin/rikugan-jadx
+```
+
+### System-Wide Installation
+
+```bash
+# Install for all users
+sudo mkdir -p /opt/rikugan/plugins
+sudo cp rikugan_jadx.py /opt/rikugan/plugins/
+sudo cp -r rikugan /opt/rikugan/plugins/
+
+# Create system-wide launcher
+sudo tee /usr/local/bin/rikugan-jadx << 'EOF'
+#!/bin/bash
+python /opt/rikugan/plugins/rikugan_jadx.py "$@"
+EOF
+
+sudo chmod +x /usr/local/bin/rikugan-jadx
+```
+
+### Development Installation
+
+```bash
+# Install in development mode
+cd /path/to/Rikugan
+
+# Create development environment
+python -m venv venv
+source venv/bin/activate
+
+# Install in editable mode
+pip install -e .
+
+# Plugin will use development version of Rikugan
+python rikugan_jadx.py analyze app.apk -o ./output
+```
+
+## Uninstallation
+
+### Complete Removal
+
+```bash
+# Remove JADX plugin
+rm -rf ~/.jadx/plugins/rikugan
+
+# Remove standalone installation
+rm -f ~/.local/bin/rikugan-jadx
+rm -f /usr/local/bin/rikugan-jadx
+
+# Remove config
+rm -f ~/.jadx/plugins/rikugan/config.json
+
+# Note: IDA/Binary Ninja integration remains
+# To remove Rikugan entirely, uninstall from those platforms
+```
+
+### Plugin-Only Removal
+
+```bash
+# Keep Rikugan core, remove only JADX plugin
+rm -rf ~/.jadx/plugins/rikugan
+
+# Rikugan will still work in IDA/Binary Ninja
+```
+
+## Upgrading
+
+### Upgrade Plugin
+
+```bash
+cd /path/to/Rikugan
+git pull origin main  # Or download new version
+
+# Reinstall plugin
+python install_jadx_plugin.py --force
+```
+
+### Check for Updates
+
+```bash
+# Check current version
+python rikugan_jadx.py --version
+
+# Compare with latest
+curl -s https://api.github.com/repos/alicangnll/Rikugan/releases/latest | grep tag_name
+```
+
+## Next Steps
+
+After installation:
+
+1. **Configure API key** (if using AI features):
+   ```bash
+   # Edit config
+   nano ~/.jadx/plugins/rikugan/config.json
+   
+   # Set your API key
+   # "api_key": "your-api-key-here"
+   ```
+
+2. **Test with sample APK**:
+   ```bash
+   python rikugan_jadx.py analyze sample.apk -o ./test_analysis
+   ```
+
+3. **Explore features**:
+   - Read [JADX_README.md](JADX_README.md) for detailed usage
+   - Try interactive mode: `python rikugan_jadx.py interactive app.apk`
+   - Check security assessment features
+
+4. **Integrate with workflow**:
+   - Add to CI/CD pipeline
+   - Use with IDA Pro for deep analysis
+   - Use with Binary Ninja for modern analysis
+
+## Support
+
+For issues and questions:
+- **Documentation:** [JADX_README.md](JADX_README.md)
+- **Issues:** https://github.com/alicangnll/Rikugan/issues
+- **Discussions:** https://github.com/alicangnll/Rikugan/discussions
+
+## Appendix: Installation Directory Structure
+
+```
+~/.jadx/plugins/rikugan/
+├── rikugan_jadx.py          # Main plugin script (executable)
+├── plugin.json              # JADX plugin metadata
+├── config.json              # Plugin configuration
+├── README.md                # This file
+└── rikugan/                  # Rikugan core module
+    ├── jadx/
+    │   ├── __init__.py
+    │   └── api.py           # JADX API wrapper
+    ├── core/
+    │   ├── config.py       # Configuration management
+    │   ├── logging.py      # Logging utilities
+    │   └── crypto.py       # Encryption utilities
+    ├── tools/
+    │   └── ...             # Analysis tools
+    └── skills/
+        └── builtins/
+            └── jadx-analysis/
+                └── skill.md  # Skill definition
+```

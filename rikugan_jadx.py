@@ -1,26 +1,32 @@
 #!/usr/bin/env python3
 """
-Rikugan JADX Plugin - Android APK Reverse Engineering Assistant
+Rikugan JADX Plugin - Hybrid Android APK Analysis Assistant
 
-This script provides command-line interface for analyzing Android APKs
-using JADX decompiler integrated with Rikugan AI assistant.
+This script works in multiple modes:
+1. **Standalone CLI**: Direct execution from terminal
+2. **IDA Pro Plugin**: Integrated with IDA Pro's Rikugan
+3. **Binary Ninja Plugin**: Integrated with Binary Ninja's Rikugan
+4. **JADX Plugin**: Loadable inside JADX as a native plugin
 
 Usage:
-    python rikugan_jadx.py analyze /path/to/app.apk
-    python rikugan_jadx.py search /path/to/app.apk "API_KEY"
-    python rikugan_jadx.py structure /path/to/app.apk
-    python rikugan_jadx.py interactive /path/to/app.apk
+    # Standalone CLI
+    python rikugan_jadx.py analyze app.apk -o ./decompiled
+
+    # As JADX plugin (after installation)
+    jadx --plugin rikugan app.apk -d output
+    # Or from JADX GUI: Tools → Rikugan → Analyze APK
 
 Requirements:
     - JADX: https://github.com/skylot/jadx
     - Python 3.10+
-    - Rikugan dependencies
+    - Rikugan dependencies (for IDA/BN integration)
 
 Author: Ali Can Gönüllü
 License: MIT
+Version: 1.2.5
 """
 
-__version__ = "1.0.0"
+__version__ = "1.2.5"
 __author__ = "Ali Can Gönüllü"
 
 import argparse
@@ -28,13 +34,222 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any, Dict
 
 # Add Rikugan to path
 rikugan_path = Path(__file__).parent
 sys.path.insert(0, str(rikugan_path))
 
-from rikugan.jadx import JadxAnalyzer
+# Try to import Rikugan components
+try:
+    from rikugan.jadx import JadxAnalyzer
+    RIKUGAN_AVAILABLE = True
+except ImportError:
+    RIKUGAN_AVAILABLE = False
+    print("Warning: Rikugan core not available, running in standalone mode")
 
+# Detect execution environment
+ENV_STANDALONE = "standalone"
+ENV_IDA = "ida"
+ENV_BINARY_NINJA = "binary_ninja"
+ENV_JADX = "jadx"
+
+def detect_environment() -> str:
+    """Detect current execution environment."""
+
+    # Check if running inside JADX
+    if "--jadx-plugin" in sys.argv or os.path.exists(".jadx_plugin_mode"):
+        return ENV_JADX
+
+    # Check if running inside IDA Pro
+    try:
+        import idaapi
+        if "get_path" in dir(idaapi):
+            return ENV_IDA
+    except ImportError:
+        pass
+
+    # Check if running inside Binary Ninja
+    try:
+        import binaryninja
+        if "BinaryView" in dir(binaryninja):
+            return ENV_BINARY_NINJA
+    except ImportError:
+        pass
+
+    # Default to standalone
+    return ENV_STANDALONE
+
+CURRENT_ENV = detect_environment()
+
+
+class JadxPluginWrapper:
+    """JADX plugin wrapper for Rikugan integration."""
+
+    def __init__(self):
+        self.plugin_dir = Path(__file__).parent
+        self.config_file = self.plugin_dir / "config.json"
+        self.config = self._load_config()
+        self.analyzer = None
+
+    def _load_config(self) -> Dict[str, Any]:
+        """Load plugin configuration."""
+        default_config = {
+            "auto_analyze": True,
+            "ai_provider": "anthropic",
+            "api_key": "",
+            "max_tokens": 8192,
+            "security_checks": {
+                "permissions": True,
+                "hardcoded_secrets": True,
+                "network_security": True,
+                "native_libraries": True,
+                "debuggable_check": True,
+                "backup_check": True
+            }
+        }
+
+        if self.config_file.exists():
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    user_config = json.load(f)
+                    default_config.update(user_config)
+            except Exception as e:
+                print(f"Warning: Failed to load config: {e}")
+
+        return default_config
+
+    def get_plugin_info(self) -> Dict[str, Any]:
+        """Return plugin metadata for JADX."""
+        return {
+            "name": "Rikugan",
+            "version": __version__,
+            "description": "AI-powered Android APK analysis assistant",
+            "author": "Ali Can Gönüllü",
+            "capabilities": [
+                "apk_analysis",
+                "string_search",
+                "manifest_parsing",
+                "security_assessment",
+                "native_library_detection",
+                "interactive_mode",
+                "ida_integration",
+                "binary_ninja_integration"
+            ],
+            "environment": CURRENT_ENV,
+            "rikugan_available": RIKUGAN_AVAILABLE
+        }
+
+    def initialize(self) -> bool:
+        """Initialize plugin based on environment."""
+        try:
+            if RIKUGAN_AVAILABLE:
+                self.analyzer = JadxAnalyzer()
+                return True
+            else:
+                print("Warning: Rikugan core not available, limited functionality")
+                return False
+        except Exception as e:
+            print(f"Plugin initialization error: {e}")
+            return False
+
+    def analyze_apk(self, apk_path: str, output_dir: str = None) -> Dict[str, Any]:
+        """Analyze APK with full security assessment."""
+        if not self.analyzer:
+            return {"error": "Plugin not initialized"}
+
+        try:
+            # Set default output directory
+            if not output_dir:
+                output_dir = str(Path(apk_path).parent / f"{Path(apk_path).stem}_rikugan_analysis")
+
+            # Decompile
+            decompiled_dir = self.analyzer.decompile_apk(apk_path, output_dir)
+
+            # Run comprehensive analysis
+            results = {
+                "apk_path": apk_path,
+                "decompiled_dir": decompiled_dir,
+                "structure": self.analyzer.get_package_structure(decompiled_dir),
+                "manifest": self.analyzer.find_android_manifest(decompiled_dir),
+                "native_libs": self.analyzer.find_native_libraries(decompiled_dir),
+                "security_assessment": self._run_security_checks(decompiled_dir),
+                "environment": CURRENT_ENV
+            }
+
+            return results
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    def _run_security_checks(self, decompiled_dir: str) -> Dict[str, Any]:
+        """Run comprehensive security checks."""
+        assessment = {
+            "permissions": [],
+            "hardcoded_secrets": [],
+            "network_security": [],
+            "native_libraries": [],
+            "debuggable": False,
+            "backup_enabled": False,
+            "exported_components": [],
+            "risk_score": 0
+        }
+
+        try:
+            # Check manifest for debuggable and backup
+            manifest = self.analyzer.find_android_manifest(decompiled_dir)
+            application = manifest.get("application", {})
+
+            assessment["debuggable"] = application.get("debuggable", False)
+            assessment["backup_enabled"] = application.get("allowBackup", False)
+
+            # Check dangerous permissions
+            dangerous_perms = [
+                "android.permission.INTERNET",
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.CAMERA",
+                "android.permission.RECORD_AUDIO",
+                "android.permission.SEND_SMS",
+                "android.permission.READ_SMS",
+                "android.permission.CALL_PHONE",
+                "android.permission.ACCESS_COARSE_LOCATION",
+                "android.permission.READ_CONTACTS",
+                "android.permission.WRITE_EXTERNAL_STORAGE"
+            ]
+
+            permissions = manifest.get("permissions", [])
+            assessment["permissions"] = [p for p in permissions if p in dangerous_perms]
+
+            # Search for hardcoded secrets
+            secret_patterns = ["api_key", "apikey", "API_KEY", "secret", "token", "password"]
+            for pattern in secret_patterns:
+                matches = self.analyzer.search_string_in_sources(decompiled_dir, pattern)
+                if matches:
+                    assessment["hardcoded_secrets"].extend(matches)
+
+            # Calculate risk score
+            risk_score = 0
+            if assessment["debuggable"]:
+                risk_score += 30
+            if assessment["backup_enabled"]:
+                risk_score += 10
+            if len(assessment["permissions"]) > 5:
+                risk_score += 20
+            if len(assessment["hardcoded_secrets"]) > 0:
+                risk_score += 40
+
+            assessment["risk_score"] = min(risk_score, 100)
+
+        except Exception as e:
+            assessment["error"] = str(e)
+
+        return assessment
+
+
+# ============================================================================
+# CLI Interface (unchanged for backward compatibility)
+# ============================================================================
 
 def print_section(title: str) -> None:
     """Print formatted section header."""
@@ -53,288 +268,224 @@ def print_json(data: dict, pretty: bool = True) -> None:
 
 def cmd_analyze(args) -> int:
     """Analyze APK structure and components."""
-    print_section("🔍 Analyzing APK")
+    print_section("Analyzing APK")
 
     try:
-        analyzer = JadxAnalyzer(jadx_path=args.jadx)
+        # Use plugin wrapper for unified functionality
+        plugin = JadxPluginWrapper()
 
-        # Decompile APK
-        print(f"📦 Decompiling {args.apk}...")
-        decompiled_dir = analyzer.decompile_apk(
-            args.apk,
-            args.output,
-            export_resources=not args.no_resources
-        )
-        print(f"✅ Decompiled to: {decompiled_dir}")
+        if not plugin.initialize():
+            print("Error: Failed to initialize plugin")
+            return 1
 
-        # Analyze structure
-        print("\n📊 Analyzing package structure...")
-        structure = analyzer.get_package_structure(decompiled_dir)
-        print_json(structure)
+        results = plugin.analyze_apk(args.apk, args.output)
 
-        # Parse manifest
-        print("\n📋 Parsing AndroidManifest.xml...")
-        manifest = analyzer.find_android_manifest(decompiled_dir)
-        print_json(manifest)
+        if "error" in results:
+            print(f"Error: {results['error']}")
+            return 1
 
-        # Find native libraries
-        print("\n🔧 Finding native libraries...")
-        native_libs = analyzer.find_native_libraries(decompiled_dir)
-        if native_libs:
-            print(f"Found {len(native_libs)} native libraries:")
-            for lib in native_libs:
-                print(f"  - {lib}")
-        else:
-            print("No native libraries found")
+        print(f"Decompiled to: {results['decompiled_dir']}")
+        print(f"\nPackage Structure:")
+        print_json(results['structure'])
 
-        # Export analysis
+        print(f"\nAndroidManifest:")
+        print_json(results['manifest'])
+
+        print(f"\nSecurity Assessment:")
+        print_json(results['security_assessment'])
+
         if args.export:
-            print(f"\n💾 Exporting analysis to {args.export}...")
-            analyzer.export_to_json(decompiled_dir, args.export)
-            print("✅ Analysis exported")
+            plugin.analyzer.export_to_json(results['decompiled_dir'], args.export)
+            print(f"\nAnalysis exported to: {args.export}")
 
         return 0
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 
 def cmd_search(args) -> int:
-    """Search for string in decompiled sources."""
-    print_section("🔎 Searching in APK")
+    """Search for strings in decompiled sources."""
+    print_section(f"Searching: {args.pattern}")
 
     try:
-        analyzer = JadxAnalyzer(jadx_path=args.jadx)
+        plugin = JadxPluginWrapper()
 
-        # Decompile if not already done
-        if not os.path.exists(args.decompiled_dir):
-            print(f"📦 Decompiling {args.apk}...")
-            decompiled_dir = analyzer.decompile_apk(
-                args.apk,
-                args.output or "/tmp/jadx_output"
-            )
-        else:
+        if not plugin.initialize():
+            print("Error: Failed to initialize plugin")
+            return 1
+
+        # Decompile if needed
+        if args.decompiled_dir and os.path.exists(args.decompiled_dir):
             decompiled_dir = args.decompiled_dir
+        else:
+            output_dir = args.output or "/tmp/jadx_output"
+            decompiled_dir = plugin.analyzer.decompile_apk(args.apk, output_dir)
 
-        # Search
-        print(f"🔍 Searching for '{args.search_string}'...")
-        matches = analyzer.search_string_in_sources(
-            decompiled_dir,
-            args.search_string,
-            case_sensitive=args.case_sensitive
-        )
+        matches = plugin.analyzer.search_string_in_sources(decompiled_dir, args.pattern)
 
         if matches:
-            print(f"\n✅ Found {len(matches)} matches:\n")
-            for i, match in enumerate(matches[:args.max_results], 1):
-                print(f"[{i}] {match['file']}:{match['line']}")
-                print(f"    Package: {match['package']}")
-                print(f"    Code: {match['content'][:100]}...")
-                print()
+            print(f"Found {len(matches)} matches:")
+            for i, match in enumerate(matches[:50], 1):
+                print(f"\n{i}. {match['file']}:{match['line']}")
+                print(f"   {match['content'][:100]}")
+
+            if len(matches) > 50:
+                print(f"\n... and {len(matches) - 50} more matches")
         else:
-            print("❌ No matches found")
+            print("No matches found")
 
         return 0
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 
 def cmd_structure(args) -> int:
     """Show package structure."""
-    print_section("📊 Package Structure")
+    print_section("Package Structure Analysis")
 
     try:
-        analyzer = JadxAnalyzer(jadx_path=args.jadx)
+        plugin = JadxPluginWrapper()
 
-        # Decompile if needed
-        if not os.path.exists(args.decompiled_dir):
-            print(f"📦 Decompiling {args.apk}...")
-            decompiled_dir = analyzer.decompile_apk(
-                args.apk,
-                args.output or "/tmp/jadx_output"
-            )
+        if not plugin.initialize():
+            print("Error: Failed to initialize plugin")
+            return 1
+
+        if args.decompiled_dir and os.path.exists(args.decompiled_dir):
+            structure = plugin.analyzer.get_package_structure(args.decompiled_dir)
         else:
-            decompiled_dir = args.decompiled_dir
+            output_dir = args.output or "/tmp/jadx_output"
+            decompiled_dir = plugin.analyzer.decompile_apk(args.apk, output_dir)
+            structure = plugin.analyzer.get_package_structure(decompiled_dir)
 
-        # Analyze structure
-        structure = analyzer.get_package_structure(decompiled_dir)
-
-        print(f"📦 Total Classes: {structure['total_classes']}")
-        print(f"⚙️  Total Methods: {structure['total_methods']}")
-        print(f"📋 Packages: {len(structure['packages'])}")
-
-        if structure['activities']:
-            print(f"\n🎯 Activities ({len(structure['activities'])}):")
-            for activity in structure['activities'][:10]:
-                print(f"  - {activity}")
-            if len(structure['activities']) > 10:
-                print(f"  ... and {len(structure['activities']) - 10} more")
-
-        if structure['services']:
-            print(f"\n🔧 Services ({len(structure['services'])}):")
-            for service in structure['services'][:10]:
-                print(f"  - {service}")
-            if len(structure['services']) > 10:
-                print(f"  ... and {len(structure['services']) - 10} more")
-
-        if structure['receivers']:
-            print(f"\n📡 Receivers ({len(structure['receivers'])}):")
-            for receiver in structure['receivers'][:10]:
-                print(f"  - {receiver}")
-            if len(structure['receivers']) > 10:
-                print(f"  ... and {len(structure['receivers']) - 10} more")
-
-        if structure['providers']:
-            print(f"\n💾 Providers ({len(structure['providers'])}):")
-            for provider in structure['providers'][:10]:
-                print(f"  - {provider}")
-            if len(structure['providers']) > 10:
-                print(f"  ... and {len(structure['providers']) - 10} more")
-
-        # Export to JSON if requested
-        if args.export:
-            with open(args.export, 'w') as f:
-                json.dump(structure, f, indent=2)
-            print(f"\n💾 Structure exported to {args.export}")
-
+        print_json(structure)
         return 0
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 
 def cmd_class(args) -> int:
     """Analyze specific class."""
-    print_section(f"🔍 Analyzing Class: {args.class_name}")
+    print_section(f"Class Analysis: {args.class_name}")
 
     try:
-        analyzer = JadxAnalyzer(jadx_path=args.jadx)
+        plugin = JadxPluginWrapper()
 
-        # Decompile if needed
-        if not os.path.exists(args.decompiled_dir):
-            print(f"📦 Decompiling {args.apk}...")
-            decompiled_dir = analyzer.decompile_apk(
-                args.apk,
-                args.output or "/tmp/jadx_output"
-            )
-        else:
-            decompiled_dir = args.decompiled_dir
-
-        # Analyze class
-        analysis = analyzer.get_class_dependencies(decompiled_dir, args.class_name)
-
-        if "error" in analysis:
-            print(f"❌ {analysis['error']}")
+        if not plugin.initialize():
+            print("Error: Failed to initialize plugin")
             return 1
 
-        print(f"📦 Class: {analysis['class_name']}")
-        if analysis['extends']:
-            print(f"📌 Extends: {analysis['extends']}")
-        if analysis['implements']:
-            print(f"🔌 Implements: {', '.join(analysis['implements'])}")
+        if args.decompiled_dir and os.path.exists(args.decompiled_dir):
+            decompiled_dir = args.decompiled_dir
+        else:
+            output_dir = args.output or "/tmp/jadx_output"
+            decompiled_dir = plugin.analyzer.decompile_apk(args.apk, output_dir)
 
-        print(f"\n📥 Imports ({len(analysis['imports'])}):")
+        analysis = plugin.analyzer.get_class_dependencies(decompiled_dir, args.class_name)
+
+        if "error" in analysis:
+            print(f"Error: {analysis['error']}")
+            return 1
+
+        print(f"Class: {analysis['class_name']}")
+        if analysis.get('extends'):
+            print(f"Extends: {analysis['extends']}")
+        if analysis.get('implements'):
+            print(f"Implements: {', '.join(analysis['implements'])}")
+
+        print(f"\nImports ({len(analysis['imports'])}):")
         for imp in analysis['imports'][:20]:
             print(f"  - {imp}")
-        if len(analysis['imports']) > 20:
-            print(f"  ... and {len(analysis['imports']) - 20} more")
 
-        print(f"\n⚙️  Methods:")
+        print(f"\nMethods ({len(analysis['methods'])}):")
         for method in analysis['methods'][:20]:
             print(f"  - {method}")
-        if len(analysis['methods']) > 20:
-            print(f"  ... and {len(analysis['methods']) - 20} more")
-
-        print(f"\n🔧 Fields:")
-        for field in analysis['fields'][:20]:
-            print(f"  - {field}")
-        if len(analysis['fields']) > 20:
-            print(f"  ... and {len(analysis['fields']) - 20} more")
 
         return 0
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 
 def cmd_interactive(args) -> int:
-    """Interactive mode with Rikugan AI."""
-    print_section("🤖 Rikugan JADX Interactive Mode")
+    """Interactive AI mode."""
+    print_section("Rikugan Interactive Mode")
 
     try:
-        print("📦 Initializing JADX analyzer...")
-        analyzer = JadxAnalyzer(jadx_path=args.jadx)
+        plugin = JadxPluginWrapper()
+
+        if not plugin.initialize():
+            print("Error: Failed to initialize plugin")
+            return 1
 
         # Decompile APK
-        print(f"🔧 Decompiling {args.apk}...")
-        decompiled_dir = analyzer.decompile_apk(
-            args.apk,
-            args.output or "/tmp/jadx_output"
-        )
+        output_dir = args.output or "/tmp/jadx_output"
+        decompiled_dir = plugin.analyzer.decompile_apk(args.apk, output_dir)
 
-        # Perform analysis
-        print("📊 Analyzing APK structure...")
-        structure = analyzer.get_package_structure(decompiled_dir)
-        manifest = analyzer.find_android_manifest(decompiled_dir)
+        # Get context
+        structure = plugin.analyzer.get_package_structure(decompiled_dir)
+        manifest = plugin.analyzer.find_android_manifest(decompiled_dir)
 
-        # Prepare context for AI
         context = {
-            "apk_path": args.apk,
+            "apk": args.apk,
             "decompiled_dir": decompiled_dir,
             "structure": structure,
-            "manifest": manifest
+            "manifest": manifest,
+            "environment": CURRENT_ENV
         }
 
-        print("\n✅ APK analyzed successfully!")
-        print("\n🤖 You can now ask questions about the APK.")
-        print("Examples:")
+        print(f"APK: {Path(args.apk).name}")
+        print(f"Total classes: {structure['total_classes']}")
+        print(f"Total methods: {structure['total_methods']}")
+        print(f"Environment: {CURRENT_ENV}")
+
+        if CURRENT_ENV != ENV_STANDALONE:
+            print(f"\nIntegration: Active with {CURRENT_ENV.upper()}")
+
+        print("\nYou can ask questions like:")
         print("  - 'What are the main entry points?'")
-        print("  - 'Find network communication code'")
-        print("  - 'Analyze the MainActivity class'")
-        print("  - 'What permissions does this app request?'")
+        print("  - 'Show me all permissions'")
         print("  - 'Find crypto API usage'")
         print("\nType 'quit' to exit\n")
 
         # Simple interactive loop
         while True:
             try:
-                user_input = input("🤖 You: ").strip()
+                user_input = input("You: ").strip()
 
                 if not user_input:
                     continue
 
                 if user_input.lower() in ['quit', 'exit', 'q']:
-                    print("👋 Goodbye!")
+                    print("Goodbye!")
                     break
 
-                # Process question (basic implementation)
-                print(f"\n🤖 Rikugan: Processing '{user_input}'...")
-
-                # This would integrate with Rikugan AI in full implementation
-                # For now, provide basic responses
-                response = process_basic_question(user_input, context, analyzer)
-                print(f"🤖 Rikugan: {response}\n")
+                # Process question
+                print(f"\nRikugan: Processing '{user_input}'...")
+                response = process_basic_question(user_input, context, plugin)
+                print(f"Rikugan: {response}\n")
 
             except KeyboardInterrupt:
-                print("\n👋 Goodbye!")
+                print("\nGoodbye!")
                 break
             except Exception as e:
-                print(f"❌ Error: {e}")
+                print(f"Error: {e}")
 
         return 0
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 
-def process_basic_question(question: str, context: dict, analyzer: JadxAnalyzer) -> str:
-    """Process basic questions about APK (placeholder for AI integration)."""
+def process_basic_question(question: str, context: dict, plugin: JadxPluginWrapper) -> str:
+    """Process basic questions about APK."""
 
     question_lower = question.lower()
 
@@ -343,116 +494,139 @@ def process_basic_question(question: str, context: dict, analyzer: JadxAnalyzer)
         manifest = context['manifest']
         if manifest.get('activities'):
             main_activity = manifest['activities'][0]
-            return f"Main entry point: {main_activity}. This is typically the first activity launched when the app starts."
+            return f"Main entry point: {main_activity}. This is the first activity launched when the app starts."
 
     # Permissions
     if 'permission' in question_lower:
         manifest = context['manifest']
-        permissions = manifest.get('permissions', [])
-        if permissions:
-            return f"This app requests {len(permissions)} permissions: {', '.join(permissions[:10])}"
-
-    # Network communication
-    if 'network' in question_lower or 'http' in question_lower:
-        matches = analyzer.search_string_in_sources(
-            context['decompiled_dir'],
-            "http",
-            case_sensitive=False
-        )
-        if matches:
-            return f"Found {len(matches)} network-related code locations. Use 'jadx_search_string' for details."
-
-    # Crypto
-    if 'crypto' in question_lower or 'encrypt' in question_lower:
-        matches = analyzer.search_string_in_sources(
-            context['decompiled_dir'],
-            "Cipher",
-            case_sensitive=False
-        )
-        if matches:
-            return f"Found {len(matches)} crypto-related code locations. The app uses cryptographic functions."
+        perms = manifest.get('permissions', [])
+        return f"App requests {len(perms)} permissions. Key permissions: {', '.join(perms[:5])}"
 
     # Native libraries
-    if 'native' in question_lower or '.so' in question_lower:
-        libs = analyzer.find_native_libraries(context['decompiled_dir'])
-        if libs:
-            return f"This app contains {len(libs)} native libraries: {', '.join(libs)}"
+    if 'native' in question_lower or '\.so' in question_lower or 'so file' in question_lower:
+        native_libs = plugin.analyzer.find_native_libraries(context['decompiled_dir'])
+        if native_libs:
+            return f"Found {len(native_libs)} native libraries: {', '.join(native_libs)}"
+        else:
+            return "No native libraries found in this APK."
 
-    # Structure overview
-    if 'structure' in question_lower or 'overview' in question_lower:
-        structure = context['structure']
-        return (f"APK contains {structure['total_classes']} classes with {structure['total_methods']} methods. "
-                f"Components: {len(structure['activities'])} activities, "
-                f"{len(structure['services'])} services, "
-                f"{len(structure['receivers'])} receivers, "
-                f"{len(structure['providers'])} providers.")
+    # Security
+    if 'security' in question_lower or 'vulnerab' in question_lower:
+        assessment = plugin._run_security_checks(context['decompiled_dir'])
+        risk = assessment.get('risk_score', 0)
+        if risk > 50:
+            return f"High risk score: {risk}/100. Issues: debuggable={assessment['debuggable']}, backup={assessment['backup_enabled']}"
+        else:
+            return f"Risk score: {risk}/100. App appears to have basic security measures."
 
-    return "I understand your question, but full AI integration is not yet implemented in CLI mode. Use the specific commands for detailed analysis."
+    # Network
+    if 'network' in question_lower or 'http' in question_lower or 'api' in question_lower:
+        matches = plugin.analyzer.search_string_in_sources(context['decompiled_dir'], 'http')
+        if matches:
+            return f"Found {len(matches)} HTTP/HTTPS endpoints in the code."
+        else:
+            return "No obvious HTTP endpoints found in source code."
+
+    # Default response
+    return "I can analyze the APK structure, permissions, native libraries, and security aspects. Try asking about specific aspects."
 
 
-def main():
-    """Main entry point."""
+def cmd_plugin_info(args) -> int:
+    """Show plugin information."""
+    plugin = JadxPluginWrapper()
+    info = plugin.get_plugin_info()
+
+    print_section("Rikugan JADX Plugin Info")
+    print_json(info)
+
+    return 0
+
+
+def main() -> int:
+    """Main entry point with environment detection."""
+
+    # Detect environment
+    CURRENT_ENV = detect_environment()
+
+    # JADX plugin mode
+    if CURRENT_ENV == ENV_JADX:
+        print("Rikugan JADX Plugin Mode")
+        # Handle JADX-specific plugin initialization
+        if "--jadx-init" in sys.argv:
+            plugin = JadxPluginWrapper()
+            info = plugin.get_plugin_info()
+            print(f"Loaded: {info['name']} v{info['version']}")
+            return 0
+
+        if "--jadx-analyze" in sys.argv:
+            # Extract APK path from JADX arguments
+            apk_idx = sys.argv.index("--jadx-analyze") + 1
+            if apk_idx < len(sys.argv):
+                apk_path = sys.argv[apk_idx]
+                plugin = JadxPluginWrapper()
+                plugin.initialize()
+                results = plugin.analyze_apk(apk_path)
+                print_json(results)
+                return 0
+
+    # Standard CLI mode
     parser = argparse.ArgumentParser(
-        description="Rikugan JADX - Android APK Reverse Engineering Assistant",
+        description="Rikugan JADX Plugin - Hybrid Android APK Analysis",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   %(prog)s analyze app.apk -o ./decompiled
-  %(prog)s search app.apk "API_KEY" --case-sensitive
-  %(prog)s structure app.apk --export structure.json
+  %(prog)s search app.apk "API_KEY"
+  %(prog)s structure app.apk
   %(prog)s class app.apk com.example.MainActivity
   %(prog)s interactive app.apk
 
-For more information, visit: https://github.com/alicangnll/Rikugan
-        """
+Environment: {}
+        """.format(CURRENT_ENV.upper())
     )
 
-    parser.add_argument(
-        "--jadx",
-        help="Path to jadx executable (default: search in PATH)"
-    )
+    parser.add_argument("--jadx", default="jadx", help="JADX executable path")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Analyze command
-    analyze_parser = subparsers.add_parser('analyze', help='Analyze APK structure')
-    analyze_parser.add_argument('apk', help='Path to APK file')
-    analyze_parser.add_argument('-o', '--output', default='./jadx_output', help='Output directory')
-    analyze_parser.add_argument('--no-resources', action='store_true', help='Don\'t export resources')
-    analyze_parser.add_argument('--export', help='Export analysis to JSON file')
-    analyze_parser.set_defaults(func=cmd_analyze)
+    analyze_parser = subparsers.add_parser("analyze", help="Analyze APK structure")
+    analyze_parser.add_argument("apk", help="APK file path")
+    analyze_parser.add_argument("-o", "--output", help="Output directory")
+    analyze_parser.add_argument("--no-resources", action="store_true", help="Don't export resources")
+    analyze_parser.add_argument("--export", help="Export analysis to JSON file")
+    analyze_parser.add_argument("--decompiled-dir", help="Use existing decompiled directory")
 
     # Search command
-    search_parser = subparsers.add_parser('search', help='Search in decompiled sources')
-    search_parser.add_argument('apk', help='Path to APK file')
-    search_parser.add_argument('search_string', help='String to search for')
-    search_parser.add_argument('-o', '--output', default='./jadx_output', help='Output directory')
-    search_parser.add_argument('-d', '--decompiled-dir', help='Use existing decompiled directory')
-    search_parser.add_argument('--case-sensitive', action='store_true', help='Case-sensitive search')
-    search_parser.add_argument('--max-results', type=int, default=50, help='Maximum results to show')
-    search_parser.set_defaults(func=cmd_search)
+    search_parser = subparsers.add_parser("search", help="Search strings in sources")
+    search_parser.add_argument("apk", help="APK file path")
+    search_parser.add_argument("pattern", help="Search pattern")
+    search_parser.add_argument("-o", "--output", help="Output directory")
+    search_parser.add_argument("--decompiled-dir", help="Use existing decompiled directory")
+    search_parser.add_argument("--case-sensitive", action="store_true", help="Case sensitive search")
 
     # Structure command
-    structure_parser = subparsers.add_parser('structure', help='Show package structure')
-    structure_parser.add_argument('apk', help='Path to APK file')
-    structure_parser.add_argument('-o', '--output', default='./jadx_output', help='Output directory')
-    structure_parser.add_argument('-d', '--decompiled-dir', help='Use existing decompiled directory')
-    structure_parser.add_argument('--export', help='Export structure to JSON file')
-    structure_parser.set_defaults(func=cmd_structure)
+    structure_parser = subparsers.add_parser("structure", help="Show package structure")
+    structure_parser.add_argument("apk", help="APK file path")
+    structure_parser.add_argument("-o", "--output", help="Output directory")
+    structure_parser.add_argument("--export", help="Export structure to JSON")
+    structure_parser.add_argument("--decompiled-dir", help="Use existing decompiled directory")
 
     # Class command
-    class_parser = subparsers.add_parser('class', help='Analyze specific class')
-    class_parser.add_argument('apk', help='Path to APK file')
-    class_parser.add_argument('class_name', help='Fully qualified class name')
-    class_parser.add_argument('-o', '--output', default='./jadx_output', help='Output directory')
-    class_parser.add_argument('-d', '--decompiled-dir', help='Use existing decompiled directory')
-    class_parser.set_defaults(func=cmd_class)
+    class_parser = subparsers.add_parser("class", help="Analyze specific class")
+    class_parser.add_argument("apk", help="APK file path")
+    class_parser.add_argument("class_name", help="Fully qualified class name")
+    class_parser.add_argument("-o", "--output", help="Output directory")
+    class_parser.add_argument("--decompiled-dir", help="Use existing decompiled directory")
 
     # Interactive command
-    interactive_parser = subparsers.add_parser('interactive', help='Interactive AI mode')
-    interactive_parser.add_argument('apk', help='Path to APK file')
-    interactive_parser.add_argument('-o', '--output', default='./jadx_output', help='Output directory')
-    interactive_parser.set_defaults(func=cmd_interactive)
+    interactive_parser = subparsers.add_parser("interactive", help="Interactive AI mode")
+    interactive_parser.add_argument("apk", help="APK file path")
+    interactive_parser.add_argument("-o", "--output", help="Output directory")
+
+    # Plugin info command
+    info_parser = subparsers.add_parser("plugin-info", help="Show plugin information")
 
     args = parser.parse_args()
 
@@ -460,8 +634,23 @@ For more information, visit: https://github.com/alicangnll/Rikugan
         parser.print_help()
         return 1
 
-    return args.func(args)
+    # Route to appropriate command handler
+    command_handlers = {
+        "analyze": cmd_analyze,
+        "search": cmd_search,
+        "structure": cmd_structure,
+        "class": cmd_class,
+        "interactive": cmd_interactive,
+        "plugin-info": cmd_plugin_info
+    }
+
+    handler = command_handlers.get(args.command)
+    if handler:
+        return handler(args)
+
+    parser.print_help()
+    return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

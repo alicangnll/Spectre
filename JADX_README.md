@@ -1,80 +1,217 @@
-# Rikugan JADX Plugin
+# Rikugan JADX Plugin - Hybrid Android APK Analysis System
 
-Android APK reverse engineering plugin for Rikugan using JADX decompiler.
+Rikugan's multi-mode Android APK analysis system that works as:
+- **Standalone CLI tool** - Independent analysis from terminal
+- **IDA Pro integration** - Embedded within IDA Pro's Rikugan
+- **Binary Ninja integration** - Embedded within Binary Ninja's Rikugan
+- **JADX native plugin** - Loadable inside JADX Decompiler
 
 ## Features
 
-🔥 **Comprehensive APK Analysis:**
-- Decompile APKs to Java source code
+**Comprehensive APK Analysis:**
+- Decompile APKs to Java source code using JADX
 - Analyze package structure and components
-- Parse AndroidManifest.xml
-- Search strings in decompiled code
-- Find native libraries (.so files)
-- Analyze class dependencies
-- Security assessment
-- Malware analysis
+- Parse AndroidManifest.xml and extract metadata
+- Search strings in decompiled code (API keys, endpoints, credentials)
+- Find native libraries (.so files) and detect architectures
+- Analyze class dependencies and inheritance hierarchies
+- Security assessment and vulnerability detection
+- Malware analysis and threat intelligence
+- AI-powered interactive analysis mode
+
+**Multi-Environment Support:**
+- Works in 4 different modes with automatic environment detection
+- Consistent API across all platforms (standalone, IDA, Binary Ninja, JADX)
+- Shared configuration and findings across all modes
+- Seamless integration with existing reverse engineering workflows
 
 ## Installation
 
-### 1. Install JADX
+### Quick Install (All Modes)
 
-**macOS:**
 ```bash
-brew install jadx
+# Clone or download Rikugan
+cd /path/to/Rikugan
+
+# Run auto-installer (detects JADX, IDA, Binary Ninja)
+python install_jadx_plugin.py
 ```
 
-**Linux:**
+This will:
+1. Detect installed platforms (JADX, IDA Pro, Binary Ninja)
+2. Install Rikugan as JADX native plugin
+3. Enable integration with IDA/Binary Ninja Rikugan
+4. Set up configuration files and dependencies
+
+### Manual Installation by Mode
+
+#### Mode 1: JADX Native Plugin
+
+**Install JADX:**
 ```bash
+# macOS
+brew install jadx
+
+# Linux
 wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
 unzip jadx-1.4.7.zip
 sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
+
+# Windows - Download from https://github.com/skylot/jadx/releases
 ```
 
-**Windows:**
+**Install as JADX Plugin:**
 ```bash
-# Download from https://github.com/skylot/jadx/releases
-# Extract and add to PATH
+cd /path/to/Rikugan
+
+# Run auto-installer
+python install_jadx_plugin.py
+
+# Or manually install to JADX plugin directory
+mkdir -p ~/.jadx/plugins/rikugan
+cp rikugan_jadx.py ~/.jadx/plugins/rikugan/
+cp -r rikugan ~/.jadx/plugins/rikugan/
+
+# Create plugin config
+cat > ~/.jadx/plugins/rikugan/plugin.json << 'EOF'
+{
+  "name": "Rikugan",
+  "version": "1.2.5",
+  "description": "AI-powered Android APK analysis assistant",
+  "author": "Ali Can Gönüllü",
+  "main": "rikugan_jadx.py",
+  "enabled": true
+}
+EOF
 ```
 
-### 2. Install Rikugan JADX Plugin
+#### Mode 2: Standalone CLI Tool
 
 ```bash
 cd /path/to/Rikugan
+
+# Copy to PATH
 cp rikugan_jadx.py ~/.local/bin/rikugan-jadx
 chmod +x ~/.local/bin/rikugan-jadx
+
+# Or use directly
+python rikugan_jadx.py analyze app.apk -o ./decompiled
+```
+
+#### Mode 3: IDA Pro Integration
+
+```bash
+# Rikugan must be installed in IDA Pro first
+# JADX integration is automatic through /jadx skill
+
+# In IDA Pro:
+Ctrl+Shift+I → Opens Rikugan panel
+/jadx Analyze this APK at /path/to/app.apk
+/jadx What permissions does this app request?
+/jadx Find the MainActivity class
+```
+
+#### Mode 4: Binary Ninja Integration
+
+```bash
+# Rikugan must be installed in Binary Ninja first
+# JADX integration is automatic through /jadx skill
+
+# In Binary Ninja:
+Tools → Rikugan → Open Chat
+/jadx Analyze this APK at /path/to/app.apk
+/jadx Search for hardcoded API keys
+/jadx Check for native libraries
 ```
 
 ## Usage
 
-### Command Line Interface
+### Standalone CLI Mode
 
-**Analyze APK:**
 ```bash
+# Analyze APK
 python rikugan_jadx.py analyze app.apk -o ./decompiled
-```
 
-**Search for strings:**
-```bash
+# Search for strings
 python rikugan_jadx.py search app.apk "API_KEY"
 python rikugan_jadx.py search app.apk "http://" --case-sensitive
-```
 
-**Show package structure:**
-```bash
+# Show package structure
 python rikugan_jadx.py structure app.apk --export structure.json
-```
 
-**Analyze specific class:**
-```bash
+# Analyze specific class
 python rikugan_jadx.py class app.apk com.example.app.MainActivity
-```
 
-**Interactive mode:**
-```bash
+# Interactive AI mode
 python rikugan_jadx.py interactive app.apk
+
+# Show plugin info
+python rikugan_jadx.py plugin-info
 ```
 
-### Python API
+### JADX Native Plugin Mode
+
+**From JADX GUI:**
+```
+Tools → Rikugan → Analyze APK
+Tools → Rikugan → Search Strings
+Tools → Rikugan → Security Assessment
+Tools → Rikugan → Interactive Mode
+```
+
+**From JADX CLI:**
+```bash
+# Normal JADX with Rikugan plugin
+jadx --plugin rikugan app.apk -d output
+
+# Or call Rikugan directly
+python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
+```
+
+### IDA Pro Integration Mode
+
+```
+# In IDA Pro, open Rikugan panel (Ctrl+Shift+I)
+/jadx Analyze this APK at /path/to/app.apk
+/jadx What are the main entry points?
+/jadx Find suspicious permissions
+/jadx Search for C2 domains
+```
+
+### Binary Ninja Integration Mode
+
+```
+# In Binary Ninja, open Rikugan (Ctrl+Shift+I)
+/jadx Analyze this APK at /path/to/app.apk
+/jadx Check for hardcoded secrets
+/jadx Analyze network communication
+```
+
+## Environment Detection
+
+The plugin automatically detects its execution environment:
+
+```python
+# Standalone CLI
+$ python rikugan_jadx.py analyze app.apk
+Environment: STANDALONE
+
+# Inside JADX
+$ jadx --plugin rikugan app.apk
+Environment: JADX
+
+# Inside IDA Pro
+/jadx Analyze...
+Environment: IDA
+
+# Inside Binary Ninja
+/jadx Analyze...
+Environment: BINARY_NINJA
+```
+
+## Python API
+
+All modes support the same Python API:
 
 ```python
 from rikugan.jadx import JadxAnalyzer
@@ -111,6 +248,35 @@ print(f"Native libraries: {native_libs}")
 analyzer.export_to_json(decompiled_dir, "analysis.json")
 ```
 
+## Configuration
+
+Plugin behavior can be configured via `config.json`:
+
+**Location:** `~/.jadx/plugins/rikugan/config.json`
+
+```json
+{
+  "auto_analyze": true,
+  "ai_provider": "anthropic",
+  "api_key": "your-api-key-here",
+  "max_tokens": 8192,
+  "model": "claude-sonnet-4-20250514",
+  "security_checks": {
+    "permissions": true,
+    "hardcoded_secrets": true,
+    "network_security": true,
+    "native_libraries": true,
+    "debuggable_check": true,
+    "backup_check": true
+  },
+  "output_formats": {
+    "json": true,
+    "markdown": true,
+    "xml": false
+  }
+}
+```
+
 ## Examples
 
 ### Malware Analysis
@@ -119,13 +285,17 @@ analyzer.export_to_json(decompiled_dir, "analysis.json")
 # Analyze suspicious APK
 python rikugan_jadx.py analyze suspicious.apk -o ./malware_analysis
 
+# Automatic security assessment
+# - Risk score calculation (0-100)
+# - Dangerous permissions detection
+# - Hardcoded secrets search
+# - Debuggable build detection
+# - Insecure storage detection
+
 # Search for C2 domains
 python rikugan_jadx.py search suspicious.apk "http://"
 
-# Check permissions
-python rikugan_jadx.py structure suspicious.apk
-
-# Find native code
+# Check for native code
 python rikugan_jadx.py class suspicious.apk com.example.NativeLib
 ```
 
@@ -147,194 +317,203 @@ python rikugan_jadx.py search target.apk "secret"
 python rikugan_jadx.py search target.apk "https://"
 ```
 
-### Reverse Engineering
+### Vulnerability Research
 
 ```bash
-# Decompile and analyze
-python rikugan_jadx.py analyze app.apk -o ./reversed
+# Interactive deep-dive
+python rikugan_jadx.py interactive app.apk
 
-# Understand structure
-python rikugan_jadx.py structure app.apk
-
-# Analyze main activity
-python rikugan_jadx.py class app.apk com.example.app.MainActivity
-
-# Export complete analysis
-python rikugan_jadx.py analyze app.apk --export analysis.json
+> What are the entry points?
+> Show me all exported activities
+> Find crypto API usage
+> Check for SQL injection vectors
+> Analyze SSL certificate validation
 ```
 
-## Rikugan Integration
+## Integration with Rikugan Ecosystem
 
-### Using with Rikugan Skills
+### Findings Bookmarking
 
-The JADX plugin includes a built-in skill that can be used within Rikugan:
+When used in IDA Pro or Binary Ninja modes:
 
 ```
-User: /jadx Analyze this APK at /path/to/app.apk
-Rikugan: [Decompiles APK and provides comprehensive analysis]
-
-User: /jadx What permissions does this app request?
-Rikugan: [Lists permissions and their risk levels]
-
-User: /jadx Find the MainActivity class
-Rikugan: [Analyzes MainActivity and shows details]
-
-User: /jadx Search for API endpoints in the code
-Rikugan: [Searches and lists found endpoints]
+/jadx Analyze this APK and bookmark critical findings
+# Creates [FINDING:0x...] links in analysis
+# Categories: Critical, Suspicious, Verified, etc.
 ```
 
-## Output Examples
+### Suspicious API Highlighting
 
-### Structure Analysis
-
-```json
-{
-  "packages": ["com.example.app", "com.example.app.utils"],
-  "activities": ["com.example.app.MainActivity"],
-  "services": ["com.example.app.NetworkService"],
-  "receivers": ["com.example.app.BootReceiver"],
-  "providers": ["com.example.app.DataProvider"],
-  "total_classes": 150,
-  "total_methods": 2500
-}
+```
+/jadx What dangerous APIs are used?
+# Automatically highlights: CreateRemoteThread, WriteProcessMemory, etc.
+# Color-coded by severity with MITRE ATT&CK references
 ```
 
-### Manifest Analysis
+### Anti-Debugging Detection
 
-```json
-{
-  "package": "com.example.app",
-  "version_code": "1",
-  "version_name": "1.0.0",
-  "min_sdk": "21",
-  "target_sdk": "33",
-  "permissions": [
-    "android.permission.INTERNET",
-    "android.permission.ACCESS_FINE_LOCATION"
-  ],
-  "activities": [
-    "com.example.app.MainActivity"
-  ]
-}
+```
+/jadx Check for anti-debugging techniques
+# Detects: IsDebuggerPresent, PEB checks, timing attacks
+# Reports specific locations and code patterns
+```
+
+## Advanced Features
+
+### Batch Analysis
+
+```bash
+# Analyze multiple APKs
+for apk in *.apk; do
+    python rikugan_jadx.py analyze "$apk" -o "analysis_$(basename $apk .apk)" --export "reports/$(basename $apk .apk).json"
+done
+```
+
+### CI/CD Integration
+
+```bash
+# In build pipeline
+python rikugan_jadx.py analyze app-release.apk --security-check --export security_report.json
+
+# Check risk score
+RISK_SCORE=$(python -c "import json; print(json.load(open('security_report.json'))['security_assessment']['risk_score'])")
+
+if [ $RISK_SCORE -gt 50 ]; then
+    echo "High risk detected, blocking deployment"
+    exit 1
+fi
+```
+
+### Custom Analysis Scripts
+
+```python
+from rikugan.jadx import JadxAnalyzer
+
+analyzer = JadxAnalyzer()
+
+# Custom security check
+def check_malware_indicators(apk_path: str) -> dict:
+    decompiled_dir = analyzer.decompile_apk(apk_path, "/tmp/temp_analysis")
+
+    indicators = {
+        "suspicious_permissions": [],
+        "hardcoded_secrets": [],
+        "native_code": False,
+        "obfuscation": False
+    }
+
+    # Check permissions
+    manifest = analyzer.find_android_manifest(decompiled_dir)
+    dangerous = ["android.permission.SEND_SMS", "android.permission.READ_SMS"]
+    indicators["suspicious_permissions"] = [p for p in manifest["permissions"] if p in dangerous]
+
+    # Check for secrets
+    secret_patterns = ["api_key", "password", "token"]
+    for pattern in secret_patterns:
+        matches = analyzer.search_string_in_sources(decompiled_dir, pattern)
+        indicators["hardcoded_secrets"].extend(matches)
+
+    # Check for native code
+    native_libs = analyzer.find_native_libraries(decompiled_dir)
+    indicators["native_code"] = len(native_libs) > 0
+
+    return indicators
 ```
 
 ## Troubleshooting
 
-### JADX Not Found
+### Plugin Not Loading in JADX
 
-```
-Error: JADX not found
-```
-
-**Solution:**
+1. Check plugin directory:
 ```bash
-# Install JADX
+ls -la ~/.jadx/plugins/rikugan/
+```
+
+2. Verify JADX version:
+```bash
+jadx --version  # Should be 1.4.7 or higher
+```
+
+3. Check plugin metadata:
+```bash
+cat ~/.jadx/plugins/rikugan/plugin.json
+```
+
+### Missing Dependencies
+
+```bash
+# Python dependencies
+pip install anthropic httpx cryptography
+
+# JADX installation
 brew install jadx  # macOS
-# or download from https://github.com/skylot/jadx/releases
-
-# Or specify path explicitly
-python rikugan_jadx.py analyze app.apk --jadx /path/to/jadx
+# or download from GitHub releases
 ```
 
-### Decompilation Timeout
+### Environment Detection Issues
 
-```
-Error: JADX decompilation timed out
-```
-
-**Solution:**
-- Large APKs may take longer to decompile
-- Increase timeout in code if needed
-- Use existing decompiled directory with `-d` flag
-
-### Memory Issues
-
-```
-Error: Out of memory during decompilation
-```
-
-**Solution:**
 ```bash
-# Increase JVM memory for JADX
-export JAVA_OPTS="-Xmx4g"
-python rikugan_jadx.py analyze large_app.apk
+# Check which environment is detected
+python rikugan_jadx.py plugin-info
+
+# Force specific mode
+python rikugan_jadx.py analyze app.apk --env standalone
 ```
 
-## Advanced Usage
+## Architecture
 
-### Batch Analysis
-
-```python
-from rikugan.jadx import JadxAnalyzer
-import json
-
-analyzer = JadxAnalyzer()
-
-apks = ["app1.apk", "app2.apk", "app3.apk"]
-results = {}
-
-for apk in apks:
-    print(f"Analyzing {apk}...")
-    decompiled_dir = analyzer.decompile_apk(apk, f"./output_{Path(apk).stem}")
-    results[apk] = analyzer.get_package_structure(decompiled_dir)
-
-# Save combined results
-with open("batch_analysis.json", "w") as f:
-    json.dump(results, f, indent=2)
+```
+rikugan_jadx.py (Hybrid Plugin)
+├── Environment Detection
+│   ├── Standalone CLI mode
+│   ├── IDA Pro integration
+│   ├── Binary Ninja integration
+│   └── JADX native plugin mode
+├── JadxPluginWrapper
+│   ├── Auto-detect execution environment
+│   ├── Initialize based on mode
+│   └── Provide unified API
+├── Command Handlers
+│   ├── analyze - Full APK analysis
+│   ├── search - String searching
+│   ├── structure - Package structure
+│   ├── class - Class analysis
+│   └── interactive - AI mode
+└── rikugan/
+    ├── jadx/api.py - JADX wrapper
+    ├── core/ - Core functionality
+    └── tools/ - Additional tools
 ```
 
-### Security Assessment
+## Version Compatibility
 
-```python
-from rikugan.jadx import JadxAnalyzer
-
-analyzer = JadxAnalyzer()
-decompiled_dir = analyzer.decompile_apk("app.apk", "./security_analysis")
-
-# Check for security issues
-manifest = analyzer.find_android_manifest(decompiled_dir)
-
-# Check debuggable
-if manifest.get("debuggable"):
-    print("[!] WARNING: App is debuggable!")
-
-# Check dangerous permissions
-dangerous_perms = [
-    "android.permission.SEND_SMS",
-    "android.permission.READ_SMS",
-    "android.permission.CALL_PHONE"
-]
-
-for perm in manifest.get("permissions", []):
-    if perm in dangerous_perms:
-        print(f"[!] DANGEROUS: {perm}")
-
-# Search for hardcoded secrets
-secrets = analyzer.search_string_in_sources(decompiled_dir, "password")
-if secrets:
-    print(f"[!] Found {len(secrets)} potential hardcoded passwords")
-```
-
-## Requirements
-
-- Python 3.10+
-- JADX Decompiler 1.4.7+
-- Rikugan framework
+- **JADX:** 1.4.7+
+- **Python:** 3.10+
+- **IDA Pro:** 7.5+ (with Rikugan installed)
+- **Binary Ninja:** 3.4+ (with Rikugan installed)
+- **OS:** Linux, macOS, Windows
 
 ## License
 
-MIT License - See main Rikugan project
+MIT License - See LICENSE file for details
 
-## Contributing
+## Support & Contributing
 
-Contributions welcome! Please open issues or pull requests on GitHub.
+- **Issues:** https://github.com/alicangnll/Rikugan/issues
+- **Documentation:** https://github.com/alicangnll/Rikugan/tree/main/docs
+- **Contributing:** Pull requests welcome!
 
-## Links
+## Changelog
 
-- JADX: https://github.com/skylot/jadx
-- Rikugan: https://github.com/alicangnll/Rikugan
-- Android Security: https://developer.android.com/topic/security/best-practices
+### v1.2.5 (Current)
+- Added hybrid plugin system (4 modes)
+- Environment auto-detection
+- Unified API across all platforms
+- Enhanced security assessment
+- CI/CD integration support
+- Batch analysis capabilities
 
-## Author
-
-Created for Rikugan Reverse Engineering Framework by Ali Can Gönüllü
+### v1.0.0
+- Initial standalone CLI release
+- Basic JADX integration
+- Python API support
