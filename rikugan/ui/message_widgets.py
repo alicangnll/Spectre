@@ -6,7 +6,7 @@ import random
 import re as _re
 from typing import ClassVar
 
-from .markdown import md_to_html
+from .markdown import md_to_html, _is_ascii_art_diagram
 from .qt_compat import (
     QFrame,
     QHBoxLayout,
@@ -442,7 +442,7 @@ class AssistantMessageWidget(QFrame):
 
         # Check if content has code blocks or diagrams
         has_code = "```" in visible
-        has_diagram = self._has_diagram(visible)
+        has_diagram = _is_ascii_art_diagram(visible)
 
         if not has_code and not has_diagram:
             # No code blocks or diagrams - use simple QLabel with HTML
@@ -493,12 +493,9 @@ class AssistantMessageWidget(QFrame):
                     self._content_layout.insertWidget(self._content_layout.count() - 1, code_widget)
                     self._content_widgets.append(code_widget)
                 elif block_type == "DIAGRAM":
-                    # Diagram index in diagram_blocks list
-                    # block_idx is the overall index in blocks list
-                    # diagram_blocks contains only diagrams, so we need to find the correct diagram
-                    diagram_idx_in_blocks = block_idx - len(code_blocks)
-                    if 0 <= diagram_idx_in_blocks < len(diagram_blocks):
-                        diagram_text = diagram_blocks[diagram_idx_in_blocks][0]
+                    # Diagram counter is separate, so block_idx is directly the index in diagram_blocks
+                    if block_idx < len(diagram_blocks):
+                        diagram_text = diagram_blocks[block_idx][0]
                         diagram_widget = DiagramWidget(diagram_text)
                         self._content_layout.insertWidget(self._content_layout.count() - 1, diagram_widget)
                         self._content_widgets.append(diagram_widget)
@@ -514,13 +511,6 @@ class AssistantMessageWidget(QFrame):
                     self._content_widgets.append(label)
 
         self._pending_delta = 0
-
-    def _has_diagram(self, text: str) -> bool:
-        """Check if text contains ASCII art diagram characters."""
-        if not text:
-            return False
-        diagram_chars = set('┌─┐│└┘▽▼▲△╔╗╚╝║═╟┤┬┴├┤┼┴┬╭╮╰╯╱╲╳▀▄■▴▸▶►◄↕↔↖↗↘↙→←↑↓⇐⇑⇒⇔⇕⇖⇗⇘⇙⌈⌉⌊⌋⌌⌍⌎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙␟␠␡␢␣␤␥␦␧␨␩␪␫␬␭␮␯␰␱␲␳␴␵␶␷␸␹␺␻␼␽␾␿⏀⏁⏂⏃⏄⏅⏆⏇⏈⏉⏊⏋⏌⏍⏎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙⏚⏛⏜⏝⏞⏟⏠')
-        return any(char in diagram_chars for char in text)
 
     def _create_html_label(self, html_text: str) -> QLabel:
         """Helper to create a QLabel for HTML content."""
