@@ -514,11 +514,6 @@ class RikuganPanelCore(QWidget):
         self._export_btn.setStyleSheet(_SMALL_BTN_STYLE)
         self._export_btn.clicked.connect(self._on_export_current)
         btn_layout.addWidget(self._export_btn)
-        self._history_btn = QPushButton("History")
-        self._history_btn.setFixedWidth(64)
-        self._history_btn.setStyleSheet(_SMALL_BTN_STYLE)
-        self._history_btn.clicked.connect(self._on_show_history)
-        btn_layout.addWidget(self._history_btn)
         self._settings_btn = QPushButton("Settings")
         self._settings_btn.setFixedWidth(64)
         self._settings_btn.setStyleSheet(_SMALL_BTN_STYLE)
@@ -924,26 +919,6 @@ class RikuganPanelCore(QWidget):
             dlg.setParent(None)
         except Exception as e:
             log_error(f"Settings dialog error: {e}")
-
-    def _on_show_history(self) -> None:
-        """Show the chat history dialog."""
-        try:
-            from .chat_history_dialog import ChatHistoryDialog
-
-            # Get current file info for filtering
-            idb_path = getattr(self._ctrl, '_idb_path', '')
-            db_instance_id = getattr(self._ctrl, '_db_instance_id', '')
-
-            dlg = ChatHistoryDialog(
-                self._config,
-                parent=self,
-                idb_path=idb_path,
-                db_instance_id=db_instance_id
-            )
-            dlg.exec()
-            log_info("Chat history dialog closed")
-        except Exception as e:
-            log_error(f"Chat history dialog error: {e}")
 
     def _show_new_chat_dialog(self, context_pct: int) -> str:
         """Show a confirmation dialog with context usage. Returns 'yes', 'clear', or 'no'."""
@@ -1569,53 +1544,3 @@ class RikuganPanelCore(QWidget):
         self._send_btn.setEnabled(not self._awaiting_button_approval)
         self._send_btn.setText("Queue" if running else "Send")
         self._cancel_btn.setVisible(running)
-
-
-# ═══════════════════════════════════════════════════
-# COPY FUNCTIONALITY FOR IDA PRO UI
-# ═══════════════════════════════════════════════════
-
-    def add_code_copy_button(self, code: str, language: str = "") -> QWidget:
-        """Add a code block widget with copy button to the chat.
-
-        Args:
-            code: The code content to display
-            language: Programming language name (optional)
-
-        Returns:
-            QWidget containing the code block with copy button
-        """
-        from .code_block_widget import create_code_block_widget
-
-        widget = create_code_block_widget(code, language, parent=self)
-        return widget
-
-    def copy_text_to_clipboard(self, text: str) -> bool:
-        """Copy text to system clipboard.
-
-        Args:
-            text: Text to copy
-
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            from .copy_utils import add_copy_to_clipboard
-            add_copy_to_clipboard(text)
-            return True
-        except Exception as e:
-            log_error(f"Failed to copy to clipboard: {e}")
-            return False
-
-    def get_clipboard_text(self) -> str | None:
-        """Get text from system clipboard.
-
-        Returns:
-            Clipboard text or None if unavailable
-        """
-        try:
-            from .copy_utils import get_clipboard_text
-            return get_clipboard_text()
-        except Exception as e:
-            log_error(f"Failed to get clipboard text: {e}")
-            return None

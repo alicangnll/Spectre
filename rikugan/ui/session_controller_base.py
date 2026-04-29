@@ -184,9 +184,7 @@ class SessionControllerBase:
         if self.config.checkpoint_auto_save and session.messages:
             try:
                 history = SessionHistory(self.config)
-                description = self._generate_session_description(session)
-                history.save_session(session, description=description)
-                log_debug(f"Saved session {tab_id} with description: {description[:50]}...")
+                history.save_session(session)
             except (OSError, ValueError) as e:
                 log_error(f"Failed to save session on tab close: {e}")
         del self._sessions[tab_id]
@@ -212,24 +210,6 @@ class SessionControllerBase:
             if msg.role.value == "user" and msg.content:
                 text = msg.content.strip()
                 return text[:20] + ("..." if len(text) > 20 else "")
-        return "New Chat"
-
-    def _generate_session_description(self, session) -> str:
-        """Generate a description for a session from its messages."""
-        if not session.messages:
-            return "New Chat"
-
-        # Find first user message
-        for msg in session.messages:
-            if msg.role.value == "user" and msg.content:
-                text = msg.content.strip()
-                # Remove system commands and empty lines
-                lines = [line for line in text.split('\n') if line.strip() and not line.strip().startswith('/')]
-                if lines:
-                    # Return first meaningful line, truncated
-                    desc = lines[0][:100]
-                    return desc + ("..." if len(lines[0]) > 100 else "")
-
         return "New Chat"
 
     @property
@@ -352,8 +332,7 @@ class SessionControllerBase:
         if session and self.config.checkpoint_auto_save and session.messages:
             try:
                 history = SessionHistory(self.config)
-                description = self._generate_session_description(session)
-                path = history.save_session(session, description=description)
+                path = history.save_session(session)
                 log_debug(f"Session auto-saved: {path}")
             except (OSError, ValueError) as e:
                 log_error(f"Failed to auto-save session: {e}")
@@ -365,9 +344,7 @@ class SessionControllerBase:
         if session and self.config.checkpoint_auto_save and session.messages:
             try:
                 history = SessionHistory(self.config)
-                description = self._generate_session_description(session)
-                history.save_session(session, description=description)
-                log_debug(f"Session saved on new chat: {description[:50]}")
+                history.save_session(session)
             except OSError as e:
                 log_debug(f"Failed to save session on new chat: {e}")
         self._sessions[self._active_tab_id] = SessionState(
@@ -437,9 +414,7 @@ class SessionControllerBase:
             if session.messages:
                 try:
                     history = SessionHistory(self.config)
-                    description = self._generate_session_description(session)
-                    history.save_session(session, description=description)
-                    log_debug(f"Saved session {tab_id} on file change: {description[:50]}")
+                    history.save_session(session)
                 except (OSError, ValueError) as e:
                     log_error(f"Failed to save session {tab_id} on file change: {e}")
         self._sessions.clear()
@@ -482,9 +457,7 @@ class SessionControllerBase:
             if self.config.checkpoint_auto_save and session.messages:
                 try:
                     history = SessionHistory(self.config)
-                    description = self._generate_session_description(session)
-                    history.save_session(session, description=description)
-                    log_debug(f"Saved session {tab_id} on shutdown: {description[:50]}")
+                    history.save_session(session)
                 except (OSError, ValueError) as e:
                     log_error(f"Failed to save session {tab_id} on shutdown: {e}")
         self._mcp_manager.shutdown()

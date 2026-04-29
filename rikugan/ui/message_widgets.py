@@ -11,7 +11,6 @@ from .qt_compat import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
     QSizePolicy,
     Qt,
@@ -116,20 +115,15 @@ class UserMessageWidget(QFrame):
 
         self._content = QLabel(text)
         self._content.setWordWrap(True)
-        self._content.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self._content.setTextInteractionFlags(
             qt_flags(
                 Qt.TextInteractionFlag.TextSelectableByMouse,
                 Qt.TextInteractionFlag.TextSelectableByKeyboard,
             )
         )
-        self._content.setStyleSheet("""
-            color: #d4d4d4;
-            font-size: 13px;
-        """)
-        self._content.setMinimumWidth(100)
-        self._content.setMinimumHeight(50)
-        self._content.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        self._content.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+        self._content.setMinimumWidth(0)
+        self._content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         layout.addWidget(self._content)
 
 
@@ -246,7 +240,6 @@ class AssistantMessageWidget(QFrame):
         self.setObjectName("message_assistant")
         self._full_text = ""
         self._pending_delta = 0
-        self._code_blocks = []  # Store extracted code blocks for copying
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 6, 8, 6)
@@ -260,7 +253,6 @@ class AssistantMessageWidget(QFrame):
 
         self._content = QLabel()
         self._content.setWordWrap(True)
-        self._content.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self._content.setTextFormat(Qt.TextFormat.RichText)
         self._content.setTextInteractionFlags(
             qt_flags(
@@ -271,16 +263,9 @@ class AssistantMessageWidget(QFrame):
         )
         self._content.setOpenExternalLinks(True)
         self._content.setStyleSheet("color: #d4d4d4; font-size: 13px;")
-        # Enable context menu for copy functionality
-        self._content.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self._content.customContextMenuRequested.connect(self._show_context_menu)
-        # Enable mouse tracking for double-click to copy
-        self._content.setMouseTracking(True)
-        self._content.mouseDoubleClickEvent = self._on_double_click
-        # Allow proper sizing for tables and long content
-        self._content.setMinimumWidth(100)
-        self._content.setMinimumHeight(50)
-        self._content.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        # Prevent the label from requesting more width than its parent
+        self._content.setMinimumWidth(0)
+        self._content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         layout.addWidget(self._content)
 
     def _render(self) -> None:
@@ -290,178 +275,8 @@ class AssistantMessageWidget(QFrame):
             self._thinking_block.set_thinking(thinking, in_progress=in_progress)
         else:
             self._thinking_block.hide()
-        # Extract code blocks before rendering
-        self._extract_code_blocks(visible)
-        # Use setHtml for proper HTML rendering instead of setText
-        self._content.setHtml(md_to_html(visible))
+        self._content.setText(md_to_html(visible))
         self._pending_delta = 0
-
-    def _extract_code_blocks(self, text: str) -> None:
-        """Extract code blocks from markdown text for copying."""
-        import re
-        self._code_blocks = []
-        # Match fenced code blocks: ```lang ... ```
-        pattern = r'```(\w*)\n(.*?)```'
-        for match in re.finditer(pattern, text, re.DOTALL):
-            lang = match.group(1) or ""
-            code = match.group(2).strip()
-            self._code_blocks.append({'language': lang, 'code': code})
-
-    def copy_last_code_block(self) -> bool:
-        """Copy the last code block to clipboard.
-
-        Returns:
-            True if successful, False otherwise
-        """
-        if not self._code_blocks:
-            return False
-
-        try:
-            from .copy_utils import add_copy_to_clipboard
-            import html
-
-            last_block = self._code_blocks[-1]
-            raw_code = last_block['code']
-
-            # If raw_code contains HTML entities, decode them
-            if '&lt;' in raw_code or '&gt;' in raw_code or '&amp;' in raw_code:
-                try:
-                    raw_code = html.unescape(raw_code)
-                except:
-                    pass  # If decoding fails, use as-is
-
-            add_copy_to_clipboard(raw_code)
-            print(f"Copied code block ({len(raw_code)} chars)")
-            return True
-        except Exception as e:
-            print(f"Failed to copy code block: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-
-    def copy_all_code_blocks(self) -> bool:
-        """Copy all code blocks to clipboard, separated by newlines.
-
-        Returns:
-            True if successful, False otherwise
-        """
-        if not self._code_blocks:
-            return False
-
-        try:
-            from .copy_utils import add_copy_to_clipboard
-            import html
-
-            # Collect and decode all code blocks
-            decoded_blocks = []
-            for block in self._code_blocks:
-                code = block['code']
-                # If code contains HTML entities, decode them
-                if '&lt;' in code or '&gt;' in code or '&amp;' in code:
-                    try:
-                        code = html.unescape(code)
-                    except:
-                        pass  # If decoding fails, use as-is
-                decoded_blocks.append(code)
-
-            all_code = '\n\n'.join(decoded_blocks)
-            add_copy_to_clipboard(all_code)
-            print(f"Copied {len(self._code_blocks)} code blocks ({len(all_code)} chars)")
-            return True
-        except Exception as e:
-            print(f"Failed to copy code blocks: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-
-    def has_code_blocks(self) -> bool:
-        """Check if this message contains any code blocks."""
-        return len(self._code_blocks) > 0
-
-    def _on_double_click(self, event) -> None:
-        """Handle double-click to copy code blocks."""
-        if self._code_blocks:
-            if self.copy_last_code_block():
-                self._show_copy_feedback()
-                print("Code copied (double-click)")
-        # Call original event handler
-        QLabel.mouseDoubleClickEvent(self._content, event)
-
-    def _show_context_menu(self, pos) -> None:
-        """Show context menu with copy options."""
-        import sys
-
-        menu = QMenu(self)
-        menu.setStyleSheet("""
-            QMenu {
-                background-color: #2d2d2d;
-                color: #d4d4d4;
-                border: 1px solid #3c3c3c;
-            }
-            QMenu::item {
-                padding: 6px 24px;
-            }
-            QMenu::item:selected {
-                background-color: #3c3c3c;
-            }
-        """)
-
-        if self._code_blocks:
-            # Add copy options for code blocks
-            if len(self._code_blocks) == 1:
-                action = menu.addAction("Copy Code")
-                # Use lambda to avoid immediate execution
-                action.triggered.connect(lambda checked=False: self._safe_copy_last())
-            else:
-                action_last = menu.addAction("Copy Last Code Block")
-                action_last.triggered.connect(lambda checked=False: self._safe_copy_last())
-
-                action_all = menu.addAction("Copy All Code Blocks")
-                action_all.triggered.connect(lambda checked=False: self._safe_copy_all())
-
-            menu.addSeparator()
-
-        # Add standard copy action
-        menu.addAction("Copy Selection")
-        menu.setActiveAction(menu.actions()[-1])
-
-        menu.exec_(self._content.mapToGlobal(pos))
-
-    def _safe_copy_last(self) -> None:
-        """Safely copy last code block with error handling."""
-        try:
-            if self.copy_last_code_block():
-                self._show_copy_feedback()
-        except Exception as e:
-            print(f"Error in copy_last_code_block: {e}")
-
-    def _safe_copy_all(self) -> None:
-        """Safely copy all code blocks with error handling."""
-        try:
-            if self.copy_all_code_blocks():
-                self._show_copy_feedback()
-        except Exception as e:
-            print(f"Error in copy_all_code_blocks: {e}")
-
-    def keyPressEvent(self, event) -> None:
-        """Handle keyboard shortcuts for copying code blocks."""
-        # Ctrl+Shift+C to copy the last code block
-        if (event.key() == Qt.Key.Key_C and
-            event.modifiers() & Qt.KeyboardModifier.ControlModifier and
-            event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            if self.copy_last_code_block():
-                # Show brief feedback
-                self._show_copy_feedback()
-                return
-        # Let parent handle other keys
-        super().keyPressEvent(event)
-
-    def _show_copy_feedback(self) -> None:
-        """Show brief visual feedback when code is copied."""
-        original_style = self._content.styleSheet()
-        self._content.setStyleSheet(original_style + " background-color: rgba(80, 200, 120, 0.1);")
-        # Reset after 300ms
-        QTimer.singleShot(300, lambda: self._content.setStyleSheet(original_style))
 
     def append_text(self, delta: str) -> None:
         self._full_text += delta
