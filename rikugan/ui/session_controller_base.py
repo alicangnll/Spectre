@@ -103,9 +103,9 @@ class SessionControllerBase:
                     log_error(f"discover_all_external_mcp returned {type(external_mcp)} instead of dict")
                 else:
                     for source_key, servers in external_mcp.items():
-                    enabled = [s for s in servers if f"{source_key}:{s.name}" in enabled_set]
-                    if enabled:
-                        self._mcp_manager.add_external_configs(enabled)
+                        enabled = [s for s in servers if f"{source_key}:{s.name}" in enabled_set]
+                        if enabled:
+                            self._mcp_manager.add_external_configs(enabled)
 
             if self._runtime_shutdown.is_set():
                 return
