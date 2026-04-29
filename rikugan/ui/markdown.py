@@ -8,6 +8,7 @@ Handles the subset of Markdown that LLMs commonly produce:
 - Bullet lists (- item, * item)
 - Numbered lists (1. item)
 - Links [text](url)
+- Tables (| col1 | col2 | ...)
 - Paragraphs (double newline)
 - Horizontal rules (---, ***)
 
@@ -30,7 +31,7 @@ _HR_COLOR = "#3c3c3c"
 _H_COLOR = "#569cd6"
 
 _MARKDOWN_HINT_RE = re.compile(
-    r"(^#{1,4}\s)|(^\s*[-*]\s+)|(^\s*\d+[.)]\s+)|```|`[^`]+`|\*\*|__|(?<!\w)\*(.+?)\*(?!\w)|(?<!\w)_(.+?)_(?!\w)|\[[^\]]+\]\([^)]+\)|^[-*_]{3,}\s*$",
+    r"(^#{1,4}\s)|(^\s*[-*]\s+)|(^\s*\d+[.)]\s+)|```|`[^`]+`|\*\*|__|(?<!\w)\*(.+?)\*(?!\w)|(?<!\w)_(.+?)_(?!\w)|\[[^\]]+\]\([^)]+\)|^[-*_]{3,}\s*$|^\|.*\|",
     re.MULTILINE,
 )
 
@@ -45,6 +46,108 @@ _BLOCK_CODE_STYLE = (
     f"padding:8px; font-family:monospace; font-size:12px; "
     f"white-space:pre-wrap; word-break:break-all;"
 )
+
+_TABLE_STYLE = (
+    "border:1px solid #3c3c3c; border-collapse:collapse; "
+    "margin:4px 0; width:100%;"
+)
+_TABLE_CELL_STYLE = (
+    "border:1px solid #3c3c3c; padding:4px 8px; "
+    "text-align:left; vertical-align:top;"
+)
+_TABLE_HEADER_STYLE = (
+    "background-color:#2d2d2d; color:#569cd6; "
+    "font-weight:bold; font-size:12px;"
+)
+_TABLE_ROW_STYLE = "font-size:12px;"
+
+
+def _parse_table_row(row: str) -> list[str]:
+    """Parse a markdown table row and return list of cell contents."""
+    # Remove leading/trailing pipes and split
+    row = row.strip()
+    if row.startswith("|"):
+        row = row[1:]
+    if row.endswith("|"):
+        row = row[:-1]
+
+    cells = [cell.strip() for cell in row.split("|")]
+    return cells
+
+
+def _is_separator_row(row: str) -> bool:
+    """Check if a row is a table separator (contains only |, -, and spaces)."""
+    row = row.strip()
+    if not row.startswith("|") or not row.endswith("|"):
+        return False
+    # Remove leading/trailing pipes
+    inner = row[1:-1].strip()
+    # Check if remaining content is only |, -, and spaces
+    return all(c in "|- " for c in inner)
+
+
+def _parse_table(lines: list[str], start_idx: int) -> tuple[str, int]:
+    """Parse a markdown table starting at start_idx.
+
+    Returns (html_table, next_line_index).
+    """
+    if start_idx >= len(lines):
+        return "", start_idx
+
+    # Parse header row
+    header_row = lines[start_idx]
+    headers = _parse_table_row(header_row)
+
+    # Check for separator row
+    if start_idx + 1 < len(lines) and _is_separator_row(lines[start_idx + 1]):
+        # This is a valid table with separator
+        separator_idx = start_idx + 1
+        data_start_idx = start_idx + 2
+    else:
+        # No separator row, treat all rows as data
+        separator_idx = start_idx  # No separator
+        data_start_idx = start_idx + 1
+
+    # Parse data rows
+    data_rows = []
+    i = data_start_idx
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith("|") and line.endswith("|"):
+            data_rows.append(_parse_table_row(line))
+            i += 1
+        else:
+            break
+
+    # Build HTML table
+    html_parts = ['<table style="' + _TABLE_STYLE + '">']
+
+    # Header row
+    html_parts.append('<tr>')
+    for header in headers:
+        header_html = _inline(header)
+        html_parts.append(
+            f'<th style="{_TABLE_CELL_STYLE}{_TABLE_HEADER_STYLE}">{header_html}</th>'
+        )
+    html_parts.append('</tr>')
+
+    # Data rows
+    for row in data_rows:
+        html_parts.append('<tr style="' + _TABLE_ROW_STYLE + '">')
+        # Ensure all rows have same number of cells as headers
+        for j in range(len(headers)):
+            if j < len(row):
+                cell_html = _inline(row[j])
+            else:
+                cell_html = ""
+            html_parts.append(
+                f'<td style="{_TABLE_CELL_STYLE}">{cell_html}</td>'
+            )
+        html_parts.append('</tr>')
+
+    html_parts.append('</table>')
+
+    return "".join(html_parts), i
 
 
 def _has_markdown_syntax(text: str) -> bool:
@@ -87,6 +190,15 @@ def md_to_html(text: str) -> str:
             out_lines.append(stripped)
             i += 1
             continue
+
+        # Table — detect table rows (start and end with |)
+        if stripped.startswith("|") and stripped.endswith("|"):
+            table_html, next_i = _parse_table(lines, i)
+            if table_html:
+                out_lines.append(table_html)
+                i = next_i
+                continue
+            # If table parsing failed, fall through to regular text processing
 
         # Horizontal rule
         if re.match(r"^[-*_]{3,}\s*$", stripped):
