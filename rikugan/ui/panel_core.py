@@ -265,6 +265,8 @@ class RikuganPanelCore(QWidget):
         self._pending_restore_messages: dict[str, list] = {}
         # Event buffers for inactive tabs - ensures events aren't lost when switching tabs
         self._tab_event_buffers: dict[str, list[TurnEvent]] = {}
+        # Track agent running state per tab for proper button state management
+        self._tab_agent_running: dict[str, bool] = {}
         self._context_bar: ContextBar | None = None
         self._mutation_panel: MutationLogPanel | None = None
         self._skills_refresh_timer: QTimer | None = None
@@ -555,6 +557,8 @@ class RikuganPanelCore(QWidget):
         index = self._tab_widget.addTab(chat_view, label)
         self._tab_widget.setCurrentIndex(index)
         self._update_tab_bar_visibility()
+        # Initialize agent running state for new tab
+        self._tab_agent_running[tab_id] = False
         return chat_view
 
     def _on_new_tab(self) -> None:
@@ -740,6 +744,7 @@ class RikuganPanelCore(QWidget):
         self._restore_messages_if_needed(tab_id)
         self._replay_buffered_events_if_needed(tab_id)
         self._update_token_display()
+        self._update_button_state_for_tab(tab_id)
 
     def _tab_id_at_index(self, index: int) -> str | None:
         """Find the tab_id for a given tab index via the stored property (O(1))."""
@@ -804,6 +809,31 @@ class RikuganPanelCore(QWidget):
             if self._tab_widget.widget(i) is cv:
                 self._tab_widget.setTabText(i, label)
                 break
+
+    def _update_button_state_for_tab(self, tab_id: str) -> None:
+        """Update button states based on the agent running state for the given tab."""
+        is_running = self._tab_agent_running.get(tab_id, False)
+
+        # Update send/queue button
+        self._send_btn.setVisible(True)
+        self._send_btn.setEnabled(not self._awaiting_button_approval)
+        self._send_btn.setText("Queue" if is_running else "Send")
+
+        # Update cancel button visibility
+        self._cancel_btn.setVisible(is_running)
+
+        # Update input placeholder text
+        if self._awaiting_button_approval:
+            self._input_area.set_enabled(False)
+            self._input_area.setPlaceholderText("Use the Approve/Reject buttons above to continue.")
+        else:
+            self._input_area.set_enabled(True)
+            if is_running:
+                self._input_area.setPlaceholderText(
+                    "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
+                )
+            else:
+                self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
 
     # --- Public API ---
 
@@ -1558,6 +1588,10 @@ class RikuganPanelCore(QWidget):
         self._start_agent(f"/undo {count}")
 
     def _set_running(self, running: bool) -> None:
+        # Track running state per tab
+        current_tab_id = self._ctrl.active_tab_id
+        self._tab_agent_running[current_tab_id] = running
+
         # Keep input enabled so users can queue follow-up messages while
         # running — UNLESS we're waiting for a button-only approval.
         if self._awaiting_button_approval:
