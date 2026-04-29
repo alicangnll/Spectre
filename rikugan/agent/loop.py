@@ -1005,10 +1005,11 @@ class AgentLoop:
                 param_descriptions = None
                 tool_def = self.tools.get(tc_name)
                 if tool_def and tool_def.parameters:
+                    # tool_def.parameters is a list of ParameterSchema objects
                     param_descriptions = {
-                        param_name: param.get("description", "")
-                        for param_name, param in tool_def.parameters.items()
-                        if param.get("description")
+                        param.name: param.description
+                        for param in tool_def.parameters
+                        if param.description
                     }
 
                 tool_calls.append(ToolCall(id=tc_id, name=tc_name, arguments=args))
