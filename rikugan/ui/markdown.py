@@ -35,9 +35,22 @@ _MARKDOWN_HINT_RE = re.compile(
     re.MULTILINE,
 )
 
+_ASCII_ART_PATTERN = re.compile(
+    r'[┌─┐│└┘▽▼▲△╔╗╚╝║═╟┤┬┴├┤┼┴┬╭╮╰╯╱╲╳▀▄■▴▸▶►◄↕↔↖↗↘↙→←↑↓⇐⇑⇒⇔⇕⇖⇗⇘⇙⌈⌉⌊⌋⌌⌍⌎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙␟␠␡␢␣␤␥␦␧␨␩␪␫␬␭␮␯␰␱␲␳␴␵␶␷␸␹␺␻␼␽␾␿⏀⏁⏂⏃⏄⏅⏆⏇⏈⏉⏊⏋⏌⏍⏎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙⏚⏛⏜⏝⏞⏟⏠]',
+    re.MULTILINE
+)
+
 _INLINE_CODE_STYLE = (
     f"background-color:{_CODE_BG}; color:{_CODE_FG}; "
     f"padding:1px 4px; border-radius:3px; font-family:monospace; font-size:12px;"
+)
+
+# ASCII art diagram style
+_DIAGRAM_STYLE = (
+    f"background-color:{_BLOCK_BG}; color:{_BLOCK_FG}; "
+    f"border:1px solid {_CODE_BORDER}; border-radius:4px; "
+    f"padding:8px; font-family:'Monaco', 'Menlo', 'Ubuntu Mono', monospace; "
+    f"font-size:11px; line-height:1.2; white-space:pre; overflow-x:auto;"
 )
 
 _BLOCK_CODE_STYLE = (
@@ -155,6 +168,26 @@ def _has_markdown_syntax(text: str) -> bool:
     return bool(text and _MARKDOWN_HINT_RE.search(text))
 
 
+def _is_ascii_art_diagram(text: str) -> bool:
+    """Check if text is an ASCII art diagram."""
+    if not text or len(text) < 3:
+        return False
+
+    lines = text.split('\n')
+    if len(lines) < 3:
+        return False
+
+    # Count diagram characters
+    diagram_char_count = 0
+    for line in lines:
+        matches = _ASCII_ART_PATTERN.findall(line)
+        diagram_char_count += len(matches)
+
+    # If average more than 3 diagram chars per line, likely a diagram
+    avg_chars = diagram_char_count / len(lines)
+    return avg_chars > 3
+
+
 def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
     """Convert a Markdown string to Qt-compatible HTML.
 
@@ -168,6 +201,12 @@ def md_to_html(text: str, return_code_blocks: bool = False) -> str | tuple:
     """
     if not text:
         return "" if not return_code_blocks else ("", [])
+
+    # Check for ASCII art diagrams first
+    if _is_ascii_art_diagram(text):
+        escaped = html.escape(text)
+        diagram_html = f'<div style="{_DIAGRAM_STYLE}">{escaped}</div>'
+        return diagram_html if not return_code_blocks else (diagram_html, [])
 
     if not _has_markdown_syntax(text):
         escaped = html.escape(text).replace("\n", "<br>")
