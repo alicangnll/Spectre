@@ -743,7 +743,6 @@ class RikuganPanelCore(QWidget):
             return
         self._ctrl.switch_tab(tab_id)
         self._restore_messages_if_needed(tab_id)
-        self._replay_buffered_events_if_needed(tab_id)
         self._update_token_display()
         self._update_button_state_for_tab(tab_id)
 
@@ -773,17 +772,6 @@ class RikuganPanelCore(QWidget):
         chat_view = self._chat_views.get(tab_id)
         if chat_view is not None:
             chat_view.restore_from_messages(messages)
-
-    def _replay_buffered_events_if_needed(self, tab_id: str) -> None:
-        """Replay buffered events for a tab when it becomes active."""
-        events = self._tab_event_buffers.pop(tab_id, None)
-        if not events:
-            return
-        chat_view = self._chat_views.get(tab_id)
-        if chat_view is not None:
-            for event in events:
-                if not self._is_shutdown:
-                    chat_view.handle_event(event)
 
     def _update_token_display(self, token_count: int | None = None) -> None:
         """Update the context bar token display with context window percentage."""
