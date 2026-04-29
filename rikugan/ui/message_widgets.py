@@ -358,16 +358,17 @@ class AssistantMessageWidget(QFrame):
         else:
             self._thinking_block.hide()
 
-        # Parse markdown with code blocks extraction
-        html_content, code_blocks = md_to_html(visible, return_code_blocks=True)
-
         # Clear existing content widgets
         for widget in self._content_widgets:
             widget.deleteLater()
         self._content_widgets.clear()
 
-        # If no code blocks, use simple QLabel
-        if not code_blocks:
+        # Check if content has code blocks
+        has_code = "```" in visible
+
+        if not has_code:
+            # No code blocks - use simple QLabel with HTML
+            html_content = md_to_html(visible)
             label = QLabel()
             label.setWordWrap(True)
             label.setTextFormat(Qt.TextFormat.RichText)
@@ -386,11 +387,63 @@ class AssistantMessageWidget(QFrame):
             self._content_layout.insertWidget(self._content_layout.count() - 1, label)
             self._content_widgets.append(label)
         else:
-            # Has code blocks - create CodeBlockWidget for each with copy button
-            for lang, code in code_blocks:
-                code_widget = CodeBlockWidget(lang, code)
-                self._content_layout.insertWidget(self._content_layout.count() - 1, code_widget)
-                self._content_widgets.append(code_widget)
+            # Has code blocks - extract and render with copy buttons
+            html_content, code_blocks = md_to_html(visible, return_code_blocks=True)
+
+            # Split HTML by block placeholders and interleave content
+            parts = html_content.split("\x00BLOCK")
+            for idx, part in enumerate(parts):
+                if not part:
+                    continue
+
+                # Check if this part is just a block index
+                if part[0].isdigit() and part[1] == "\x00":
+                    block_idx = int(part[0])
+                    if block_idx < len(code_blocks):
+                        lang, code = code_blocks[block_idx]
+                        code_widget = CodeBlockWidget(lang, code)
+                        self._content_layout.insertWidget(self._content_layout.count() - 1, code_widget)
+                        self._content_widgets.append(code_widget)
+
+                    # Render any remaining content after the block
+                    remaining = part[2:]
+                    if remaining.strip():
+                        label = QLabel()
+                        label.setWordWrap(True)
+                        label.setTextFormat(Qt.TextFormat.RichText)
+                        label.setTextInteractionFlags(
+                            qt_flags(
+                                Qt.TextInteractionFlag.TextSelectableByMouse,
+                                Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                                Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                            )
+                        )
+                        label.setOpenExternalLinks(True)
+                        label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+                        label.setMinimumWidth(0)
+                        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                        label.setText(remaining)
+                        self._content_layout.insertWidget(self._content_layout.count() - 1, label)
+                        self._content_widgets.append(label)
+                elif part.strip():
+                    # Regular HTML content (not a block)
+                    label = QLabel()
+                    label.setWordWrap(True)
+                    label.setTextFormat(Qt.TextFormat.RichText)
+                    label.setTextInteractionFlags(
+                        qt_flags(
+                            Qt.TextInteractionFlag.TextSelectableByMouse,
+                            Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                            Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                        )
+                    )
+                    label.setOpenExternalLinks(True)
+                    label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+                    label.setMinimumWidth(0)
+                    label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                    label.setText(part)
+                    self._content_layout.insertWidget(self._content_layout.count() - 1, label)
+                    self._content_widgets.append(label)
 
         self._pending_delta = 0
 
