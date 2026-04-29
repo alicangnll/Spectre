@@ -263,6 +263,8 @@ class RikuganPanelCore(QWidget):
         # Tab-to-ChatView mapping
         self._chat_views: dict[str, ChatView] = {}
         self._pending_restore_messages: dict[str, list] = {}
+        # Event buffers for inactive tabs - ensures events aren't lost when switching tabs
+        self._tab_event_buffers: dict[str, list[TurnEvent]] = {}
         self._context_bar: ContextBar | None = None
         self._mutation_panel: MutationLogPanel | None = None
         self._skills_refresh_timer: QTimer | None = None
@@ -736,6 +738,7 @@ class RikuganPanelCore(QWidget):
             return
         self._ctrl.switch_tab(tab_id)
         self._restore_messages_if_needed(tab_id)
+        self._replay_buffered_events_if_needed(tab_id)
         self._update_token_display()
 
     def _tab_id_at_index(self, index: int) -> str | None:
@@ -764,6 +767,17 @@ class RikuganPanelCore(QWidget):
         chat_view = self._chat_views.get(tab_id)
         if chat_view is not None:
             chat_view.restore_from_messages(messages)
+
+    def _replay_buffered_events_if_needed(self, tab_id: str) -> None:
+        """Replay buffered events for a tab when it becomes active."""
+        events = self._tab_event_buffers.pop(tab_id, None)
+        if not events:
+            return
+        chat_view = self._chat_views.get(tab_id)
+        if chat_view is not None:
+            for event in events:
+                if not self._is_shutdown:
+                    chat_view.handle_event(event)
 
     def _update_token_display(self, token_count: int | None = None) -> None:
         """Update the context bar token display with context window percentage."""
@@ -1003,9 +1017,27 @@ class RikuganPanelCore(QWidget):
         if self._is_shutdown:
             return
         chat_view = self._active_chat_view()
+
+        # If no active chat view exists for the current tab, buffer the event
         if chat_view is None:
+            current_tab_id = self._ctrl.active_tab_id
+            if current_tab_id not in self._tab_event_buffers:
+                self._tab_event_buffers[current_tab_id] = []
+            self._tab_event_buffers[current_tab_id].append(event)
             return
+
+        # Process any buffered events for this tab first (from previous tab switches)
+        current_tab_id = self._ctrl.active_tab_id
+        if current_tab_id in self._tab_event_buffers and self._tab_event_buffers[current_tab_id]:
+            for buffered_event in self._tab_event_buffers[current_tab_id]:
+                if not self._is_shutdown:
+                    chat_view.handle_event(buffered_event)
+            # Clear buffer after replaying (it's already been consumed)
+            self._tab_event_buffers[current_tab_id].clear()
+
+        # Handle the current event
         chat_view.handle_event(event)
+
         if event.usage:
             # Use prompt_tokens from the event directly — session hasn't
             # been updated yet during streaming, so session.last_prompt_tokens
