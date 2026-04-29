@@ -1066,13 +1066,7 @@ class RikuganPanelCore(QWidget):
         if self._is_shutdown:
             return
         chat_view = self._active_chat_view()
-
-        # If no active chat view exists for the current tab, buffer the event
         if chat_view is None:
-            current_tab_id = self._ctrl.active_tab_id
-            if current_tab_id not in self._tab_event_buffers:
-                self._tab_event_buffers[current_tab_id] = []
-            self._tab_event_buffers[current_tab_id].append(event)
             return
 
         # Handle the current event
