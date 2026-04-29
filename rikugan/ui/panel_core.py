@@ -263,6 +263,8 @@ class RikuganPanelCore(QWidget):
         # Tab-to-ChatView mapping
         self._chat_views: dict[str, ChatView] = {}
         self._pending_restore_messages: dict[str, list] = {}
+        # Event buffers for inactive tabs - ensures events aren't lost when switching tabs
+        self._tab_event_buffers: dict[str, list[TurnEvent]] = {}
         # Track agent running state per tab for proper button state management
         self._tab_agent_running: dict[str, bool] = {}
         self._context_bar: ContextBar | None = None
@@ -622,6 +624,7 @@ class RikuganPanelCore(QWidget):
             chat_view.deleteLater()
         # Clean up per-tab state
         self._tab_agent_running.pop(tab_id, None)
+        self._tab_event_buffers.pop(tab_id, None)
         self._update_tab_bar_visibility()
 
     def _on_export_tab(self, index: int) -> None:
@@ -742,6 +745,7 @@ class RikuganPanelCore(QWidget):
             return
         self._ctrl.switch_tab(tab_id)
         self._restore_messages_if_needed(tab_id)
+        self._replay_buffered_events_if_needed(tab_id)
         self._update_token_display()
         self._update_button_state_for_tab(tab_id)
 
@@ -771,6 +775,17 @@ class RikuganPanelCore(QWidget):
         chat_view = self._chat_views.get(tab_id)
         if chat_view is not None:
             chat_view.restore_from_messages(messages)
+
+    def _replay_buffered_events_if_needed(self, tab_id: str) -> None:
+        """Replay buffered events for a tab when it becomes active."""
+        events = self._tab_event_buffers.pop(tab_id, None)
+        if not events:
+            return
+        chat_view = self._chat_views.get(tab_id)
+        if chat_view is not None:
+            for event in events:
+                if not self._is_shutdown:
+                    chat_view.handle_event(event)
 
     def _update_token_display(self, token_count: int | None = None) -> None:
         """Update the context bar token display with context window percentage."""
@@ -912,22 +927,6 @@ class RikuganPanelCore(QWidget):
             self._ctrl.queue_message(text)
             chat_view.add_queued_message(text)
             return
-
-        # Check if there are pending queued messages for this tab
-        # Process them first before starting a new agent
-        pending_queue = getattr(self._ctrl, '_pending_messages', {})
-        current_tab_id = self._ctrl.active_tab_id
-        if current_tab_id in pending_queue and pending_queue[current_tab_id]:
-            # Add new message to queue
-            self._ctrl.queue_message(text)
-            chat_view.add_queued_message(text)
-            # Start agent with first queued message
-            first_queued = pending_queue[current_tab_id].pop(0)
-            if not pending_queue[current_tab_id]:
-                del pending_queue[current_tab_id]
-            self._start_agent(first_queued)
-            return
-
         self._start_agent(text)
 
     def _on_send_clicked(self) -> None:
@@ -1051,8 +1050,23 @@ class RikuganPanelCore(QWidget):
         if self._is_shutdown:
             return
         chat_view = self._active_chat_view()
+
+        # If no active chat view exists for the current tab, buffer the event
         if chat_view is None:
+            current_tab_id = self._ctrl.active_tab_id
+            if current_tab_id not in self._tab_event_buffers:
+                self._tab_event_buffers[current_tab_id] = []
+            self._tab_event_buffers[current_tab_id].append(event)
             return
+
+        # Process any buffered events for this tab first (from previous tab switches)
+        current_tab_id = self._ctrl.active_tab_id
+        if current_tab_id in self._tab_event_buffers and self._tab_event_buffers[current_tab_id]:
+            for buffered_event in self._tab_event_buffers[current_tab_id]:
+                if not self._is_shutdown:
+                    chat_view.handle_event(buffered_event)
+            # Clear buffer after replaying (it's already been consumed)
+            self._tab_event_buffers[current_tab_id].clear()
 
         # Handle the current event
         chat_view.handle_event(event)

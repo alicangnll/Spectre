@@ -70,9 +70,9 @@ class SessionControllerBase:
         tab_id = self._create_session()
         self._active_tab_id = tab_id
 
-        self._runner: BackgroundAgentRunner | None = None
-        # Per-tab message queues - each tab can queue messages independently
-        self._pending_messages: dict[str, list[str]] = {}
+        # Per-tab agent runners - each tab can run its own agent independently
+        self._runners: dict[str, BackgroundAgentRunner] = {}
+        self._pending_messages: list[str] = []
 
     def _initialize_runtime(self) -> None:
         """Load heavy runtime components off the UI path."""
@@ -147,9 +147,6 @@ class SessionControllerBase:
             db_instance_id=self._db_instance_id,
         )
         self._sessions[tab_id] = session
-        # Initialize queue for this tab
-        self._pending_messages[tab_id] = []
-        return tab_id
         return tab_id
 
     def create_tab(self) -> str:
@@ -192,18 +189,20 @@ class SessionControllerBase:
             except (OSError, ValueError) as e:
                 log_error(f"Failed to save session on tab close: {e}")
         del self._sessions[tab_id]
-        # Clean up queue for this tab
-        self._pending_messages.pop(tab_id, None)
+        # Clean up runner for this tab
+        runner = self._runners.pop(tab_id, None)
+        if runner:
+            runner.cancel()
         log_debug(f"Closed tab {tab_id}")
 
     def switch_tab(self, tab_id: str) -> None:
-        """Switch active tab. Keeps the shared runner running."""
+        """Switch active tab. No longer cancels running agent - each tab runs independently."""
         if tab_id == self._active_tab_id:
             return
         if tab_id not in self._sessions:
             return
-        # Note: We do NOT cancel the agent when switching tabs
-        # The shared runner continues, and new tabs can queue messages
+        # Note: We NO LONGER cancel the agent when switching tabs
+        # Each tab maintains its own agent runner independently
         self._active_tab_id = tab_id
         log_debug(f"Switched to tab {tab_id}")
 
@@ -253,12 +252,13 @@ class SessionControllerBase:
 
     @property
     def is_agent_running(self) -> bool:
-        """Check if agent is running (single shared runner for all tabs)."""
-        return self._runner is not None and self._runner.agent_loop.is_running
+        """Check if agent is running for the current tab."""
+        runner = self._runners.get(self._active_tab_id)
+        return runner is not None and runner.agent_loop.is_running
 
     def get_runner(self) -> BackgroundAgentRunner | None:
-        """Get the shared runner."""
-        return self._runner
+        """Get the runner for the current tab."""
+        return self._runners.get(self._active_tab_id)
 
     def get_provider(self) -> Any:
         """Create and return an LLMProvider instance for the current config."""
@@ -282,7 +282,7 @@ class SessionControllerBase:
         return self._tool_registry
 
     def start_agent(self, user_message: str) -> str | None:
-        """Create provider + agent loop and start the background runner."""
+        """Create provider + agent loop and start the background runner for the current tab."""
         if not self._runtime_init_done.is_set():
             # Delay only the first agent start if background init is still running.
             self._runtime_init_done.wait(timeout=10.0)
@@ -307,38 +307,38 @@ class SessionControllerBase:
             skill_registry=self._skill_registry,
             host_name=self.host_name,
         )
-        self._runner = BackgroundAgentRunner(loop)
-        self._runner.start(user_message)
+        runner = BackgroundAgentRunner(loop)
+        runner.start(user_message)
+        self._runners[self._active_tab_id] = runner
         return None
 
     def get_event(self, timeout: float = 0) -> TurnEvent | None:
-        """Get event from the shared runner."""
-        if self._runner is None:
+        """Get event from the current tab's runner."""
+        runner = self._runners.get(self._active_tab_id)
+        if runner is None:
             return None
-        return self._runner.get_event(timeout=timeout)
+        return runner.get_event(timeout=timeout)
 
     def cancel(self) -> None:
-        """Cancel the agent and clear pending messages for current tab."""
-        # Clear only current tab's pending messages
-        if self._active_tab_id in self._pending_messages:
-            self._pending_messages[self._active_tab_id].clear()
-        if self._runner:
-            self._runner.cancel()
+        """Cancel the agent for the current tab."""
+        self._pending_messages.clear()
+        runner = self._runners.get(self._active_tab_id)
+        if runner:
+            runner.cancel()
 
     def queue_message(self, text: str) -> None:
-        """Queue a message for the current tab."""
-        if self._active_tab_id not in self._pending_messages:
-            self._pending_messages[self._active_tab_id] = []
-        self._pending_messages[self._active_tab_id].append(text)
-        log_debug(f"Message queued for tab {self._active_tab_id}, {len(self._pending_messages[self._active_tab_id])} pending")
+        self._pending_messages.append(text)
+        log_debug(f"Message queued, {len(self._pending_messages)} pending")
 
     def on_agent_finished(self) -> None:
-        """Clean up the runner when agent finishes."""
-        self._runner = None
-
-        # Note: We do NOT auto-process queued messages here
-        # Queued messages remain in queue until user switches to that tab
-        # This gives users control over when queued messages are processed
+        """Clean up the runner for the current tab when agent finishes."""
+        runner = self._runners.pop(self._active_tab_id, None)
+        if runner:
+            # Runner will be garbage collected
+            pass
+        # Discard queued messages — context may have changed (error, cancel,
+        # model switch).  The user can re-send if still relevant.
+        self._pending_messages.clear()
 
         # Re-persist the instance ID in the database.  For BN the BNDB may
         # not have existed at init time; writing again ensures the ID is
@@ -356,9 +356,7 @@ class SessionControllerBase:
 
     def new_chat(self) -> None:
         """Reset the active tab to a fresh session."""
-        # Clear pending messages for current tab
-        if self._active_tab_id in self._pending_messages:
-            self._pending_messages[self._active_tab_id].clear()
+        self._pending_messages.clear()
         session = self._sessions.get(self._active_tab_id)
         if session and self.config.checkpoint_auto_save and session.messages:
             try:
@@ -467,9 +465,10 @@ class SessionControllerBase:
         self._runtime_shutdown.set()
         if self._runtime_init_thread.is_alive():
             self._runtime_init_done.wait(timeout=1.0)
-        if self._runner:
-            self._runner.cancel()
-            self._runner = None
+        # Cancel all runners across all tabs
+        for runner in self._runners.values():
+            runner.cancel()
+        self._runners.clear()
         # Final attempt to persist instance ID before the host saves the DB.
         set_database_instance_id(self._db_instance_id)
         for tab_id, session in self._sessions.items():

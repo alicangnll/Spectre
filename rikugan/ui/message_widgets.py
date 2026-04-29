@@ -338,22 +338,16 @@ class AssistantMessageWidget(QFrame):
         self._thinking_block = _ThinkingBlock()
         layout.addWidget(self._thinking_block)
 
-        self._content = QLabel()
-        self._content.setWordWrap(True)
-        self._content.setTextFormat(Qt.TextFormat.RichText)
-        self._content.setTextInteractionFlags(
-            qt_flags(
-                Qt.TextInteractionFlag.TextSelectableByMouse,
-                Qt.TextInteractionFlag.TextSelectableByKeyboard,
-                Qt.TextInteractionFlag.LinksAccessibleByMouse,
-            )
-        )
-        self._content.setOpenExternalLinks(True)
-        self._content.setStyleSheet("color: #d4d4d4; font-size: 13px;")
-        # Prevent the label from requesting more width than its parent
-        self._content.setMinimumWidth(0)
-        self._content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        layout.addWidget(self._content)
+        # Container for mixed content (HTML labels + code block widgets)
+        self._content_container = QWidget()
+        self._content_layout = QVBoxLayout(self._content_container)
+        self._content_layout.setContentsMargins(0, 0, 0, 0)
+        self._content_layout.setSpacing(4)
+        self._content_layout.addStretch()
+        layout.addWidget(self._content_container)
+
+        # Track current content widgets
+        self._content_widgets: list[QWidget] = []
 
     def _render(self) -> None:
         thinking, visible = _split_thinking(self._full_text)
@@ -363,7 +357,120 @@ class AssistantMessageWidget(QFrame):
         else:
             self._thinking_block.hide()
 
-        self._content.setText(md_to_html(visible))
+        # Parse markdown with code blocks extraction
+        html_content, code_blocks = md_to_html(visible, return_code_blocks=True)
+
+        # Clear existing content widgets
+        for widget in self._content_widgets:
+            widget.deleteLater()
+        self._content_widgets.clear()
+
+        # If no code blocks, use simple QLabel
+        if not code_blocks:
+            label = QLabel()
+            label.setWordWrap(True)
+            label.setTextFormat(Qt.TextFormat.RichText)
+            label.setTextInteractionFlags(
+                qt_flags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse,
+                    Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                    Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                )
+            )
+            label.setOpenExternalLinks(True)
+            label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+            label.setMinimumWidth(0)
+            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            label.setText(html_content)
+            self._content_layout.insertWidget(self._content_layout.count() - 1, label)
+            self._content_widgets.append(label)
+        else:
+            # Split HTML by code block placeholders and create widgets
+            parts = html_content.split("\x00BLOCK")
+            for i, part in enumerate(parts):
+                if not part:
+                    continue
+
+                # Check if this part starts with a placeholder (e.g., "0\x00")
+                if part[0].isdigit() and "\x00" in part:
+                    # Extract the block index
+                    end_idx = part.find("\x00")
+                    idx_str = part[:end_idx]
+                    try:
+                        block_idx = int(idx_str)
+                        if block_idx < len(code_blocks):
+                            lang, code = code_blocks[block_idx]
+                            code_widget = CodeBlockWidget(lang, code)
+                            self._content_layout.insertWidget(
+                                self._content_layout.count() - 1, code_widget
+                            )
+                            self._content_widgets.append(code_widget)
+
+                            # Process remaining content after the placeholder
+                            remaining = part[end_idx + 1:]
+                            if remaining.strip():
+                                label = QLabel()
+                                label.setWordWrap(True)
+                                label.setTextFormat(Qt.TextFormat.RichText)
+                                label.setTextInteractionFlags(
+                                    qt_flags(
+                                        Qt.TextInteractionFlag.TextSelectableByMouse,
+                                        Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                                        Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                                    )
+                                )
+                                label.setOpenExternalLinks(True)
+                                label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+                                label.setMinimumWidth(0)
+                                label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                                label.setText(remaining)
+                                self._content_layout.insertWidget(
+                                    self._content_layout.count() - 1, label
+                                )
+                                self._content_widgets.append(label)
+                    except (ValueError, IndexError):
+                        # If parsing fails, treat as regular text
+                        if part.strip():
+                            label = QLabel()
+                            label.setWordWrap(True)
+                            label.setTextFormat(Qt.TextFormat.RichText)
+                            label.setTextInteractionFlags(
+                                qt_flags(
+                                    Qt.TextInteractionFlag.TextSelectableByMouse,
+                                    Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                                    Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                                )
+                            )
+                            label.setOpenExternalLinks(True)
+                            label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+                            label.setMinimumWidth(0)
+                            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                            label.setText(part)
+                            self._content_layout.insertWidget(
+                                self._content_layout.count() - 1, label
+                            )
+                            self._content_widgets.append(label)
+                else:
+                    # Regular HTML content
+                    if part.strip():
+                        label = QLabel()
+                        label.setWordWrap(True)
+                        label.setTextFormat(Qt.TextFormat.RichText)
+                        label.setTextInteractionFlags(
+                            qt_flags(
+                                Qt.TextInteractionFlag.TextSelectableByMouse,
+                                Qt.TextInteractionFlag.TextSelectableByKeyboard,
+                                Qt.TextInteractionFlag.LinksAccessibleByMouse,
+                            )
+                        )
+                        label.setOpenExternalLinks(True)
+                        label.setStyleSheet("color: #d4d4d4; font-size: 13px;")
+                        label.setMinimumWidth(0)
+                        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                        label.setText(part)
+                        self._content_layout.insertWidget(self._content_layout.count() - 1, label)
+                        self._content_widgets.append(label)
+
         self._pending_delta = 0
 
     def append_text(self, delta: str) -> None:
