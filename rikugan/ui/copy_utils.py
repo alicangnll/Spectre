@@ -5,25 +5,22 @@ from .qt_compat import QApplication
 
 def add_copy_to_clipboard(text: str) -> None:
     """Copy text to system clipboard."""
-    clipboard = QApplication.clipboard()
-    # Use the clipboard mode constant - works for both Qt5 and Qt6
     try:
-        # Qt6 mode
-        clipboard.setText(text, mode=clipboard.Mode.Clipboard)
-    except AttributeError:
-        # Qt5 fallback
-        clipboard.setText(text, mode=1)  # QClipboard::Clipboard = 1
+        # Use Qt clipboard (works reliably in IDA Pro)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text)
+    except Exception as e:
+        print(f"Failed to copy to clipboard: {e}")
 
 
 def get_clipboard_text() -> str:
     """Get text from system clipboard."""
-    clipboard = QApplication.clipboard()
     try:
-        # Qt6 mode
-        return clipboard.text(mode=clipboard.Mode.Clipboard)
-    except AttributeError:
-        # Qt5 fallback
-        return clipboard.text(mode=1)  # QClipboard::Clipboard = 1
+        clipboard = QApplication.clipboard()
+        return clipboard.text()
+    except Exception as e:
+        print(f"Failed to get clipboard text: {e}")
+        return ""
 
 
 def create_copy_button_html(block_id: str, raw_code: str) -> str:

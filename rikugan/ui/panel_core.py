@@ -930,7 +930,16 @@ class RikuganPanelCore(QWidget):
         try:
             from .chat_history_dialog import ChatHistoryDialog
 
-            dlg = ChatHistoryDialog(self._config, parent=self)
+            # Get current file info for filtering
+            idb_path = getattr(self._ctrl, '_idb_path', '')
+            db_instance_id = getattr(self._ctrl, '_db_instance_id', '')
+
+            dlg = ChatHistoryDialog(
+                self._config,
+                parent=self,
+                idb_path=idb_path,
+                db_instance_id=db_instance_id
+            )
             dlg.exec()
             log_info("Chat history dialog closed")
         except Exception as e:

@@ -33,93 +33,20 @@ from .qt_compat import (
 class ChatHistoryDialog(QDialog):
     """Dialog for browsing and managing old chat sessions."""
 
-    def __init__(self, config: RikuganConfig, parent: QWidget = None):
+    def __init__(self, config: RikuganConfig, parent: QWidget = None, idb_path: str = "", db_instance_id: str = ""):
         super().__init__(parent)
         self._config = config
         self._history = SessionHistory(config)
         self._selected_session_id: str | None = None
         self._sessions: list[dict] = []
+        self._idb_path = idb_path
+        self._db_instance_id = db_instance_id
+        self._show_all = False  # Whether to show all sessions or filter by current file
 
         self.setWindowTitle("Rikugan - Old Chats")
         self.setMinimumSize(900, 600)
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #1e1e1e;
-                color: #d4d4d4;
-            }
-            QLabel {
-                color: #d4d4d4;
-                font-size: 12px;
-            }
-            QLineEdit {
-                background-color: #2d2d2d;
-                color: #d4d4d4;
-                border: 1px solid #3c3c3c;
-                border-radius: 4px;
-                padding: 6px;
-                font-size: 12px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #569cd6;
-            }
-            QListWidget {
-                background-color: #252526;
-                color: #d4d4d4;
-                border: 1px solid #3c3c3c;
-                border-radius: 4px;
-                font-size: 11px;
-            }
-            QListWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #3c3c3c;
-            }
-            QListWidget::item:selected {
-                background-color: #264f78;
-                color: #ffffff;
-            }
-            QListWidget::item:hover {
-                background-color: #2d2d2d;
-            }
-            QTextEdit {
-                background-color: #1a1a1a;
-                color: #d4d4d4;
-                border: 1px solid #3c3c3c;
-                border-radius: 4px;
-                padding: 8px;
-                font-family: 'Consolas', 'Monaco', monospace;
-                font-size: 12px;
-            }
-            QPushButton {
-                background-color: #2d2d2d;
-                color: #d4d4d4;
-                border: 1px solid #3c3c3c;
-                border-radius: 4px;
-                padding: 6px 16px;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #3c3c3c;
-            }
-            QPushButton:pressed {
-                background-color: #1e1e1e;
-            }
-            QPushButton#delete_btn {
-                background-color: #2d1a1a;
-                color: #f44747;
-                border: 1px solid #f44747;
-            }
-            QPushButton#delete_btn:hover {
-                background-color: #3a2a2a;
-            }
-            QPushButton#export_btn {
-                background-color: #1a2d1a;
-                color: #4ec9b0;
-                border: 1px solid #4ec9b0;
-            }
-            QPushButton#export_btn:hover {
-                background-color: #2a3a2a;
-            }
-        """)
+        # Don't set dialog-level stylesheet to avoid conflicts
+        # Individual widgets will be styled below
 
         self._build_ui()
         self._load_sessions()
@@ -132,15 +59,28 @@ class ChatHistoryDialog(QDialog):
 
         # Header with search
         header = QHBoxLayout()
-        title_label = QLabel("💬 Chat History")
+        title_label = QLabel("Chat History")
         title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #569cd6;")
         header.addWidget(title_label)
         header.addStretch()
 
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText("🔍 Search chats...")
+        self._search_edit.setPlaceholderText("Search chats...")
         self._search_edit.setFixedWidth(250)
         self._search_edit.textChanged.connect(self._on_search_changed)
+        self._search_edit.setStyleSheet("""
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 6px;
+                font-size: 11px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #569cd6;
+            }
+        """)
         header.addWidget(self._search_edit)
 
         layout.addLayout(header)
@@ -159,9 +99,46 @@ class ChatHistoryDialog(QDialog):
         list_header.addWidget(self._count_label)
         list_header.addStretch()
 
-        self._refresh_btn = QPushButton("🔄 Refresh")
+        self._filter_btn = QPushButton("Current File")
+        self._filter_btn.setCheckable(True)
+        self._filter_btn.setChecked(True)
+        self._filter_btn.setFixedWidth(100)
+        self._filter_btn.clicked.connect(self._toggle_filter)
+        self._filter_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            QPushButton:hover {
+                background-color: #3c3c3c;
+            }
+            QPushButton:checked {
+                background-color: #007acc;
+                color: white;
+            }
+        """)
+        list_header.addWidget(self._filter_btn)
+
+        self._refresh_btn = QPushButton("Refresh")
         self._refresh_btn.setFixedWidth(80)
         self._refresh_btn.clicked.connect(self._load_sessions)
+        self._refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            QPushButton:hover {
+                background-color: #3c3c3c;
+            }
+        """)
         list_header.addWidget(self._refresh_btn)
 
         left_layout.addLayout(list_header)
@@ -169,27 +146,98 @@ class ChatHistoryDialog(QDialog):
         self._session_list = QListWidget()
         self._session_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self._session_list.itemClicked.connect(self._on_session_selected)
+        self._session_list.setStyleSheet("""
+            QListWidget {
+                background-color: #252526;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                font-size: 11px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #3c3c3c;
+            }
+            QListWidget::item:selected {
+                background-color: #264f78;
+                color: #ffffff;
+            }
+            QListWidget::item:hover {
+                background-color: #2d2d2d;
+            }
+        """)
         left_layout.addWidget(self._session_list)
 
         # Action buttons for selected session
         action_layout = QHBoxLayout()
         action_layout.setSpacing(4)
 
-        self._view_btn = QPushButton("👁️ View")
+        self._view_btn = QPushButton("View")
         self._view_btn.setEnabled(False)
         self._view_btn.clicked.connect(self._view_selected_session)
+        self._view_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 6px 16px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #3c3c3c;
+            }
+            QPushButton:disabled {
+                background-color: #1e1e1e;
+                color: #6c6c6c;
+            }
+        """)
         action_layout.addWidget(self._view_btn)
 
-        self._export_btn = QPushButton("📥 Export")
+        self._export_btn = QPushButton("Export")
         self._export_btn.setObjectName("export_btn")
         self._export_btn.setEnabled(False)
         self._export_btn.clicked.connect(self._export_selected_session)
+        self._export_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1a2d1a;
+                color: #4ec9b0;
+                border: 1px solid #4ec9b0;
+                border-radius: 4px;
+                padding: 6px 16px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #2a3a2a;
+            }
+            QPushButton:disabled {
+                background-color: #1e1e1e;
+                color: #3a5a3a;
+            }
+        """)
         action_layout.addWidget(self._export_btn)
 
-        self._delete_btn = QPushButton("🗑️ Delete")
+        self._delete_btn = QPushButton("Delete")
         self._delete_btn.setObjectName("delete_btn")
         self._delete_btn.setEnabled(False)
         self._delete_btn.clicked.connect(self._delete_selected_session)
+        self._delete_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2d1a1a;
+                color: #f44747;
+                border: 1px solid #f44747;
+                border-radius: 4px;
+                padding: 6px 16px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #3a2a2a;
+            }
+            QPushButton:disabled {
+                background-color: #1e1e1e;
+                color: #5a3a3a;
+            }
+        """)
         action_layout.addWidget(self._delete_btn)
 
         left_layout.addLayout(action_layout)
@@ -208,6 +256,17 @@ class ChatHistoryDialog(QDialog):
         self._preview_text = QTextEdit()
         self._preview_text.setReadOnly(True)
         self._preview_text.setPlaceholderText("Select a chat to preview...")
+        self._preview_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #1a1a1a;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 12px;
+            }
+        """)
         right_layout.addWidget(self._preview_text)
 
         splitter.addWidget(right_panel)
@@ -224,8 +283,25 @@ class ChatHistoryDialog(QDialog):
 
     def _load_sessions(self) -> None:
         """Load all sessions from history."""
-        self._sessions = self._history.list_sessions()
+        if self._show_all:
+            # Show all sessions without filtering
+            self._sessions = self._history.list_sessions(idb_path="", db_instance_id="")
+        else:
+            # Filter by current file
+            self._sessions = self._history.list_sessions(idb_path=self._idb_path, db_instance_id=self._db_instance_id)
+
         self._update_session_list()
+
+    def _toggle_filter(self) -> None:
+        """Toggle between showing all sessions and filtering by current file."""
+        self._show_all = not self._filter_btn.isChecked()
+
+        if self._show_all:
+            self._filter_btn.setText("All Files")
+        else:
+            self._filter_btn.setText("Current File")
+
+        self._load_sessions()
 
     def _update_session_list(self, search_term: str = "") -> None:
         """Update the session list widget, optionally filtered by search."""
@@ -268,7 +344,7 @@ class ChatHistoryDialog(QDialog):
         provider = session.get("provider", "")
 
         # Create item text
-        item_text = f"📅 {date_str}\n💭 {description}\n📊 {msg_count} messages • {provider}/{model}"
+        item_text = f"[{date_str}]\n{description}\n{msg_count} messages • {provider}/{model}"
 
         item = QListWidgetItem(item_text)
         item.setData(Qt.ItemDataRole.UserRole, session["id"])
@@ -301,18 +377,18 @@ class ChatHistoryDialog(QDialog):
 
         # Build preview text
         lines = []
-        lines.append(f"Session ID: {session.id}")
-        lines.append(f"Created: {datetime.fromtimestamp(session.created_at).strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append(f"Provider: {session.provider_name}")
-        lines.append(f"Model: {session.model_name}")
+        lines.append(f"**Session ID:** {session.id}")
+        lines.append(f"**Created:** {datetime.fromtimestamp(session.created_at).strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append(f"**Provider:** {session.provider_name}")
+        lines.append(f"**Model:** {session.model_name}")
         if session.idb_path:
-            lines.append(f"File: {os.path.basename(session.idb_path)}")
-        lines.append(f"Messages: {len(session.messages)}")
+            lines.append(f"**File:** {os.path.basename(session.idb_path)}")
+        lines.append(f"**Messages:** {len(session.messages)}")
         lines.append("")
-        lines.append("─" * 60)
+        lines.append("---")
         lines.append("")
 
-        # Show first few messages
+        # Show first few messages with markdown
         preview_count = 0
         max_preview = 10  # Show first 10 messages
 
@@ -324,10 +400,10 @@ class ChatHistoryDialog(QDialog):
             if len(content) > 200:
                 content = content[:200] + "..."
 
-            lines.append(f"**{role}**:")
+            lines.append(f"**{role}:**")
             lines.append(content)
             lines.append("")
-            lines.append("─" * 40)
+            lines.append("---")
             lines.append("")
 
             preview_count += 1
@@ -338,7 +414,10 @@ class ChatHistoryDialog(QDialog):
                 break
 
         preview_text = "\n".join(lines)
-        self._preview_text.setPlainText(preview_text)
+
+        # Use markdown rendering
+        from .markdown import md_to_html
+        self._preview_text.setHtml(md_to_html(preview_text))
 
     def _view_selected_session(self) -> None:
         """View the full selected session."""
@@ -354,6 +433,25 @@ class ChatHistoryDialog(QDialog):
         dialog = QDialog(self)
         dialog.setWindowTitle(f"Session: {self._selected_session_id[:8]}")
         dialog.setMinimumSize(800, 600)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #1e1e1e;
+                color: #d4d4d4;
+            }
+            QLabel {
+                color: #d4d4d4;
+                font-size: 12px;
+            }
+            QTextEdit {
+                background-color: #1a1a1a;
+                color: #d4d4d4;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 12px;
+            }
+        """)
 
         layout = QVBoxLayout(dialog)
 
@@ -467,7 +565,7 @@ class ChatHistoryDialog(QDialog):
             QMessageBox.warning(self, "Error", "Failed to delete chat.")
 
 
-def show_chat_history(config: RikuganConfig, parent: QWidget = None) -> None:
+def show_chat_history(config: RikuganConfig, parent: QWidget = None, idb_path: str = "", db_instance_id: str = "") -> None:
     """Convenience function to show the chat history dialog."""
-    dialog = ChatHistoryDialog(config, parent)
+    dialog = ChatHistoryDialog(config, parent, idb_path, db_instance_id)
     dialog.exec()

@@ -268,6 +268,9 @@ class AssistantMessageWidget(QFrame):
         # Enable context menu for copy functionality
         self._content.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._content.customContextMenuRequested.connect(self._show_context_menu)
+        # Enable mouse tracking for double-click to copy
+        self._content.setMouseTracking(True)
+        self._content.mouseDoubleClickEvent = self._on_double_click
         # Prevent the label from requesting more width than its parent
         self._content.setMinimumWidth(0)
         self._content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
@@ -306,12 +309,16 @@ class AssistantMessageWidget(QFrame):
             return False
 
         try:
+            # Use Qt clipboard (works in both IDA and standalone)
             from .copy_utils import add_copy_to_clipboard
             last_block = self._code_blocks[-1]
             add_copy_to_clipboard(last_block['code'])
+            print(f"Copied code block ({len(last_block['code'])} chars)")
             return True
         except Exception as e:
             print(f"Failed to copy code block: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def copy_all_code_blocks(self) -> bool:
@@ -327,17 +334,31 @@ class AssistantMessageWidget(QFrame):
             from .copy_utils import add_copy_to_clipboard
             all_code = '\n\n'.join(block['code'] for block in self._code_blocks)
             add_copy_to_clipboard(all_code)
+            print(f"Copied {len(self._code_blocks)} code blocks ({len(all_code)} chars)")
             return True
         except Exception as e:
             print(f"Failed to copy code blocks: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def has_code_blocks(self) -> bool:
         """Check if this message contains any code blocks."""
         return len(self._code_blocks) > 0
 
+    def _on_double_click(self, event) -> None:
+        """Handle double-click to copy code blocks."""
+        if self._code_blocks:
+            if self.copy_last_code_block():
+                self._show_copy_feedback()
+                print("Code copied (double-click)")
+        # Call original event handler
+        QLabel.mouseDoubleClickEvent(self._content, event)
+
     def _show_context_menu(self, pos) -> None:
         """Show context menu with copy options."""
+        import sys
+
         menu = QMenu(self)
         menu.setStyleSheet("""
             QMenu {
@@ -356,10 +377,15 @@ class AssistantMessageWidget(QFrame):
         if self._code_blocks:
             # Add copy options for code blocks
             if len(self._code_blocks) == 1:
-                menu.addAction("📋 Copy Code", self.copy_last_code_block)
+                action = menu.addAction("Copy Code")
+                # Use lambda to avoid immediate execution
+                action.triggered.connect(lambda checked=False: self._safe_copy_last())
             else:
-                menu.addAction("📋 Copy Last Code Block", self.copy_last_code_block)
-                menu.addAction("📋 Copy All Code Blocks", self.copy_all_code_blocks)
+                action_last = menu.addAction("Copy Last Code Block")
+                action_last.triggered.connect(lambda checked=False: self._safe_copy_last())
+
+                action_all = menu.addAction("Copy All Code Blocks")
+                action_all.triggered.connect(lambda checked=False: self._safe_copy_all())
 
             menu.addSeparator()
 
@@ -368,6 +394,22 @@ class AssistantMessageWidget(QFrame):
         menu.setActiveAction(menu.actions()[-1])
 
         menu.exec_(self._content.mapToGlobal(pos))
+
+    def _safe_copy_last(self) -> None:
+        """Safely copy last code block with error handling."""
+        try:
+            if self.copy_last_code_block():
+                self._show_copy_feedback()
+        except Exception as e:
+            print(f"Error in copy_last_code_block: {e}")
+
+    def _safe_copy_all(self) -> None:
+        """Safely copy all code blocks with error handling."""
+        try:
+            if self.copy_all_code_blocks():
+                self._show_copy_feedback()
+        except Exception as e:
+            print(f"Error in copy_all_code_blocks: {e}")
 
     def keyPressEvent(self, event) -> None:
         """Handle keyboard shortcuts for copying code blocks."""
