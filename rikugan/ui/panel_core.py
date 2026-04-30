@@ -538,6 +538,13 @@ class RikuganPanelCore(QWidget):
         self._tools_btn.clicked.connect(self._on_toggle_tools)
         btn_layout.addWidget(self._tools_btn)
 
+        self._create_agent_btn = QPushButton("Agent+")
+        self._create_agent_btn.setFixedWidth(64)
+        self._create_agent_btn.setStyleSheet(_SMALL_BTN_STYLE)
+        self._create_agent_btn.clicked.connect(self._on_create_agent)
+        self._create_agent_btn.setToolTip("Create new agent/skill")
+        btn_layout.addWidget(self._create_agent_btn)
+
         btn_layout.addStretch()
         return btn_layout
 
@@ -972,6 +979,32 @@ class RikuganPanelCore(QWidget):
             dlg.setParent(None)
         except Exception as e:
             log_error(f"Settings dialog error: {e}")
+
+    def _on_create_agent(self) -> None:
+        """Open the agent creation dialog."""
+        try:
+            from .agent_creator_dialog import AgentCreatorDialog
+            from pathlib import Path
+            import rikugan.skills
+
+            # Get the built-in skills directory directly
+            skills_dir = Path(rikugan.skills.__file__).parent / "builtins"
+
+            dlg = AgentCreatorDialog(skills_dir, parent=self)
+            qt_run(dlg)
+
+            # Optionally show info about the created agent
+            created_path = dlg.get_created_skill_path()
+            if created_path:
+                log_info(f"New agent created at: {created_path}")
+
+        except Exception as e:
+            log_error(f"Agent creation dialog error: {e}")
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to open agent creation dialog:\n{str(e)}",
+            )
 
     def _show_new_chat_dialog(self, context_pct: int) -> str:
         """Show a confirmation dialog with context usage. Returns 'yes', 'clear', or 'no'."""

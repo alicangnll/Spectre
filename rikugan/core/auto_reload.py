@@ -255,6 +255,10 @@ def trigger_manual_reload() -> None:
     _reload_rikugan()
 
 
+# Alias for convenience
+trigger_reload = trigger_manual_reload
+
+
 # Convenience function for use in IDA
 def enable_auto_reload() -> bool:
     """Enable auto-reload for development convenience.

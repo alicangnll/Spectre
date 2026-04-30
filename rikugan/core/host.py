@@ -180,6 +180,10 @@ def navigate_to(address: int) -> bool:
     return False
 
 
+# Alias for backwards compatibility and clearer naming
+navigate_to_address = navigate_to
+
+
 def get_user_config_base_dir() -> str:
     """Return host-specific user base directory for Rikugan config/log files."""
     if is_ida():

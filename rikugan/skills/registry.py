@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from ..core.config import RikuganConfig
 from ..core.logging import log_debug, log_error, log_info
 from .loader import SkillDefinition, discover_skills
+
+
+# Singleton instance
+_instance = None
 
 
 class SkillRegistry:
@@ -24,6 +29,20 @@ class SkillRegistry:
             skills_dir = RikuganConfig().skills_dir
         self._skills_dir = skills_dir
         self._skills: dict[str, SkillDefinition] = {}
+        self._builtin_skills_dir = Path(__file__).parent / "builtins"
+
+    @classmethod
+    def get_instance(cls) -> "SkillRegistry":
+        """Get the singleton SkillRegistry instance."""
+        global _instance
+        if _instance is None:
+            _instance = cls()
+        return _instance
+
+    @property
+    def builtin_skills_dir(self) -> Path:
+        """Get the built-in skills directory path."""
+        return self._builtin_skills_dir
 
     def discover(self) -> int:
         """Scan built-in and user skills directories. Returns total count."""

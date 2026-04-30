@@ -33,6 +33,7 @@ from .qt_compat import (
     QTimer,
     QVBoxLayout,
     QWidget,
+    qt_run,
 )
 
 _DEFAULT_MINIMAX_URL = "https://api.minimax.io/anthropic"
@@ -396,6 +397,16 @@ class SettingsDialog(QDialog):
         self._auto_context_cb = QCheckBox("Auto-inject binary context into system prompt")
         self._auto_context_cb.setChecked(self._config.auto_context)
         behavior_form.addRow(self._auto_context_cb)
+
+        # Add "Create Agent" button
+        create_agent_btn = QPushButton("Create New Agent")
+        create_agent_btn.setStyleSheet(
+            "QPushButton { background: #2d2d2d; color: #4ec9b0; border: 1px solid #4ec9b0; "
+            "border-radius: 4px; padding: 6px 16px; font-size: 11px; }"
+            "QPushButton:hover { background: #3c3c3c; }"
+        )
+        create_agent_btn.clicked.connect(self._on_create_agent)
+        behavior_form.addRow(create_agent_btn)
 
         self._auto_save_cb = QCheckBox("Auto-save sessions")
         self._auto_save_cb.setChecked(self._config.checkpoint_auto_save)
@@ -1293,4 +1304,27 @@ class SettingsDialog(QDialog):
         """Handle custom events for update results."""
         # Update checking uses QTimer-based polling, so we don't need this
         # but we keep it for future use
+
+    def _on_create_agent(self) -> None:
+        """Open the agent creation dialog from settings."""
+        try:
+            from .agent_creator_dialog import AgentCreatorDialog
+            from pathlib import Path
+            import rikugan.skills
+
+            # Get the built-in skills directory directly
+            skills_dir = Path(rikugan.skills.__file__).parent / "builtins"
+
+            dlg = AgentCreatorDialog(skills_dir, parent=self)
+            qt_run(dlg)
+
+            # Optionally show info about the created agent
+            created_path = dlg.get_created_skill_path()
+            if created_path:
+                from ..core.logging import log_info
+                log_info(f"New agent created at: {created_path}")
+
+        except Exception as e:
+            from ..core.logging import log_error
+            log_error(f"Agent creation dialog error: {e}")
         super().customEvent(event)
