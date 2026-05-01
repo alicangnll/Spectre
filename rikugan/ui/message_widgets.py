@@ -516,8 +516,11 @@ class AssistantMessageWidget(QFrame):
         return label
 
     def _on_link_hovered(self, url: str) -> None:
-        """Handle link hover - show tooltip with address info."""
-        if url.startswith("ida://"):
+        """Handle link hover - show tooltip with address/function info."""
+        if url.startswith("ida://func:"):
+            func_name = url[11:]  # Remove "ida://func:" prefix
+            self._show_function_tooltip(func_name)
+        elif url.startswith("ida://"):
             address_str = url[6:]  # Remove "ida://" prefix
             self._show_address_tooltip(address_str)
         else:
@@ -579,8 +582,12 @@ class AssistantMessageWidget(QFrame):
             log_debug(f"Failed to show address tooltip: {e}")
 
     def _on_link_clicked(self, url: str) -> None:
-        """Handle link clicks - IDA address jumps, findings, and external links."""
-        if url.startswith("ida://"):
+        """Handle link clicks - IDA address jumps, function names, findings, and external links."""
+        if url.startswith("ida://func:"):
+            # Extract function name from ida://func:generatePWFOTP format
+            func_name = url[11:]  # Remove "ida://func:" prefix
+            self._jump_to_function(func_name)
+        elif url.startswith("ida://"):
             # Extract address from ida://0x401000 format
             address_str = url[6:]  # Remove "ida://" prefix
             self._jump_to_address(address_str)
@@ -638,6 +645,60 @@ class AssistantMessageWidget(QFrame):
         except Exception as e:
             from ..core.logging import log_error
             log_error(f"Failed to jump to address {address_str}: {e}")
+
+    def _jump_to_function(self, func_name: str) -> None:
+        """Jump to function by name in IDA."""
+        try:
+            from ..core.host import is_ida, navigate_to_address
+            from ..core.logging import log_info, log_debug, log_error
+            import re
+
+            if not is_ida():
+                log_debug(f"Not running in IDA, cannot jump to function: {func_name}")
+                return
+
+            # Try to find the function in IDA
+            from ..core import host
+            if host._idaapi:
+                # Try to get function by name
+                func_addr = host._idaapi.get_name_ea_simple(func_name)
+
+                if func_addr == host._idaapi.BADADDR:
+                    # Function not found, try case-insensitive search
+                    log_debug(f"Function '{func_name}' not found, trying case-insensitive search...")
+
+                    # Get all function names and try to match
+                    for func_ea in host._idaapi.Functions():
+                        current_name = host._idaapi.get_func_name(func_ea)
+                        if current_name.lower() == func_name.lower():
+                            func_addr = func_ea
+                            log_info(f"Found function '{current_name}' at 0x{func_addr:X}")
+                            break
+
+                    if func_addr == host._idaapi.BADADDR:
+                        # Try partial match (substring)
+                        for func_ea in host._idaapi.Functions():
+                            current_name = host._idaapi.get_func_name(func_ea)
+                            if func_name.lower() in current_name.lower():
+                                func_addr = func_ea
+                                log_info(f"Found similar function '{current_name}' at 0x{func_addr:X}")
+                                break
+
+                if func_addr != host._idaapi.BADADDR:
+                    # Jump to function
+                    log_info(f"Jumping to function '{func_name}' at 0x{func_addr:X}")
+                    success = navigate_to_address(func_addr)
+                    if not success:
+                        log_debug(f"Failed to jump to function '{func_name}' at 0x{func_addr:X}")
+                else:
+                    log_debug(f"Function '{func_name}' not found in IDA database")
+                    # Show user-friendly message
+                    from ..core.logging import log_warning
+                    log_warning(f"Could not find function '{func_name}'. Make sure the function exists in the current database.")
+
+        except Exception as e:
+            from ..core.logging import log_error
+            log_error(f"Failed to jump to function {func_name}: {e}")
 
     def _jump_to_finding(self, address_str: str) -> None:
         """Jump to finding and display bookmark details."""

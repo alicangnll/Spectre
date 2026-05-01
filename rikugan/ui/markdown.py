@@ -539,6 +539,17 @@ def _inline_formatting(text: str) -> str:
         addr = m.group(0)
         return f'<a style="color:{_LINK_COLOR}; text-decoration:underline;" href="ida://{addr}">{addr}</a>'
 
+    # Function names: convert to clickable links
+    def _make_function_link(m: re.Match) -> str:
+        func_name = m.group(0)
+        return f'<a style="color:#4ec9b0; text-decoration:underline; font-weight:bold;" href="ida://func:{func_name}">{func_name}</a>'
+
+    # Match function names (but not after . or -> to avoid member functions being linked twice)
+    # Valid function names: start with letter or underscore, contain alphanumeric chars and underscores
+    # Examples: generatePWFOTP, generateOPTOTP, main, _start, func123
+    # Exclude: common words, type names (int, char, etc.), and keywords
+    text = re.sub(r"(?<![.\-/>])\b([a-zA-Z_][a-zA-Z0-9_]{6,})\b(?!\s*\()", _make_function_link, text)
+
     # Match various hex address formats
     # sub_401000, loc_401000, off_401000, etc. (IDA labels) - do first to avoid partial matches
     text = re.sub(r"\b(?:sub|loc|off|seg|str|byte|word|dword|qword|asc)_[0-9a-fA-F]+\b", _make_address_link, text)
