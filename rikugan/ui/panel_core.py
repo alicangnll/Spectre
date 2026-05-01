@@ -384,12 +384,13 @@ class RikuganPanelCore(QWidget):
         self._mode_bar.setDrawBase(False)
         self._mode_bar.addTab("Chat")
         self._mode_bar.addTab("Tools")
+        self._mode_bar.addTab("Functions")
         self._mode_bar.currentChanged.connect(self._on_mode_changed)
         if self._tools_form_factory is not None:
             self._mode_bar.setVisible(False)
         layout.addWidget(self._mode_bar)
 
-        # Stacked content: page 0 = chat, page 1 = tools
+        # Stacked content: page 0 = chat, page 1 = tools, page 2 = functions
         self._mode_stack = QStackedWidget()
         layout.addWidget(self._mode_stack, 1)
 
@@ -416,6 +417,13 @@ class RikuganPanelCore(QWidget):
             # Binary Ninja: embed directly in the mode stack.
             self._mode_stack.addWidget(self._tools_panel)
         self._tools_tab_index = -1  # kept for IDA compat
+
+        # --- Page 2: Functions (lazily initialized) ---
+        self._functions_page: QWidget | None = None
+        self._functions_list = None
+        self._functions_search = None
+        _functions_placeholder = QWidget()
+        self._mode_stack.addWidget(_functions_placeholder)
 
         self._context_bar = ContextBar()
         self._context_bar.set_model(self._config.provider.model)
@@ -1245,11 +1253,13 @@ class RikuganPanelCore(QWidget):
         self._mutations_btn.setChecked(visible)
 
     def _on_mode_changed(self, index: int) -> None:
-        """Handle the Chat / Tools mode bar switch."""
+        """Handle the Chat / Tools / Functions mode bar switch."""
         self._mode_stack.setCurrentIndex(index)
         if index == 1:
             self._ensure_tools_initialized()
             self._tools_btn.setChecked(True)
+        elif index == 2:
+            self._ensure_functions_initialized()
         else:
             self._tools_btn.setChecked(False)
 
@@ -1339,6 +1349,218 @@ class RikuganPanelCore(QWidget):
         self._tools_poll_timer.setInterval(100)
         self._tools_poll_timer.timeout.connect(self._poll_tools_events)
         self._tools_poll_timer.start()
+
+    def _ensure_functions_initialized(self) -> None:
+        """Lazily initialize functions panel contents on first open."""
+        if getattr(self, "_functions_initialized", False):
+            return
+        self._functions_initialized = True
+
+        # Remove placeholder and add real functions page
+        if self._functions_page is None:
+            self._functions_page = QWidget()
+            functions_layout = QVBoxLayout(self._functions_page)
+            functions_layout.setContentsMargins(8, 8, 8, 8)
+            functions_layout.setSpacing(8)
+
+            # Search box
+            search_layout = QHBoxLayout()
+            title_label = QLabel("Functions")
+            title_label.setStyleSheet("color: #569cd6; font-weight: bold; font-size: 14px;")
+            search_layout.addWidget(title_label)
+            search_layout.addStretch()
+            functions_layout.addLayout(search_layout)
+
+            self._functions_search = QLineEdit()
+            self._functions_search.setPlaceholderText("Search functions...")
+            self._functions_search.setStyleSheet(
+                "QLineEdit {"
+                "background: #1e1e1e; "
+                "color: #d4d4d4; "
+                "border: 1px solid #3c3c3c; "
+                "border-radius: 4px; "
+                "padding: 6px; "
+                "font-size: 12px;"
+                "}"
+            )
+            self._functions_search.textChanged.connect(self._on_functions_search_changed)
+            functions_layout.addWidget(self._functions_search)
+
+            # Function list
+            from .qt_compat import QListWidget, QListWidgetItem, QSplitter
+            self._functions_list = QListWidget()
+            self._functions_list.setStyleSheet(
+                "QListWidget {"
+                "background: #1e1e1e; "
+                "color: #d4d4d4; "
+                "border: 1px solid #3c3c3c; "
+                "border-radius: 4px;"
+                "}"
+                "QListWidget::item {"
+                "padding: 6px;"
+                "}"
+                "QListWidget::item:hover {"
+                "background: #2d2d3e;"
+                "}"
+                "QListWidget::item:selected {"
+                "background: #3d3d5e;"
+                "}"
+            )
+            self._functions_list.itemDoubleClicked.connect(self._on_function_double_clicked)
+            functions_layout.addWidget(self._functions_list)
+
+            # Translate button
+            translate_btn = QPushButton("AI Translate to C")
+            translate_btn.setStyleSheet(
+                "QPushButton {"
+                "background: #2d4a6e; "
+                "color: #9cdcfe; "
+                "border: 1px solid #4a7ab5; "
+                "border-radius: 4px; "
+                "padding: 8px 16px; "
+                "font-size: 12px;"
+                "}"
+                "QPushButton:hover {"
+                "background: #3a5a8a;"
+                "}"
+                "QPushButton:pressed {"
+                "background: #1a3a5e;"
+                "}"
+            )
+            translate_btn.clicked.connect(self._on_function_translate_clicked)
+            functions_layout.addWidget(translate_btn)
+
+            # Replace placeholder with real page
+            current_index = self._mode_stack.indexOf(self._mode_stack.widget(2))
+            self._mode_stack.removeWidget(self._mode_stack.widget(2))
+            self._mode_stack.insertWidget(2, self._functions_page)
+
+            # Load functions
+            self._load_functions()
+
+    def _load_functions(self, filter_text: str = "") -> None:
+        """Load functions from the binary into the list."""
+        if self._functions_list is None:
+            return
+
+        self._functions_list.clear()
+
+        try:
+            from ..core.host import is_ida, is_binary_ninja
+
+            if is_ida():
+                self._load_ida_functions(filter_text)
+            elif is_binary_ninja():
+                self._load_binary_ninja_functions(filter_text)
+            else:
+                self._functions_list.addItem("Functions not supported in this host")
+        except Exception as e:
+            self._functions_list.addItem(f"Error loading functions: {e}")
+
+    def _load_ida_functions(self, filter_text: str = "") -> None:
+        """Load functions from IDA."""
+        try:
+            import idautils
+            import ida_name
+
+            for func_ea in idautils.Functions():
+                func_name = ida_name.get_name(func_ea)
+
+                # Filter by search text
+                if filter_text and filter_text.lower() not in func_name.lower():
+                    continue
+
+                from .qt_compat import QListWidgetItem
+                item = QListWidgetItem(f"{func_name} @ 0x{func_ea:X}")
+                item.setData(Qt.ItemDataRole.UserRole, (func_name, func_ea))
+                self._functions_list.addItem(item)
+
+        except Exception as e:
+            self._functions_list.addItem(f"Error loading IDA functions: {e}")
+
+    def _load_binary_ninja_functions(self, filter_text: str = "") -> None:
+        """Load functions from Binary Ninja."""
+        try:
+            from ..core import host
+
+            if not host._bn:
+                self._functions_list.addItem("Binary Ninja API not available")
+                return
+
+            for func in host._bn.functions():
+                func_name = func.name
+
+                # Filter by search text
+                if filter_text and filter_text.lower() not in func_name.lower():
+                    continue
+
+                from .qt_compat import QListWidgetItem
+                item = QListWidgetItem(f"{func_name} @ {func.start}")
+                item.setData(Qt.ItemDataRole.UserRole, (func_name, func.start))
+                self._functions_list.addItem(item)
+
+        except Exception as e:
+            self._functions_list.addItem(f"Error loading Binary Ninja functions: {e}")
+
+    def _on_functions_search_changed(self, text: str) -> None:
+        """Handle search text change."""
+        self._load_functions(text)
+
+    def _on_function_double_clicked(self, item) -> None:
+        """Handle function double-click - jump to function."""
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if data:
+            func_name, func_addr = data
+            self._jump_to_function(func_name, func_addr)
+
+    def _on_function_translate_clicked(self) -> None:
+        """Handle AI Translate button click."""
+        if self._functions_list is None:
+            return
+
+        current_item = self._functions_list.currentItem()
+        if not current_item:
+            return
+
+        data = current_item.data(Qt.ItemDataRole.UserRole)
+        if data:
+            func_name, func_addr = data
+            prompt = f"""Please translate this function to clean, readable C code with proper variable names and comments:
+
+Function: {func_name}
+Address: {func_addr}
+
+First, decompile this function and analyze its logic. Then provide:
+1. A high-level summary of what the function does
+2. Clean C code equivalent with:
+   - Proper variable names (not var1, var2, etc.)
+   - Helpful comments explaining the logic
+   - Standard C syntax and conventions
+   - Any necessary type definitions
+
+Please make the code as readable and maintainable as possible."""
+
+            # Switch to chat tab and send prompt
+            self._mode_bar.setCurrentIndex(0)
+            if hasattr(self, '_input_area'):
+                self._input_area.set_text(prompt)
+                self._input_area.submit()
+
+    def _jump_to_function(self, func_name: str, func_addr) -> None:
+        """Jump to function in disassembly view."""
+        try:
+            from ..core.host import is_ida, is_binary_ninja
+
+            if is_ida():
+                import idaapi
+                idaapi.jumpto(func_addr)
+                idaapi.open_disasm_window(func_addr)
+            elif is_binary_ninja():
+                from ..core import host
+                if host._bn and hasattr(func_addr, 'view'):
+                    func_addr.view.navigate(func_addr.start)
+        except Exception as e:
+            log_error(f"Failed to jump to function {func_name}: {e}")
 
     def _get_or_create_subagent_manager(self):
         """Lazily create the SubagentManager."""

@@ -137,7 +137,9 @@ class RikuganPlugin(idaapi.plugin_t):
     def init(self) -> idaapi.plugmod_t:
         _ver = importlib.import_module("rikugan.constants").PLUGIN_VERSION
         idaapi.msg(f"[Rikugan] Plugin loaded (v{_ver})\n")
-        return RikuganPlugmod()
+
+        plugmod_instance = RikuganPlugmod()
+        return plugmod_instance
 
 
 def _log(msg: str) -> None:
