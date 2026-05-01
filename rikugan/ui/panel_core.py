@@ -1324,7 +1324,10 @@ class RikuganPanelCore(QWidget):
         if getattr(self, "_tools_initialized", False):
             return
         if self._tools_panel is None:
-            return
+            # Recreate tools panel if it was destroyed
+            from .tools_panel import ToolsPanel
+            self._tools_panel = ToolsPanel()
+            self._tools_panel.hide_header()
         self._tools_initialized = True
 
         from .agent_tree import AgentTreeWidget
