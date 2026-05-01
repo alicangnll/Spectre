@@ -581,6 +581,33 @@ class AssistantMessageWidget(QFrame):
             from ..core.logging import log_debug
             log_debug(f"Failed to show address tooltip: {e}")
 
+    def _show_function_tooltip(self, func_name: str) -> None:
+        """Show tooltip with function information."""
+        try:
+            from ..core.host import is_ida
+            from ..core.logging import log_debug
+
+            tooltip_text = f"Click to jump to {func_name}()"
+
+            if is_ida():
+                try:
+                    from ..core import host
+                    if host._idaapi:
+                        # Try to get function address
+                        func_addr = host._idaapi.get_name_ea_simple(func_name)
+                        if func_addr != host._idaapi.BADADDR:
+                            tooltip_text = f"Jump to {func_name}()\n0x{func_addr:X}"
+                        else:
+                            tooltip_text = f"Function '{func_name}' not found"
+                except Exception:
+                    pass  # Keep default tooltip
+
+            from ..core.logging import log_debug
+            log_debug(f"Function hover: {tooltip_text}")
+        except Exception as e:
+            from ..core.logging import log_debug
+            log_debug(f"Failed to show function tooltip: {e}")
+
     def _on_link_clicked(self, url: str) -> None:
         """Handle link clicks - IDA address jumps, function names, findings, and external links."""
         if url.startswith("ida://func:"):
