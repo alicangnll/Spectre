@@ -37,6 +37,7 @@ from .qt_compat import (
     Qt,
     QTabBar,
     QTabWidget,
+    QTextEdit,
     QTimer,
     QToolButton,
     QVBoxLayout,
@@ -426,6 +427,10 @@ class RikuganPanelCore(QWidget):
         self._functions_page: QWidget | None = None
         self._functions_list = None
         self._functions_search = None
+        self._functions_page_num = 0
+        self._functions_page_size = 20
+        self._functions_all_data = []  # Store all (name, addr) tuples
+        self._functions_filtered_data = []  # Store filtered (name, addr) tuples
         _functions_placeholder = QWidget()
         self._mode_stack.addWidget(_functions_placeholder)
 
@@ -1390,6 +1395,36 @@ class RikuganPanelCore(QWidget):
             self._functions_search.textChanged.connect(self._on_functions_search_changed)
             functions_layout.addWidget(self._functions_search)
 
+            # Pagination controls
+            pagination_layout = QHBoxLayout()
+            self._functions_page_label = QLabel("Page 1")
+            self._functions_page_label.setStyleSheet("color: #808080; font-size: 11px;")
+            pagination_layout.addWidget(self._functions_page_label)
+
+            self._functions_prev_btn = QPushButton("← Prev")
+            self._functions_prev_btn.setStyleSheet(
+                "QPushButton { background: #2d4a6e; color: #9cdcfe; border: 1px solid #4a7ab5; "
+                "border-radius: 3px; padding: 4px 8px; font-size: 10px; }"
+                "QPushButton:hover { background: #3a5a8a; }"
+                "QPushButton:disabled { color: #505050; background: #1e1e1e; border-color: #303030; }"
+            )
+            self._functions_prev_btn.clicked.connect(lambda: self._on_functions_page_changed(-1))
+            self._functions_prev_btn.setEnabled(False)
+            pagination_layout.addWidget(self._functions_prev_btn)
+
+            self._functions_next_btn = QPushButton("Next →")
+            self._functions_next_btn.setStyleSheet(
+                "QPushButton { background: #2d4a6e; color: #9cdcfe; border: 1px solid #4a7ab5; "
+                "border-radius: 3px; padding: 4px 8px; font-size: 10px; }"
+                "QPushButton:hover { background: #3a5a8a; }"
+                "QPushButton:disabled { color: #505050; background: #1e1e1e; border-color: #303030; }"
+            )
+            self._functions_next_btn.clicked.connect(lambda: self._on_functions_page_changed(1))
+            pagination_layout.addWidget(self._functions_next_btn)
+
+            pagination_layout.addStretch()
+            functions_layout.addLayout(pagination_layout)
+
             # Function list
             self._functions_list = QListWidget()
             self._functions_list.setStyleSheet(
@@ -1446,22 +1481,28 @@ class RikuganPanelCore(QWidget):
         if self._functions_list is None:
             return
 
-        self._functions_list.clear()
+        # Reset to page 0 when filter changes
+        self._functions_page_num = 0
 
+        # Load all functions into filtered data
+        self._functions_filtered_data = []
         try:
             from ..core.host import is_ida, is_binary_ninja
 
             if is_ida():
-                self._load_ida_functions(filter_text)
+                self._load_ida_functions_data(filter_text)
             elif is_binary_ninja():
-                self._load_binary_ninja_functions(filter_text)
+                self._load_binary_ninja_functions_data(filter_text)
             else:
-                self._functions_list.addItem("Functions not supported in this host")
+                pass  # No functions
         except Exception as e:
-            self._functions_list.addItem(f"Error loading functions: {e}")
+            pass
 
-    def _load_ida_functions(self, filter_text: str = "") -> None:
-        """Load functions from IDA."""
+        # Update pagination
+        self._update_functions_page()
+
+    def _load_ida_functions_data(self, filter_text: str = "") -> None:
+        """Load IDA functions into filtered data list."""
         try:
             import idautils
             import ida_name
@@ -1473,20 +1514,17 @@ class RikuganPanelCore(QWidget):
                 if filter_text and filter_text.lower() not in func_name.lower():
                     continue
 
-                item = QListWidgetItem(f"{func_name} @ 0x{func_ea:X}")
-                item.setData(Qt.ItemDataRole.UserRole, (func_name, func_ea))
-                self._functions_list.addItem(item)
+                self._functions_filtered_data.append((func_name, func_ea))
 
         except Exception as e:
-            self._functions_list.addItem(f"Error loading IDA functions: {e}")
+            pass
 
-    def _load_binary_ninja_functions(self, filter_text: str = "") -> None:
-        """Load functions from Binary Ninja."""
+    def _load_binary_ninja_functions_data(self, filter_text: str = "") -> None:
+        """Load Binary Ninja functions into filtered data list."""
         try:
             from ..core import host
 
             if not host._bn:
-                self._functions_list.addItem("Binary Ninja API not available")
                 return
 
             for func in host._bn.functions():
@@ -1496,12 +1534,43 @@ class RikuganPanelCore(QWidget):
                 if filter_text and filter_text.lower() not in func_name.lower():
                     continue
 
-                item = QListWidgetItem(f"{func_name} @ {func.start}")
-                item.setData(Qt.ItemDataRole.UserRole, (func_name, func.start))
-                self._functions_list.addItem(item)
+                self._functions_filtered_data.append((func_name, func.start))
 
         except Exception as e:
-            self._functions_list.addItem(f"Error loading Binary Ninja functions: {e}")
+            pass
+
+    def _update_functions_page(self) -> None:
+        """Update the function list with current page data."""
+        if self._functions_list is None:
+            return
+
+        self._functions_list.clear()
+
+        # Calculate page boundaries
+        start_idx = self._functions_page_num * self._functions_page_size
+        end_idx = start_idx + self._functions_page_size
+
+        # Show current page
+        page_data = self._functions_filtered_data[start_idx:end_idx]
+        for func_name, func_addr in page_data:
+            item = QListWidgetItem(f"{func_name} @ 0x{func_addr:X}")
+            item.setData(Qt.ItemDataRole.UserRole, (func_name, func_addr))
+            self._functions_list.addItem(item)
+
+        # Update page label
+        total_pages = (len(self._functions_filtered_data) + self._functions_page_size - 1) // self._functions_page_size
+        self._functions_page_label.setText(f"Page {self._functions_page_num + 1}/{max(1, total_pages)}")
+
+        # Update button states
+        self._functions_prev_btn.setEnabled(self._functions_page_num > 0)
+        self._functions_next_btn.setEnabled(self._functions_page_num < total_pages - 1)
+
+    def _on_functions_page_changed(self, delta: int) -> None:
+        """Handle pagination button click."""
+        new_page = self._functions_page_num + delta
+        if new_page >= 0:
+            self._functions_page_num = new_page
+            self._update_functions_page()
 
     def _on_functions_search_changed(self, text: str) -> None:
         """Handle search text change."""
@@ -1526,14 +1595,91 @@ class RikuganPanelCore(QWidget):
         data = current_item.data(Qt.ItemDataRole.UserRole)
         if data:
             func_name, func_addr = data
-            prompt = f"""Please translate this function to clean, readable C code with proper variable names and comments:
 
-Function: {func_name}
-Address: {func_addr}
+            # Create and show translation dialog
+            dialog = FunctionTranslationDialog(func_name, func_addr, self)
+            dialog.exec()
+
+
+class FunctionTranslationDialog(QDialog):
+    """Dialog for AI function translation with step-by-step progress."""
+
+    def __init__(self, func_name: str, func_addr, parent=None):
+        super().__init__(parent)
+        self._func_name = func_name
+        self._func_addr = func_addr
+        self._panel_core = parent
+        self._setup_ui()
+        self._start_translation()
+
+    def _setup_ui(self) -> None:
+        """Setup the dialog UI."""
+        self.setWindowTitle(f"AI Translation: {self._func_name}")
+        self.setMinimumSize(800, 600)
+        self.setStyleSheet(
+            "QDialog { background: #1e1e1e; }"
+            "QLabel { color: #d4d4d4; }"
+            "QPushButton { background: #2d4a6e; color: #9cdcfe; border: 1px solid #4a7ab5; "
+            "border-radius: 4px; padding: 6px 12px; }"
+            "QPushButton:hover { background: #3a5a8a; }"
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
+
+        # Header
+        header = QLabel(f"Translating: {self._func_name} @ 0x{self._func_addr:X}")
+        header.setStyleSheet("color: #569cd6; font-weight: bold; font-size: 14px;")
+        layout.addWidget(header)
+
+        # Progress area
+        self._progress_label = QLabel("Starting translation...")
+        self._progress_label.setStyleSheet("color: #808080; font-size: 12px;")
+        layout.addWidget(self._progress_label)
+
+        # Result area
+        self._result_text = QTextEdit()
+        self._result_text.setReadOnly(True)
+        self._result_text.setStyleSheet(
+            "QTextEdit {"
+            "background: #1e1e1e; "
+            "color: #d4d4d4; "
+            "border: 1px solid #3c3c3c; "
+            "border-radius: 4px; "
+            "padding: 8px; "
+            "font-family: 'Monaco', 'Menlo', 'Consolas', monospace; "
+            "font-size: 12px;"
+            "}"
+        )
+        layout.addWidget(self._result_text)
+
+        # Buttons
+        buttons_layout = QHBoxLayout()
+
+        self._copy_btn = QPushButton("Copy to Clipboard")
+        self._copy_btn.clicked.connect(self._copy_to_clipboard)
+        buttons_layout.addWidget(self._copy_btn)
+
+        self._close_btn = QPushButton("Close")
+        self._close_btn.clicked.connect(self.accept)
+        buttons_layout.addWidget(self._close_btn)
+
+        layout.addLayout(buttons_layout)
+
+    def _start_translation(self) -> None:
+        """Start the AI translation process."""
+        self._progress_label.setText("Analyzing function...")
+
+        prompt = f"""Please translate this function to clean, readable C code with proper variable names and comments:
+
+Function: {self._func_name}
+Address: 0x{self._func_addr:X}
 
 First, decompile this function and analyze its logic. Then provide:
 1. A high-level summary of what the function does
-2. Clean C code equivalent with:
+2. Step-by-step analysis of the code logic
+3. Clean C code equivalent with:
    - Proper variable names (not var1, var2, etc.)
    - Helpful comments explaining the logic
    - Standard C syntax and conventions
@@ -1541,11 +1687,44 @@ First, decompile this function and analyze its logic. Then provide:
 
 Please make the code as readable and maintainable as possible."""
 
-            # Switch to chat tab and send prompt
-            self._mode_bar.setCurrentIndex(0)
-            if hasattr(self, '_input_area'):
-                self._input_area.set_text(prompt)
-                self._input_area.submit()
+        # Get the panel's input area and trigger submit
+        if hasattr(self._panel_core, '_input_area') and self._panel_core._input_area:
+            from ..core.logging import log_error
+
+            try:
+                # Store the dialog reference to capture response
+                self._panel_core._translation_dialog = self
+
+                # Submit using the input area's callback
+                if self._panel_core._input_area._submit_callback:
+                    self._panel_core._input_area._submit_callback(prompt)
+
+                    self._progress_label.setText("AI is translating... (this may take a moment)")
+                else:
+                    raise Exception("Submit callback not available")
+            except Exception as e:
+                log_error(f"Translation failed: {e}")
+                self._result_text.setPlainText(f"Error during translation: {e}")
+                self._progress_label.setText("Translation failed")
+                self._progress_label.setStyleSheet("color: #f44747; font-size: 12px;")
+        else:
+            self._result_text.setPlainText("Error: Rikugan input area not available")
+            self._progress_label.setText("Error")
+
+    def show_result(self, text: str) -> None:
+        """Show the translation result in the dialog."""
+        self._result_text.setPlainText(text)
+        self._progress_label.setText("Translation complete!")
+        self._progress_label.setStyleSheet("color: #4ec9b0; font-size: 12px;")
+
+    def _copy_to_clipboard(self) -> None:
+        """Copy result to clipboard."""
+        from .qt_compat import QApplication
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self._result_text.toPlainText())
+        self._copy_btn.setText("Copied!")
+        from ..core.logging import log_info
+        log_info("Translation copied to clipboard")
 
     def _jump_to_function(self, func_name: str, func_addr) -> None:
         """Jump to function in disassembly view."""
