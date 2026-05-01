@@ -544,56 +544,37 @@ def _inline_formatting(text: str) -> str:
         func_name = m.group(1)
         return f'<a style="color:#4ec9b0; text-decoration:underline; font-weight:bold;" href="ida://func:{func_name}">{func_name}</a>'
 
-    # Common C/C++/Python keywords and types to exclude
-    excluded_keywords = {
-        # Types
-        'int', 'char', 'void', 'bool', 'float', 'double', 'long', 'short', 'signed', 'unsigned',
-        'size_t', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t',
-        'byte', 'string', 'str', 'bytes',
-        # Keywords
-        'return', 'if', 'else', 'while', 'for', 'do', 'switch', 'case', 'break', 'continue',
-        'goto', 'sizeof', 'typedef', 'struct', 'class', 'union', 'enum', 'extern', 'static',
-        'const', 'volatile', 'register', 'auto', 'inline', 'restrict',
-        'true', 'false', 'null', 'nullptr', 'NULL', 'True', 'False', 'None',
-        # Common verbs
-        'print', 'printf', 'scanf', 'cout', 'cin', 'endl', 'input', 'output',
-        # Access modifiers
-        'public', 'private', 'protected', 'internal', 'virtual', 'override',
-        # Exception related
-        'throw', 'catch', 'try', 'except', 'finally', 'raise', 'assert',
-        # Other
-        'import', 'include', 'define', 'ifdef', 'ifndef', 'endif', 'elif',
-        'namespace', 'using', 'template', 'typename', 'this', 'super', 'self',
-        # Common variable names
-        'count', 'length', 'size', 'index', 'value', 'data', 'result', 'error',
-        'buffer', 'string', 'number', 'object', 'pointer', 'address',
-    }
-
-    # Match function names with these patterns:
-    # - CamelCase: generatePWFOTP, GenerateOTP
-    # - snake_case with length >= 8: generate_otp, verify_password
-    # - Functions with specific prefixes: sub_, loc_, off_ (but these are already handled by address matching)
-    # - Exclude keywords and common words
+    # Match function names using pure pattern analysis (no word lists)
     def _should_link_function(name: str) -> bool:
-        """Check if a name should be linked as a function."""
-        # Skip if it's an excluded keyword
-        if name.lower() in excluded_keywords:
-            return False
-
-        # Skip if it's too short (less than 6 chars)
+        """Check if a name looks like a function using structural patterns."""
+        # Must be at least 6 characters
         if len(name) < 6:
             return False
 
-        # Link if it's CamelCase (has both lowercase and uppercase letters)
-        if any(c.islower() for c in name) and any(c.isupper() for c in name):
+        # Skip single uppercase letter followed by lowercase (class names like "MyClass")
+        # But allow if it has multiple transitions (like "MyClassMethod")
+        if name[0].isupper():
+            # Count lowercase->uppercase transitions
+            transitions = 0
+            for i in range(len(name) - 1):
+                if name[i].islower() and name[i + 1].isupper():
+                    transitions += 1
+            # Class-like: 0-1 transitions, Function-like: 2+ transitions
+            return transitions >= 2
+
+        # For lowercase-starting names, look for CamelCase pattern
+        # Pattern: lowercase -> uppercase (any continuation)
+        has_camel_case = False
+        for i in range(len(name) - 1):
+            if name[i].islower() and name[i + 1].isupper():
+                has_camel_case = True
+                break
+
+        if has_camel_case:
             return True
 
-        # Link if it's snake_case with underscores and length >= 8
+        # snake_case pattern: must have underscore
         if '_' in name and len(name) >= 8:
-            return True
-
-        # Link if it starts with common function prefixes
-        if any(name.startswith(prefix) for prefix in ['get', 'set', 'is', 'has', 'can', 'should', 'will', 'find', 'check', 'parse', 'format', 'convert', 'calculate', 'compute']):
             return True
 
         return False
