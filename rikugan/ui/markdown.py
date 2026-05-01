@@ -539,59 +539,13 @@ def _inline_formatting(text: str) -> str:
         addr = m.group(0)
         return f'<a style="color:{_LINK_COLOR}; text-decoration:underline;" href="ida://{addr}">{addr}</a>'
 
-    # Function names: convert to clickable links
-    def _make_function_link(m: re.Match) -> str:
+    # Function calls with parentheses: functionName()
+    def _make_function_call_link(m: re.Match) -> str:
         func_name = m.group(1)
-        return f'<a style="color:#4ec9b0; text-decoration:underline; font-weight:bold;" href="ida://func:{func_name}">{func_name}</a>'
+        return f'<a style="color:#4ec9b0; text-decoration:underline; font-weight:bold;" href="ida://func:{func_name}">{func_name}</a>()'
 
-    # Match function names using pure pattern analysis (no word lists)
-    def _should_link_function(name: str) -> bool:
-        """Check if a name looks like a function using structural patterns."""
-        # Must be at least 6 characters
-        if len(name) < 6:
-            return False
-
-        # Skip single uppercase letter followed by lowercase (class names like "MyClass")
-        # But allow if it has multiple transitions (like "MyClassMethod")
-        if name[0].isupper():
-            # Count lowercase->uppercase transitions
-            transitions = 0
-            for i in range(len(name) - 1):
-                if name[i].islower() and name[i + 1].isupper():
-                    transitions += 1
-            # Class-like: 0-1 transitions, Function-like: 2+ transitions
-            return transitions >= 2
-
-        # For lowercase-starting names, look for CamelCase pattern
-        # Pattern: lowercase -> uppercase (any continuation)
-        has_camel_case = False
-        for i in range(len(name) - 1):
-            if name[i].islower() and name[i + 1].isupper():
-                has_camel_case = True
-                break
-
-        if has_camel_case:
-            return True
-
-        # snake_case pattern: must have underscore
-        if '_' in name and len(name) >= 8:
-            return True
-
-        return False
-
-    # Match potential function names and filter them
-    def _function_matcher(m: re.Match) -> str:
-        func_name = m.group(1)
-        if _should_link_function(func_name):
-            return _make_function_link(m)
-        return func_name
-
-    # Match word boundaries for function names (but not after . or ->)
-    # (?<![.\-/>]) = not preceded by ., -, /, or >
-    # \b = word boundary
-    # ([a-zA-Z_][a-zA-Z0-9_]{5,}) = function name (min 6 chars total)
-    # \b(?!\s*\() = word boundary, not followed by ( (we're linking without parentheses)
-    text = re.sub(r"(?<![.\-/>])\b([a-zA-Z_][a-zA-Z0-9_]{5,})\b(?!\s*\()", _function_matcher, text)
+    # Match function calls like generatePWFOTP(), setDigitalLoginPassword()
+    text = re.sub(r"\b([a-zA-Z_][a-zA-Z0-9_]{3,})\(\)", _make_function_call_link, text)
 
     # Match various hex address formats
     # sub_401000, loc_401000, off_401000, etc. (IDA labels) - do first to avoid partial matches
