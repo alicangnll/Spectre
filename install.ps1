@@ -1,12 +1,12 @@
 # ──────────────────────────────────────────────────────────────────────
-# Rikugan — universal installer (Windows)
+# Spectra — universal installer (Windows)
 #
-#   irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/alicangnll/Spectra/main/install.ps1 | iex
 #
 # Or with arguments:
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target ida
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target binja
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1))) -Target both
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Spectra/main/install.ps1))) -Target ida
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Spectra/main/install.ps1))) -Target binja
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/alicangnll/Spectra/main/install.ps1))) -Target both
 #
 # Environment variables:
 #   RIKUGAN_DIR     — where to clone the repo   (default: ~\.rikugan)
@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$RepoUrl = "https://github.com/alicangnll/Rikugan.git"
+$RepoUrl = "https://github.com/alicangnll/Spectra.git"
 $InstallDir = if ($env:RIKUGAN_DIR) { $env:RIKUGAN_DIR } else { Join-Path $HOME ".rikugan" }
 $Branch = if ($env:RIKUGAN_BRANCH) { $env:RIKUGAN_BRANCH } else { "main" }
 
@@ -36,7 +36,7 @@ function Write-Err     { param($Msg) Write-Host "[-] $Msg" -ForegroundColor Red 
 function Show-Banner {
     Write-Host ""
     Write-Host "    +==========================================+" -ForegroundColor White
-    Write-Host "    |            六眼  Rikugan                 |" -ForegroundColor White
+    Write-Host "    |            六眼  Spectra                 |" -ForegroundColor White
     Write-Host "    |     Reverse Engineering AI Agent         |" -ForegroundColor White
     Write-Host "    |        IDA Pro  .  Binary Ninja          |" -ForegroundColor White
     Write-Host "    +==========================================+" -ForegroundColor White
@@ -367,7 +367,7 @@ function Install-Repository {
             Write-Warn "$InstallDir exists but is not a git repo -- backing up to $backup"
             Rename-Item $InstallDir $backup
         }
-        Write-Info "Cloning Rikugan into $InstallDir..."
+        Write-Info "Cloning Spectra into $InstallDir..."
         git clone --branch $Branch --depth 1 $RepoUrl $InstallDir --quiet 2>$null
         Write-Ok "Cloned successfully"
     }
@@ -481,7 +481,7 @@ if ($failed) {
     Write-Warn "Installation completed with errors. Check the output above."
 }
 else {
-    Write-Ok "Rikugan installation complete!"
+    Write-Ok "Spectra installation complete!"
 }
 Write-Host "  Install location: $InstallDir" -ForegroundColor DarkGray
 Write-Host "  To update later:  cd $InstallDir; git pull" -ForegroundColor DarkGray

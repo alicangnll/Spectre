@@ -1,1 +1,1 @@
-"""Binary Ninja host integration for Rikugan."""
+"""Binary Ninja host integration for Spectra."""

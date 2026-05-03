@@ -346,7 +346,7 @@ class AnthropicProvider(LLMProvider):
         )
 
     def _handle_api_error(self, e: Exception) -> NoReturn:
-        """Raise the appropriate Rikugan error from an Anthropic API error."""
+        """Raise the appropriate Spectra error from an Anthropic API error."""
         try:
             anthropic = importlib.import_module("anthropic")
         except ImportError:

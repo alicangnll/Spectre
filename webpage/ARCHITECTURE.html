@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rikugan Architecture — Agent Internals</title>
+<title>Spectra Architecture — Agent Internals</title>
 <link rel="icon" type="image/png" href="assets/rikugan_icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -439,7 +439,7 @@ td code{font-size:.82rem}
 <nav class="top-nav">
   <a href="index.html" class="top-nav-brand">
     <img src="assets/rikugan_icon.png" alt="">
-    Rikugan <span class="jp">六眼</span>
+    Spectra <span class="jp">六眼</span>
   </a>
   <div class="top-nav-links">
     <a href="index.html">Home</a>
@@ -457,7 +457,7 @@ td code{font-size:.82rem}
 <header class="hero">
   <div class="hero-grid"></div>
   <div class="hero-jp">六眼</div>
-  <h1>Rikugan Architecture</h1>
+  <h1>Spectra Architecture</h1>
   <p class="hero-sub">Complete technical reference for the agent internals, tooling framework, exploration mode, and everything under the hood — for developers and agents.</p>
   <div class="hero-badges">
     <span class="badge"><span class="dot purple"></span>Generator-based Loop</span>
@@ -507,7 +507,7 @@ td code{font-size:.82rem}
 <section class="section" id="overview">
   <div class="section-num">01</div>
   <h2>High-Level Overview</h2>
-  <p>Rikugan is a <strong>generator-based agentic loop</strong> embedded inside IDA Pro and Binary Ninja. The agent runs in a background thread and communicates with the Qt UI via a stream of <code>TurnEvent</code> objects. All host API calls (IDA/BN) are marshalled to the main thread via <code>@idasync</code>.</p>
+  <p>Spectra is a <strong>generator-based agentic loop</strong> embedded inside IDA Pro and Binary Ninja. The agent runs in a background thread and communicates with the Qt UI via a stream of <code>TurnEvent</code> objects. All host API calls (IDA/BN) are marshalled to the main thread via <code>@idasync</code>.</p>
 
   <div class="arch-box">
     <div class="arch-item"><div class="ai">&#x1F9E0;</div><div class="at">Agent Loop</div><div class="ad">Generator yields TurnEvents, handles tool calls, manages state</div></div>
@@ -572,7 +572,7 @@ td code{font-size:.82rem}
       <tr><td><code>rikugan/agent/turn.py</code></td><td>TurnEvent / TurnEventType definitions</td></tr>
       <tr><td><code>rikugan/tools/base.py</code></td><td><code>@tool</code> decorator, ToolDefinition</td></tr>
       <tr><td><code>rikugan/tools/registry.py</code></td><td>ToolRegistry</td></tr>
-      <tr><td><code>rikugan/ui/panel_core.py</code></td><td>RikuganPanelCore (Qt UI)</td></tr>
+      <tr><td><code>rikugan/ui/panel_core.py</code></td><td>SpectraPanelCore (Qt UI)</td></tr>
       <tr><td><code>rikugan/ui/session_controller_base.py</code></td><td>SessionControllerBase</td></tr>
     </table>
   </div>
@@ -1217,11 +1217,11 @@ class SessionState:
   <div class="showcase-gallery">
     <div>
       <div class="showcase-label">Binary Ninja</div>
-      <img src="assets/binja_showcase.png" alt="Rikugan in Binary Ninja" loading="lazy">
+      <img src="assets/binja_showcase.png" alt="Spectra in Binary Ninja" loading="lazy">
     </div>
     <div>
       <div class="showcase-label">IDA Pro</div>
-      <img src="assets/ida_showcase.png" alt="Rikugan in IDA Pro" loading="lazy">
+      <img src="assets/ida_showcase.png" alt="Spectra in IDA Pro" loading="lazy">
     </div>
   </div>
 
@@ -1277,7 +1277,7 @@ class SessionState:
 
   <h3>Exception Hierarchy</h3>
   <div class="error-tree">
-    <span class="root">RikuganError</span><br>
+    <span class="root">SpectraError</span><br>
     <span class="branch">├── AgentError</span> <span style="color:var(--text-dim)">&mdash; loop-level errors</span><br>
     <span class="branch">├── CancellationError</span> <span style="color:var(--text-dim)">&mdash; user cancelled</span><br>
     <span class="branch">├── ProviderError</span> <span style="color:var(--text-dim)">&mdash; LLM API errors</span><br>
@@ -1304,7 +1304,7 @@ class SessionState:
     <div class="arch-item">
       <div class="ai">&#x1F4BB;</div>
       <div class="at">IDA Output Window</div>
-      <div class="ad">IDAHandler, INFO level<br><code>[Rikugan] LEVEL: message</code></div>
+      <div class="ad">IDAHandler, INFO level<br><code>[Spectra] LEVEL: message</code></div>
     </div>
     <div class="arch-item">
       <div class="ai">&#x1F4C4;</div>
@@ -1427,7 +1427,7 @@ class SessionState:
 
 <!-- ═══════════════ FOOTER ═══════════════ -->
 <footer class="footer">
-  <p>Rikugan (六眼) &mdash; Architecture Documentation</p>
+  <p>Spectra (六眼) &mdash; Architecture Documentation</p>
   <p style="margin-top:6px">Built with care for reverse engineers, by reverse engineers.</p>
 </footer>
 

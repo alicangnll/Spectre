@@ -23,7 +23,7 @@ class MCPManager:
     """Manages multiple MCP server connections.
 
     Servers are started in background threads and their tools are
-    registered into the Rikugan ToolRegistry as they come online.
+    registered into the Spectra ToolRegistry as they come online.
     """
 
     def __init__(self):

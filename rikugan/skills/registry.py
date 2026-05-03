@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_error, log_info
 from .loader import SkillDefinition, discover_skills
 
@@ -18,15 +18,15 @@ class SkillRegistry:
     """Central registry of available skills.
 
     Discovers skills from two locations:
-    1. Built-in skills shipped with Rikugan (rikugan/skills/builtins/)
-    2. User skills (``~/.idapro/rikugan/skills/`` via RikuganConfig.skills_dir)
+    1. Built-in skills shipped with Spectra (spectra/skills/builtins/)
+    2. User skills (``~/.idapro/spectra/skills/`` via SpectraConfig.skills_dir)
 
     User skills with the same slug override built-in ones.
     """
 
     def __init__(self, skills_dir: str = ""):
         if not skills_dir:
-            skills_dir = RikuganConfig().skills_dir
+            skills_dir = SpectraConfig().skills_dir
         self._skills_dir = skills_dir
         self._skills: dict[str, SkillDefinition] = {}
         self._builtin_skills_dir = Path(__file__).parent / "builtins"
@@ -81,11 +81,11 @@ class SkillRegistry:
         enabled_ids : list of str
             External skill IDs to enable (format: ``"source:slug"``).
         disabled_slugs : list of str
-            Rikugan skill slugs to disable (remove from registry).
+            Spectra skill slugs to disable (remove from registry).
         """
         from ..core.external_sources import discover_all_external_skills
 
-        # Remove disabled Rikugan skills
+        # Remove disabled Spectra skills
         for slug in disabled_slugs:
             if slug in self._skills:
                 del self._skills[slug]

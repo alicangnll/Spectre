@@ -1,1 +1,1 @@
-"""Rikugan skills system: reusable prompt-based workflows."""
+"""Spectra skills system: reusable prompt-based workflows."""

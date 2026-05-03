@@ -1,4 +1,4 @@
-"""Token usage limiter for Rikugan.
+"""Token usage limiter for Spectra.
 
 Prevents excessive token usage by enforcing configurable limits.
 Raises an error when limits are exceeded.
@@ -62,16 +62,16 @@ class TokenLimiter:
 
     def _load_config(self) -> TokenLimit:
         """Load token limit configuration from settings or environment."""
-        from ..core.config import RikuganConfig
+        from ..core.config import SpectraConfig
 
-        cfg = RikuganConfig()
+        cfg = SpectraConfig()
 
         # Check environment variables first
-        max_input = int(os.environ.get("RIKUGAN_MAX_INPUT_TOKENS", "100000"))
-        max_output = int(os.environ.get("RIKUGAN_MAX_OUTPUT_TOKENS", "50000"))
-        max_total = int(os.environ.get("RIKUGAN_MAX_TOTAL_TOKENS", "200000"))
-        enabled = os.environ.get("RIKUGAN_TOKEN_LIMITER_ENABLED", "true").lower() == "true"
-        action = os.environ.get("RIKUGAN_TOKEN_LIMITER_ACTION", "error")
+        max_input = int(os.environ.get("SPECTRA_MAX_INPUT_TOKENS", "100000"))
+        max_output = int(os.environ.get("SPECTRA_MAX_OUTPUT_TOKENS", "50000"))
+        max_total = int(os.environ.get("SPECTRA_MAX_TOTAL_TOKENS", "200000"))
+        enabled = os.environ.get("SPECTRA_TOKEN_LIMITER_ENABLED", "true").lower() == "true"
+        action = os.environ.get("SPECTRA_TOKEN_LIMITER_ACTION", "error")
 
         # Check settings file
         if hasattr(cfg, "token_limiter"):
@@ -152,7 +152,7 @@ class TokenLimiter:
             raise ProviderError(
                 f"Token usage exceeded limit: {used:,} {token_type.value} tokens "
                 f"(limit: {limit:,}). Please reduce input length or adjust "
-                "RIKUGAN_MAX_*_TOKENS environment variables.",
+                "SPECTRA_MAX_*_TOKENS environment variables.",
                 provider="token_limiter",
             )
         elif self.config.action == "warn":

@@ -3,7 +3,7 @@ name: Binary Modification
 description: Modify binary behavior using natural language — explore, plan, patch, save
 tags: [modification, patching, exploration, game-hacking, binary]
 mode: exploration
-author: Rikugan
+author: Spectra
 version: 1.0
 ---
 Task: Modify the binary's behavior based on the user's natural language description. You will autonomously explore the binary to understand it, formulate a concrete plan, and apply minimal patches.
@@ -80,9 +80,9 @@ This is required for the Phase 4 save gate to know what was applied.
 - Always verify after patching
 - Revert on failure (write back original bytes)
 
-## Rikugan Analysis Features
+## Spectra Analysis Features
 
-Leverage Rikugan's security and navigation features during binary modification:
+Leverage Spectra's security and navigation features during binary modification:
 
 **Suspicious API Highlighting:**
 - When patching security checks, highlighted APIs help identify validation functions
@@ -104,5 +104,5 @@ Leverage Rikugan's security and navigation features during binary modification:
 **Development Workflow:**
 - Use auto-reload during development to test changes quickly
 - Enable with `Ctrl+Shift+R` in IDA when iterating on patches
-- Rikugan automatically reloads when you modify plugin code
+- Spectra automatically reloads when you modify plugin code
 - Minimal changes only — patch the fewest bytes possible

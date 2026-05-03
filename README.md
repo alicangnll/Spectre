@@ -1,4 +1,4 @@
-# Rikugan (六眼)
+# Spectra (六眼)
 
 *Forked from [Rikugan](https://github.com/buzzer-re/Rikugan)*
 
@@ -8,56 +8,56 @@ A reverse-engineering agent for **IDA Pro**, **Binary Ninja**, and **VSCode** th
 
 ![alt text](assets/ida_showcase.png)
 
-[Documentation](https://rikugan.reversing.codes/docs.html) | [Architecture](https://rikugan.reversing.codes/ARCHITECTURE.html) | [Issues](https://github.com/alicangnll/Rikugan/issues)
+[Documentation](https://spectra.reversing.codes/docs.html) | [Architecture](https://spectra.reversing.codes/ARCHITECTURE.html) | [Issues](https://github.com/alicangnll/Spectra/issues)
 
 ## Quick Start
 
-### Accessing Rikugan from Different Interfaces
+### Accessing Spectra from Different Interfaces
 
 **IDA Pro:**
 - Press `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Shift+I` (macOS)
-- Or navigate to: `Edit → Plugins → Rikugan`
+- Or navigate to: `Edit → Plugins → Spectra`
 - Chat panel appears in the IDA UI
 
 **Binary Ninja:**
 - Press `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Shift+I` (macOS)
-- Or navigate to: `Tools → Rikugan → Open Chat`
+- Or navigate to: `Tools → Spectra → Open Chat`
 - Chat panel appears in the Binary Ninja UI
 
 **VSCode Extension:**
 - Press `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Shift+I` (macOS)
-- Or use the Command Palette: `Ctrl+Shift+P` → "Rikugan: Open Chat"
-- Right-click on code → "Ask Rikugan"
+- Or use the Command Palette: `Ctrl+Shift+P` → "Spectra: Open Chat"
+- Right-click on code → "Ask Spectra"
 - Sidebar chat interface integrated with VSCode
 
 **CLI Mode:**
 ```bash
 # Standalone CLI mode
-rikugan-cli --help
+spectra-cli --help
 
 # Analyze binary directly
-rikugan-cli analyze /path/to/binary
+spectra-cli analyze /path/to/binary
 
 # Interactive chat mode
-rikugan-cli chat
+spectra-cli chat
 ```
 
 **JADX CLI (Android APK Analysis):**
 ```bash
 # Analyze Android APKs with JADX integration
-python rikugan_jadx.py analyze app.apk -o ./decompiled
+python spectra_jadx.py analyze app.apk -o ./decompiled
 
 # Search for strings in decompiled code
-python rikugan_jadx.py search app.apk "API_KEY"
+python spectra_jadx.py search app.apk "API_KEY"
 
 # Show package structure
-python rikugan_jadx.py structure app.apk
+python spectra_jadx.py structure app.apk
 
 # Analyze specific class
-python rikugan_jadx.py class app.apk com.example.MainActivity
+python spectra_jadx.py class app.apk com.example.MainActivity
 
 # Interactive AI mode for APK analysis
-python rikugan_jadx.py interactive app.apk
+python spectra_jadx.py interactive app.apk
 ```
 
 ## Install
@@ -66,15 +66,15 @@ Auto-detects IDA Pro, Binary Ninja, or both.
 
 **Linux / macOS:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/alicangnll/Spectra/main/install.ps1 | iex
 ```
 
-For host-specific install, manual setup, and configuration, see the [docs](https://rikugan.reversing.codes/docs.html).
+For host-specific install, manual setup, and configuration, see the [docs](https://spectra.reversing.codes/docs.html).
 
 ## Uninstall
 
@@ -84,7 +84,7 @@ For host-specific install, manual setup, and configuration, see the [docs](https
 ./uninstall.sh
 
 # Or download and run directly
-curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/uninstall.sh | bash
 ```
 
 **Uninstall Options:**
@@ -110,7 +110,7 @@ Manual removal required - delete plugin files from IDA/Binary Ninja plugins dire
 
 ## Is this another MCP client?
 
-No, Rikugan is an ***agent*** built to live inside your RE host. It does not consume an MCP server to interact with the host database; it has its own agentic loop, context management, role prompt ([source](rikugan/agent/system_prompt.py)), and an in-process tool orchestration layer.
+No, Spectra is an ***agent*** built to live inside your RE host. It does not consume an MCP server to interact with the host database; it has its own agentic loop, context management, role prompt ([source](spectra/agent/system_prompt.py)), and an in-process tool orchestration layer.
 
 The agent loop is a generator-based turn cycle: each user message kicks off a stream→execute→repeat pipeline where the LLM response is streamed token-by-token and tool calls are intercepted and dispatched. It supports automatic error recovery, mid-run user questions, plan mode for multi-step workflows, and message queuing — all without leaving the disassembler.
 
@@ -123,7 +123,7 @@ The agent really ***lives*** and ***breathes*** reversing.
 
 ## Features
 
-**60+ tools** covering navigation, decompiler, disassembly, cross-references, strings, annotations, types, scripting, and host-specific IL/microcode manipulation. The agent always asks permission before running scripts and will never execute the target binary. Full tool reference in the [docs](https://rikugan.reversing.codes/docs.html).
+**60+ tools** covering navigation, decompiler, disassembly, cross-references, strings, annotations, types, scripting, and host-specific IL/microcode manipulation. The agent always asks permission before running scripts and will never execute the target binary. Full tool reference in the [docs](https://spectra.reversing.codes/docs.html).
 
 **Advanced Memory Corruption & Exploitation Analysis** — v1.2.5+!
 
@@ -188,16 +188,16 @@ The enhanced **Memory Corruption** skill provides comprehensive coverage of mode
   **Example Usage:**
   ```
   User: What does the generatePWFOTP function do?
-  Rikugan: Let me analyze generatePWFOTP for you...
+  Spectra: Let me analyze generatePWFOTP for you...
   [Click on generatePWFOTP to jump to the function]
 
   User: Check the verify_password function
-  Rikugan: I'll examine verify_password()...
+  Spectra: I'll examine verify_password()...
   [Click on verify_password to jump to the function]
   ```
 
-- **Auto-Reload Development Mode** — Automatically reload Rikugan when source files change:
-  - Enable via environment variable: `export RIKUGAN_AUTO_RELOAD=1`
+- **Auto-Reload Development Mode** — Automatically reload Spectra when source files change:
+  - Enable via environment variable: `export SPECTRA_AUTO_RELOAD=1`
   - Or use keyboard shortcut: `Ctrl+Shift+R` in IDA to toggle on/off
   - Monitors all Python source files and reloads after 2 seconds of inactivity
   - Preserves session state across reloads for rapid development iteration
@@ -208,7 +208,7 @@ The enhanced **Memory Corruption** skill provides comprehensive coverage of mode
 |:--:|
 |Orchestrator spawning subagents in parallel|
 
-**Natural Language Patches** (Experimental) — `/modify` lets you describe what you want changed in plain English. Rikugan explores the binary, builds context, and applies the patches.
+**Natural Language Patches** (Experimental) — `/modify` lets you describe what you want changed in plain English. Spectra explores the binary, builds context, and applies the patches.
 
 |![alt text](assets/maze_solve.gif)|
 |:--:|
@@ -236,16 +236,16 @@ Comprehensive Android APK reverse engineering with JADX decompiler integration:
 **CLI Usage:**
 ```bash
 # Analyze APK structure
-python rikugan_jadx.py analyze app.apk -o ./decompiled
+python spectra_jadx.py analyze app.apk -o ./decompiled
 
 # Search for API endpoints
-python rikugan_jadx.py search app.apk "http://"
+python spectra_jadx.py search app.apk "http://"
 
 # Analyze specific class
-python rikugan_jadx.py class app.apk com.example.MainActivity
+python spectra_jadx.py class app.apk com.example.MainActivity
 
 # Interactive AI mode
-python rikugan_jadx.py interactive app.apk
+python spectra_jadx.py interactive app.apk
 ```
 
 **Skill Integration:**
@@ -257,7 +257,7 @@ python rikugan_jadx.py interactive app.apk
 /jadx Check for native libraries
 ```
 
-**Memory** — Findings are saved to `RIKUGAN.md` next to your database, persisting across sessions.
+**Memory** — Findings are saved to `SPECTRA.md` next to your database, persisting across sessions.
 
 **Skills & MCP** — 42+ total skills (33 built-in + 9 external), custom skill support, and MCP server integration. Reuse skills and MCP servers from Claude Code and Codex. 
 
@@ -356,7 +356,7 @@ export CUSTOM_BASE_URL="https://your-endpoint.com/v1"
 
 **MCP Server Integration:**
 ```json
-// ~/.rikugan/mcp_servers.json
+// ~/.spectra/mcp_servers.json
 {
   "servers": {
     "filesystem": {
@@ -374,10 +374,10 @@ export CUSTOM_BASE_URL="https://your-endpoint.com/v1"
 **Custom Skills:**
 ```bash
 # Create custom skill directory
-mkdir -p ~/.rikugan/skills/my-skill
+mkdir -p ~/.spectra/skills/my-skill
 
 # Add skill.md
-cat > ~/.rikugan/skills/my-skill/skill.md << 'EOF'
+cat > ~/.spectra/skills/my-skill/skill.md << 'EOF'
 ---
 name: My Custom Skill
 description: Custom analysis workflow
@@ -389,7 +389,7 @@ EOF
 
 **Profile Customization:**
 ```json
-// ~/.rikugan/profiles/restricted.json
+// ~/.spectra/profiles/restricted.json
 {
   "name": "restricted",
   "description": "Limited tool access",
@@ -406,37 +406,37 @@ EOF
 **Basic Reverse Engineering:**
 ```
 User: Analyze this binary and find the main functionality
-Rikugan: [Explores binary, maps imports/exports, analyzes key functions]
+Spectra: [Explores binary, maps imports/exports, analyzes key functions]
 
 User: What does the function at 0x401000 do?
-Rikugan: [Decompiles function, explains logic, identifies algorithms]
+Spectra: [Decompiles function, explains logic, identifies algorithms]
 
 User: Rename all crypto functions based on their purpose
-Rikugan: [Identifies crypto functions, suggests meaningful names]
+Spectra: [Identifies crypto functions, suggests meaningful names]
 ```
 
 **Vulnerability Analysis:**
 ```
 User: Check for memory corruption vulnerabilities
-Rikugan: [Activates memory-corruption skill, scans for dangerous functions]
+Spectra: [Activates memory-corruption skill, scans for dangerous functions]
 
 User: Analyze this buffer overflow at 0x402000
-Rikugan: [Activates binary-exploit skill, builds exploitation chain]
+Spectra: [Activates binary-exploit skill, builds exploitation chain]
 
 User: Can this binary be exploited on modern Linux?
-Rikugan: [Checks mitigations, suggests bypass strategies]
+Spectra: [Checks mitigations, suggests bypass strategies]
 ```
 
 **Malware Analysis:**
 ```
 User: What type of malware is this?
-Rikugan: [Activates malware-analysis skill, classifies malware family]
+Spectra: [Activates malware-analysis skill, classifies malware family]
 
 User: Find the C2 communication code
-Rikugan: [Locates network functions, decodes C2 protocol]
+Spectra: [Locates network functions, decodes C2 protocol]
 
 User: Extract the configuration
-Rikugan: [Identifies config structures, decodes encrypted data]
+Spectra: [Identifies config structures, decodes encrypted data]
 ```
 
 ## Recommended Providers
@@ -455,23 +455,23 @@ Also supports any OpenAI-compatible endpoint and Ollama for local models.
 ## Keyboard Shortcuts
 
 **Global Shortcuts (All Interfaces):**
-- `Ctrl+Shift+I` / `Cmd+Shift+I` — Open Rikugan chat
+- `Ctrl+Shift+I` / `Cmd+Shift+I` — Open Spectra chat
 - `Esc` — Close chat panel (in most interfaces)
 - `Ctrl+Enter` — Send message
 
 **IDA Pro Specific:**
-- `Edit → Plugins → Rikugan` — Menu access
+- `Edit → Plugins → Spectra` — Menu access
 - `Alt+T` — Focus chat input (when chat is open)
 - `Ctrl+Tab` — Switch between IDA and chat
 
 **Binary Ninja Specific:**
-- `Tools → Rikugan → Open Chat` — Menu access
+- `Tools → Spectra → Open Chat` — Menu access
 - `Ctrl+Shift+R` — Quick analysis of current function
 - `Ctrl+Shift+D` — Decompile and explain current function
 
 **VSCode Extension:**
-- `Ctrl+Shift+P` → "Rikugan: Open Chat" — Command palette
-- `Right-click → Ask Rikugan` — Context menu
+- `Ctrl+Shift+P` → "Spectra: Open Chat" — Command palette
+- `Right-click → Ask Spectra` — Context menu
 - `Ctrl+Shift+A` — Analyze selected code
 - `Ctrl+Shift+E` — Explain selected function
 
@@ -488,7 +488,7 @@ Also supports any OpenAI-compatible endpoint and Ollama for local models.
 
 **Best Practices:**
 ```
-1. Start with exploration — Let Rikugan map the binary first
+1. Start with exploration — Let Spectra map the binary first
 2. Use plan mode — For complex multi-step workflows
 3. Leverage memory — Important findings persist across sessions
 4. Combine skills — Use multiple skills for comprehensive analysis
@@ -499,21 +499,21 @@ Also supports any OpenAI-compatible endpoint and Ollama for local models.
 ```
 # Automated vulnerability assessment
 User: /skill vuln-audit
-Rikugan: [Scans binary, identifies potential vulnerabilities]
+Spectra: [Scans binary, identifies potential vulnerabilities]
 
 # Custom exploitation chain
 User: /skill memory-corruption
 User: Find OOB vulnerabilities and build RCE exploit
-Rikugan: [Activates skill, finds bugs, builds exploitation chain]
+Spectra: [Activates skill, finds bugs, builds exploitation chain]
 
 # Batch analysis
 User: Analyze all functions in this binary
-Rikugan: [Spawns subagents, parallel analysis, comprehensive report]
+Spectra: [Spawns subagents, parallel analysis, comprehensive report]
 
 # Protocol reverse engineering
 User: /skill protocol-analysis
 User: Decode this network protocol
-Rikugan: [Identifies protocol structure, builds parser]
+Spectra: [Identifies protocol structure, builds parser]
 ```
 
 ## Troubleshooting
@@ -523,10 +523,10 @@ Rikugan: [Identifies protocol structure, builds parser]
 **Plugin not appearing in IDA/Binary Ninja:**
 ```bash
 # Check installation
-rikugan-doctor --check-install
+spectra-doctor --check-install
 
 # Reinstall plugin
-rikugan-install --force
+spectra-install --force
 
 # Check Python compatibility
 python --version  # Should be 3.10+
@@ -549,25 +549,25 @@ export ANTHROPIC_BASE_URL="https://api.anthropic.com"
 **Performance issues:**
 ```bash
 # Clear cache
-rm -rf ~/.rikugan/cache/*
+rm -rf ~/.spectra/cache/*
 
 # Reduce context size
 # In settings.json: "max_context_tokens": 8192
 
 # Use faster model
-export RIKUGAN_DEFAULT_MODEL="claude-sonnet-4-6"
+export SPECTRA_DEFAULT_MODEL="claude-sonnet-4-6"
 ```
 
 **Memory/context issues:**
 ```bash
 # Increase memory limit
-export RIKUGAN_MAX_MEMORY="4096"
+export SPECTRA_MAX_MEMORY="4096"
 
 # Use streaming mode
-export RIKUGAN_STREAMING=true
+export SPECTRA_STREAMING=true
 
 # Enable prompt caching
-export RIKUGAN_PROMPT_CACHING=true
+export SPECTRA_PROMPT_CACHING=true
 ```
 
 ## Requirements
@@ -577,7 +577,7 @@ export RIKUGAN_PROMPT_CACHING=true
 - At least one LLM provider
 - Windows, macOS, or Linux
 
-> **IDA Pro + Python >= 3.14:** Shiboken has a known UAF bug. Rikugan includes a workaround, but Python 3.10 is still the safest choice. See the [upstream report](https://community.hex-rays.com/t/ida-9-3-b1-macos-arm64-uaf-crash/646).
+> **IDA Pro + Python >= 3.14:** Shiboken has a known UAF bug. Spectra includes a workaround, but Python 3.10 is still the safest choice. See the [upstream report](https://community.hex-rays.com/t/ida-9-3-b1-macos-arm64-uaf-crash/646).
 
 ## Roadmap
 
@@ -613,7 +613,7 @@ Contributions are welcome! Areas where you can help:
 - Share custom workflows
 
 **Bug Reports & Feature Requests:**
-- [Open an issue](https://github.com/alicangnll/Rikugan/issues) for bugs
+- [Open an issue](https://github.com/alicangnll/Spectra/issues) for bugs
 - Suggest new features or improvements
 - Share interesting use cases
 - Report documentation issues
@@ -633,9 +633,9 @@ Contributions are welcome! Areas where you can help:
 ## Community & Support
 
 **Getting Help:**
-- [Documentation](https://rikugan.reversing.codes/docs.html)
-- [GitHub Issues](https://github.com/alicangnll/Rikugan/issues)
-- [Discord Community](https://discord.gg/rikugan) (coming soon)
+- [Documentation](https://spectra.reversing.codes/docs.html)
+- [GitHub Issues](https://github.com/alicangnll/Spectra/issues)
+- [Discord Community](https://discord.gg/spectra) (coming soon)
 
 **Showcase:**
 - Share your analysis workflows
@@ -646,8 +646,8 @@ Contributions are welcome! Areas where you can help:
 **Stay Updated:**
 - ⭐ Star the repository on GitHub
 - 👀 Watch for releases and updates
-- 🐦 Follow [@rikugan_re](https://twitter.com/rikugan_re) for news
-- 📧 Subscribe to updates at [rikugan.reversing.codes](https://rikugan.reversing.codes)
+- 🐦 Follow [@spectra_re](https://twitter.com/spectra_re) for news
+- 📧 Subscribe to updates at [spectra.reversing.codes](https://spectra.reversing.codes)
 
 ## License
 
@@ -669,7 +669,7 @@ If you'd asked me last year what I thought about AI doing reverse engineering, I
 
 For that reason, I decided to invest this year in researching this topic. It's amazing what we can build with agentic coding — it's surreal how quickly I'm learning topics that I simply "didn't have time" to study before.
 
-Rikugan is just one of many projects I've built in the last three months. The first version was built in a single night. Within two days it already supported both IDA and Binary Ninja. Within three days, it was essentially what you see here, with only minor tweaks since.
+Spectra is just one of many projects I've built in the last three months. The first version was built in a single night. Within two days it already supported both IDA and Binary Ninja. Within three days, it was essentially what you see here, with only minor tweaks since.
 
 This is a work in progress with many areas for improvement. I took care to ensure this wouldn't be another AI slop project, but I'm certain there is still room to grow. I hope you use it for good. If you find bugs, have suggestions, or want quality-of-life improvements, please open an issue.
 

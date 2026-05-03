@@ -1,4 +1,4 @@
-"""Skill discovery and loading from the Rikugan skills directory."""
+"""Skill discovery and loading from the Spectra skills directory."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def _split_frontmatter(text: str) -> tuple:
 
 @dataclass
 class SkillDefinition:
-    """A loaded skill from the Rikugan skills directory<slug>/SKILL.md."""
+    """A loaded skill from the Spectra skills directory<slug>/SKILL.md."""
 
     name: str
     description: str

@@ -180,7 +180,7 @@ Not reversible with IL-level tools.
 
 ## Security Analysis Integration
 
-When analyzing obfuscated malware, leverage Rikugan's security-focused features:
+When analyzing obfuscated malware, leverage Spectra's security-focused features:
 
 **Suspicious API Detection:**
 - Obfuscated code often contains malicious APIs that get highlighted

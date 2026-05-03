@@ -1,1 +1,1 @@
-"""Host-specific system prompt modules for Rikugan."""
+"""Host-specific system prompt modules for Spectra."""

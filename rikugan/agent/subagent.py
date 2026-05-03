@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from typing import Any
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_info
 from ..providers.base import LLMProvider
 from ..skills.registry import SkillRegistry
@@ -31,7 +31,7 @@ class SubagentRunner:
         self,
         provider: LLMProvider,
         tool_registry: ToolRegistry,
-        config: RikuganConfig,
+        config: SpectraConfig,
         host_name: str = "IDA Pro",
         skill_registry: SkillRegistry | None = None,
         parent_loop: Any | None = None,

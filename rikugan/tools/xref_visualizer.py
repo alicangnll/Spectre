@@ -1,4 +1,4 @@
-"""Cross-reference visualizer tool for Rikugan.
+"""Cross-reference visualizer tool for Spectra.
 
 Provides interactive call graph visualization, function relationship mapping,
 and complexity analysis for both IDA Pro and Binary Ninja.
@@ -328,7 +328,7 @@ class XRefVisualizerTool(Tool):
 
 
 def get_tool_definition() -> ToolDefinition:
-    """Return tool definition for Rikugan tool registry."""
+    """Return tool definition for Spectra tool registry."""
     return ToolDefinition(
         name=XRefVisualizerTool.name,
         description=XRefVisualizerTool.description,

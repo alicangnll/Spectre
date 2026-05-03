@@ -1,6 +1,6 @@
-# ARCHITECTURE.md — Rikugan Agent Internals
+# ARCHITECTURE.md — Spectra Agent Internals
 
-This document describes the internal architecture of the Rikugan agent in full technical detail. It is intended for engineers who need to understand, modify, or extend the system.
+This document describes the internal architecture of the Spectra agent in full technical detail. It is intended for engineers who need to understand, modify, or extend the system.
 
 ---
 
@@ -33,7 +33,7 @@ This document describes the internal architecture of the Rikugan agent in full t
 
 ## High-Level Overview
 
-Rikugan is a **generator-based agentic loop** embedded inside IDA Pro and Binary Ninja. The agent runs in a background thread and communicates with the Qt UI via a stream of `TurnEvent` objects. All host API calls (IDA/BN) are marshalled to the main thread via `@idasync`.
+Spectra is a **generator-based agentic loop** embedded inside IDA Pro and Binary Ninja. The agent runs in a background thread and communicates with the Qt UI via a stream of `TurnEvent` objects. All host API calls (IDA/BN) are marshalled to the main thread via `@idasync`.
 
 ```
 User Input
@@ -71,7 +71,7 @@ Key files:
 - `rikugan/core/type_recovery.py` — Type library auto-detection
 - `rikugan/core/bookmark.py` — Code bookmarking system
 - `rikugan/core/advanced_search.py` — Advanced search engine
-- `rikugan/ui/panel_core.py` — `RikuganPanelCore` (Qt UI)
+- `rikugan/ui/panel_core.py` — `SpectraPanelCore` (Qt UI)
 - `rikugan/ui/session_controller_base.py` — `SessionControllerBase`
 
 ---
@@ -88,14 +88,14 @@ The entry point is `AgentLoop.run()`, a Python generator. It yields `TurnEvent` 
    - `/plan <msg>` → plan mode
    - `/modify <msg>` → exploration mode (4-phase, with patching)
    - `/explore <msg>` → exploration mode (explore-only, read-only)
-   - `/memory` → show RIKUGAN.md contents
+   - `/memory` → show SPECTRA.md contents
    - `/undo [N]` → undo last N mutations
    - `/mcp` → show MCP server health
    - `/doctor` → diagnose setup issues
 
 2. **Skill Resolution** — `_resolve_skill()` checks if the message starts with a skill slug (e.g., `/malware-analysis`). If matched, the skill's body is prepended to the system prompt and `allowed_tools` is enforced.
 
-3. **System Prompt Build** — `build_system_prompt()` assembles the prompt from host-specific base + binary context + cursor position + tool list + skill + persistent memory (RIKUGAN.md).
+3. **System Prompt Build** — `build_system_prompt()` assembles the prompt from host-specific base + binary context + cursor position + tool list + skill + persistent memory (SPECTRA.md).
 
 4. **Turn Loop** — The core loop:
    ```
@@ -313,7 +313,7 @@ Requests a phase change in exploration mode. Validates via `ExplorationState.can
 
 ### `save_memory`
 
-Persists a fact to `RIKUGAN.md` in the IDB/BNDB directory:
+Persists a fact to `SPECTRA.md` in the IDB/BNDB directory:
 ```json
 {"fact": "sub_401230 is the snake initializer", "category": "function_purpose"}
 ```
@@ -437,7 +437,7 @@ The agent synthesizes findings into a concrete modification plan.
 - Parsed into `ModificationPlan` with `PlannedChange` objects
 - Addresses extracted from step text via regex
 - User must approve the plan before execution proceeds
-- Approved plans are persisted to `RIKUGAN.md` for cross-session reference
+- Approved plans are persisted to `SPECTRA.md` for cross-session reference
 
 ### Phase 3: EXECUTE
 
@@ -612,7 +612,7 @@ The `/undo` command:
 
 ### UI Integration
 
-- `MUTATION_RECORDED` events flow to `RikuganPanelCore._on_mutation_recorded()`
+- `MUTATION_RECORDED` events flow to `SpectraPanelCore._on_mutation_recorded()`
 - A `MutationLogPanel` (in a horizontal `QSplitter` alongside the chat) shows the mutation history
 - "Mutations" toggle button appears after the first mutation
 - "Undo Last" button submits `/undo 1` through the agent loop
@@ -662,11 +662,11 @@ if self._context_manager.should_compact():
 
 **Files**: `rikugan/agent/system_prompt.py`, `rikugan/agent/loop.py`
 
-### RIKUGAN.md
+### SPECTRA.md
 
 A per-binary Markdown file stored alongside the IDB/BNDB. It acts as cross-session memory.
 
-- **Location**: `<idb_directory>/RIKUGAN.md`
+- **Location**: `<idb_directory>/SPECTRA.md`
 - **Loading**: First 200 lines loaded into the system prompt at the start of every session
 - **Writing**: Via the `save_memory` pseudo-tool or plan persistence
 
@@ -681,11 +681,11 @@ Categories: `function_purpose`, `architecture`, `naming_convention`, `prior_anal
 
 ### Plan Persistence
 
-Approved plans from exploration mode are saved to RIKUGAN.md with a timestamp, preserving analysis context across sessions.
+Approved plans from exploration mode are saved to SPECTRA.md with a timestamp, preserving analysis context across sessions.
 
 ### `/memory` Command
 
-Shows the current contents of RIKUGAN.md in the chat.
+Shows the current contents of SPECTRA.md in the chat.
 
 ---
 
@@ -832,7 +832,7 @@ In `_stream_llm_turn()`:
 │  (tool usage guidelines,    │
 │   discipline, safety)       │
 ├─────────────────────────────┤
-│  Persistent Memory          │ ← RIKUGAN.md (first 200 lines)
+│  Persistent Memory          │ ← SPECTRA.md (first 200 lines)
 ├─────────────────────────────┤
 │  Current Binary info        │ ← binary name, arch, entry point
 ├─────────────────────────────┤
@@ -861,7 +861,7 @@ In `_stream_llm_turn()`:
 
 **Files**: `rikugan/ui/panel_core.py`, `rikugan/ui/chat_view.py`, `rikugan/ui/message_widgets.py`
 
-### `RikuganPanelCore`
+### `SpectraPanelCore`
 
 The main Qt widget. Layout:
 
@@ -946,7 +946,7 @@ The agent waits with `queue.get(timeout=0.5)` in a loop, checking for cancellati
 ### Exception Hierarchy (`core/errors.py`)
 
 ```
-RikuganError
+SpectraError
 ├── AgentError          — loop-level errors
 ├── CancellationError   — user cancelled
 ├── ProviderError       — LLM API errors
@@ -985,7 +985,7 @@ for attempt in range(max_retries):
 
 ### Log Outputs
 
-1. **IDA Output Window** — `IDAHandler`, INFO level, `[Rikugan] LEVEL: message`
+1. **IDA Output Window** — `IDAHandler`, INFO level, `[Spectra] LEVEL: message`
 2. **Debug File** — `_FlushFileHandler`, DEBUG level, flushed + fsynced after every write
    - Location: `<config_dir>/rikugan/rikugan_debug.log`
    - Survives crashes (fsync)
@@ -1135,7 +1135,7 @@ UI Display
 | `/plan <msg>` | Enter plan mode: generate plan, then execute step-by-step |
 | `/modify <msg>` | Enter exploration mode: EXPLORE → PLAN → EXECUTE → SAVE |
 | `/explore <msg>` | Enter explore-only mode: autonomous read-only analysis |
-| `/memory` | Show current RIKUGAN.md contents |
+| `/memory` | Show current SPECTRA.md contents |
 | `/undo [N]` | Undo last N mutations (default 1) |
 | `/mcp` | Show MCP server health status |
 | `/doctor` | Diagnose provider, API key, tools, skills, config issues |

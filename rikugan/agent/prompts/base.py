@@ -125,7 +125,7 @@ Prefer precise search and filter tools over listing everything:
 
 PERSISTENT_MEMORY_SECTION = """\
 ## Persistent Memory (save_memory)
-You have a `save_memory` tool that writes facts to a RIKUGAN.md file next to the \
+You have a `save_memory` tool that writes facts to a SPECTRA.md file next to the \
 binary. This file is loaded into your system prompt on every future session, so \
 anything you save persists across conversations.
 

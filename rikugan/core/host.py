@@ -1,6 +1,6 @@
 """Host/runtime detection and context utilities.
 
-This module centralizes runtime integration points so Rikugan can run inside
+This module centralizes runtime integration points so Spectra can run inside
 multiple reverse-engineering hosts (IDA Pro, Binary Ninja, or standalone).
 """
 
@@ -63,7 +63,7 @@ def is_binary_ninja() -> bool:
 
 
 # Convenience module-level flags — importers that just need a bool
-# can use ``from rikugan.core.host import IDA_AVAILABLE`` instead of
+# can use ``from spectra.core.host import IDA_AVAILABLE`` instead of
 # calling ``is_ida()`` repeatedly.
 IDA_AVAILABLE: bool = is_ida()
 BINARY_NINJA_AVAILABLE: bool = is_binary_ninja()
@@ -174,7 +174,7 @@ def navigate_to(address: int) -> bool:
                     set_current_address(ea)
                 return ok
             except Exception as e:
-                sys.stderr.write(f"[Rikugan] navigate_to_address cb failed at 0x{ea:x}: {e}\n")
+                sys.stderr.write(f"[Spectra] navigate_to_address cb failed at 0x{ea:x}: {e}\n")
         return False
 
     return False
@@ -185,7 +185,7 @@ navigate_to_address = navigate_to
 
 
 def get_user_config_base_dir() -> str:
-    """Return host-specific user base directory for Rikugan config/log files."""
+    """Return host-specific user base directory for Spectra config/log files."""
     if is_ida():
         try:
             return _idaapi.get_user_idadir() if _idaapi else os.path.join(str(Path.home()), ".idapro")
@@ -199,7 +199,7 @@ def get_user_config_base_dir() -> str:
             if callable(user_directory):
                 return user_directory()
         except Exception as e:
-            sys.stderr.write(f"[Rikugan] get_user_config_base_dir failed: {e}\n")
+            sys.stderr.write(f"[Spectra] get_user_config_base_dir failed: {e}\n")
         return os.path.join(str(Path.home()), ".binaryninja")
 
     return os.path.join(str(Path.home()), ".idapro")
@@ -233,7 +233,7 @@ def get_database_path() -> str:
                     if path:
                         return str(path)
         except Exception as e:
-            sys.stderr.write(f"[Rikugan] get_database_path file attr failed: {e}\n")
+            sys.stderr.write(f"[Spectra] get_database_path file attr failed: {e}\n")
 
         for attr in ("file_name", "filename", "path"):
             try:
@@ -241,13 +241,13 @@ def get_database_path() -> str:
                 if path:
                     return str(path)
             except Exception as e:
-                sys.stderr.write(f"[Rikugan] get_database_path {attr} failed: {e}\n")
+                sys.stderr.write(f"[Spectra] get_database_path {attr} failed: {e}\n")
 
     return ""
 
 
 def get_database_instance_id() -> str:
-    """Read the Rikugan instance UUID stored in the current IDB/BNDB.
+    """Read the Spectra instance UUID stored in the current IDB/BNDB.
 
     Returns '' if none is stored yet.
     """
@@ -256,7 +256,7 @@ def get_database_instance_id() -> str:
             idaapi = _idaapi
             if idaapi is None:
                 return ""
-            node = idaapi.netnode("$ rikugan", 0, False)
+            node = idaapi.netnode("$ spectra", 0, False)
             if node == idaapi.BADNODE:
                 return ""
             val = node.supstr(0)
@@ -269,7 +269,7 @@ def get_database_instance_id() -> str:
         if bv is None:
             return ""
         try:
-            val = bv.query_metadata("rikugan_db_id")
+            val = bv.query_metadata("spectra_db_id")
             if val is None:
                 return ""
             # query_metadata may return a Metadata wrapper; unwrap if needed.
@@ -282,7 +282,7 @@ def get_database_instance_id() -> str:
 
 
 def set_database_instance_id(instance_id: str) -> bool:
-    """Store a Rikugan instance UUID in the current IDB/BNDB.
+    """Store a Spectra instance UUID in the current IDB/BNDB.
 
     Returns True on success.
     """
@@ -291,11 +291,11 @@ def set_database_instance_id(instance_id: str) -> bool:
             idaapi = _idaapi
             if idaapi is None:
                 return False
-            node = idaapi.netnode("$ rikugan", 0, True)
+            node = idaapi.netnode("$ spectra", 0, True)
             node.supset(0, instance_id)
             return True
         except Exception as e:
-            sys.stderr.write(f"[Rikugan] set_database_instance_id IDA failed: {e}\n")
+            sys.stderr.write(f"[Spectra] set_database_instance_id IDA failed: {e}\n")
             return False
 
     if is_binary_ninja():
@@ -303,10 +303,10 @@ def set_database_instance_id(instance_id: str) -> bool:
         if bv is None:
             return False
         try:
-            bv.store_metadata("rikugan_db_id", instance_id)
+            bv.store_metadata("spectra_db_id", instance_id)
             return True
         except Exception as e:
-            sys.stderr.write(f"[Rikugan] set_database_instance_id BN failed: {e}\n")
+            sys.stderr.write(f"[Spectra] set_database_instance_id BN failed: {e}\n")
             return False
 
     return False

@@ -53,7 +53,7 @@ Depth guidance:
 
 ## Security & Malware Analysis Features
 
-When analyzing potentially malicious code, use Rikugan's security-focused features:
+When analyzing potentially malicious code, use Spectra's security-focused features:
 
 **Findings Bookmarking:**
 - Bookmark important addresses with notes, tags, and categories
@@ -62,7 +62,7 @@ When analyzing potentially malicious code, use Rikugan's security-focused featur
 - Export findings as markdown report for documentation
 
 **Suspicious API Detection:**
-- Rikugan automatically highlights dangerous APIs with color-coded severity
+- Spectra automatically highlights dangerous APIs with color-coded severity
 - Critical APIs (red): CreateRemoteThread, WriteProcessMemory, VirtualAllocEx
 - High severity APIs (orange): VirtualProtect, GetProcAddress
 - Medium severity APIs (yellow): LoadLibrary, InternetConnect, socket

@@ -1,4 +1,4 @@
-"""Qt compatibility layer for Rikugan.
+"""Qt compatibility layer for Spectra.
 
 IDA 9.x 64-bit and Binary Ninja ship PySide6 (Qt6).  IDA 9.1 32-bit on
 Windows still uses Qt5 — its process has Qt5Core.dll loaded.  Importing

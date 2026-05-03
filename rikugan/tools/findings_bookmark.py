@@ -123,7 +123,7 @@ class FindingsBookmarkManager:
             # Use default location
             from ...core.logging import log_debug
             log_debug("No IDB path, using default findings location")
-            return Path.home() / ".rikugan" / "findings.json"
+            return Path.home() / ".spectra" / "findings.json"
 
         # Create findings file alongside IDB
         idb_path = Path(self.idb_path)

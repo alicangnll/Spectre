@@ -473,7 +473,7 @@ def install_il_workflow(
     try:
         # Clone the default workflow
         base_workflow = Workflow("core.function.metaAnalysis")
-        workflow_name = f"rikugan.{name}"
+        workflow_name = f"spectra.{name}"
         cloned = base_workflow.clone(workflow_name)
 
         # Determine pipeline insertion point
@@ -497,7 +497,7 @@ def install_il_workflow(
                 log_error(f"Workflow activity '{name}' failed: {e}")
 
         # Create and register the activity
-        activity_name = f"rikugan.activity.{name}"
+        activity_name = f"spectra.activity.{name}"
         activity = Activity(activity_name, action=_activity_wrapper)
         cloned.register_activity(activity)
 

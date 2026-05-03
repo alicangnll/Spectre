@@ -406,7 +406,7 @@ Dangerous: 8 permissions
 
 [Analysis Complete]
 Tool: JADX v1.4.7
-Analyzer: Rikugan JADX Plugin
+Analyzer: Spectra JADX Plugin
 Duration: 45 seconds
 ```
 
@@ -424,7 +424,7 @@ jadx -d output -e app.apk
 jadx -d output --export-gradle app.apk
 ```
 
-**Rikugan Commands:**
+**Spectra Commands:**
 ```
 /jadx Analyze this APK
 /jadx Search for API endpoints

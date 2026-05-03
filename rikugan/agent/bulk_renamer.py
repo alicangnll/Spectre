@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_error, log_info
 from ..core.types import Message, Role
 from ..providers.base import LLMProvider
@@ -146,7 +146,7 @@ class BulkRenamerEngine:
         self,
         provider: LLMProvider,
         tool_registry: ToolRegistry,
-        config: RikuganConfig,
+        config: SpectraConfig,
         host_name: str = "IDA Pro",
         skill_registry: SkillRegistry | None = None,
         batch_size: int = 10,
@@ -193,7 +193,7 @@ class BulkRenamerEngine:
         self._thread = threading.Thread(
             target=self._run_deep if deep else self._run_quick,
             daemon=True,
-            name="rikugan-bulk-renamer",
+            name="spectra-bulk-renamer",
         )
         self._thread.start()
         log_info(f"Bulk renamer started: {len(self._pending_jobs())} jobs, mode={'deep' if deep else 'quick'}")
@@ -445,7 +445,7 @@ class BulkRenamerEngine:
 
         with ThreadPoolExecutor(
             max_workers=self._max_workers,
-            thread_name_prefix="rikugan-quick-rename",
+            thread_name_prefix="spectra-quick-rename",
         ) as executor:
             futures = [executor.submit(_run_sub_batch, sub) for sub in sub_batches]
             for future in futures:
@@ -717,7 +717,7 @@ class BulkRenamerEngine:
 
         with ThreadPoolExecutor(
             max_workers=self._max_workers,
-            thread_name_prefix="rikugan-deep-rename",
+            thread_name_prefix="spectra-deep-rename",
         ) as executor:
             futures = [executor.submit(_analyze_one, job) for job in pending]
             for future in futures:

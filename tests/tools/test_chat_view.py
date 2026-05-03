@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.chat_view — pure logic helpers."""
+"""Tests for spectra.ui.chat_view — pure logic helpers."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ ensure_pyside6_stubs()
 # Reinstall them unconditionally because other tests may have left behind
 # incomplete stubs in sys.modules.
 for _mod_name in [
-    "rikugan.agent.turn",
-    "rikugan.core.types",
+    "spectra.agent.turn",
+    "spectra.core.types",
 ]:
     _stub = types.ModuleType(_mod_name)
     # Add commonly-needed attrs
@@ -28,15 +28,15 @@ for _mod_name in [
 
 # Other tests may leave stubbed UI modules behind; force fresh imports.
 for _mod_name in [
-    "rikugan.ui.chat_view",
-    "rikugan.ui.message_widgets",
-    "rikugan.ui.plan_view",
-    "rikugan.ui.tool_widgets",
+    "spectra.ui.chat_view",
+    "spectra.ui.message_widgets",
+    "spectra.ui.plan_view",
+    "spectra.ui.tool_widgets",
 ]:
     sys.modules.pop(_mod_name, None)
 
-from rikugan.ui.chat_view import _is_hidden_system_user_message, _TOOL_GROUP_MIN_CALLS  # noqa: E402
-from rikugan.ui.bulk_renamer import BulkRenamerWidget  # noqa: E402
+from spectra.ui.chat_view import _is_hidden_system_user_message, _TOOL_GROUP_MIN_CALLS  # noqa: E402
+from spectra.ui.bulk_renamer import BulkRenamerWidget  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

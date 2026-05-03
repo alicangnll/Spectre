@@ -85,7 +85,7 @@ def _type_to_str(t: Any) -> str:
 
 def _sizeof_type(bv: Any, type_str: str, default: int = 4) -> int:
     try:
-        t, _ = parse_type_string(bv, f"{type_str} __rikugan_tmp")
+        t, _ = parse_type_string(bv, f"{type_str} __spectra_tmp")
     except Exception:
         try:
             t, _ = parse_type_string(bv, type_str)
@@ -237,7 +237,7 @@ def _parse_field_type(bv: Any, ftype_str: str) -> Any:
     """Parse a field type string, trying with a dummy variable name if needed."""
     # Try with a dummy variable name first (BN often requires a declaration)
     last_err: Exception | None = None
-    for src in (f"{ftype_str} __rikugan_tmp", ftype_str):
+    for src in (f"{ftype_str} __spectra_tmp", ftype_str):
         try:
             t, _ = parse_type_string(bv, src)
             return t
@@ -709,7 +709,7 @@ def apply_type_to_variable(
         return f"No function at 0x{ea:x}"
 
     try:
-        tif, _ = parse_type_string(bv, f"{type_str} __rikugan_var")
+        tif, _ = parse_type_string(bv, f"{type_str} __spectra_var")
     except Exception:
         try:
             tif, _ = parse_type_string(bv, type_str)

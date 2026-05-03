@@ -1,4 +1,4 @@
-"""Auto-update mechanism for Rikugan.
+"""Auto-update mechanism for Spectra.
 
 Checks for updates from GitHub and provides one-click update functionality.
 """
@@ -13,7 +13,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_error, log_info, log_warn
 
 
@@ -31,21 +31,21 @@ class UpdateInfo:
 
 
 class Updater:
-    """Rikugan auto-updater.
+    """Spectra auto-updater.
 
     Checks for updates from GitHub and handles the update process.
     """
 
-    UPDATE_URL = "https://raw.githubusercontent.com/alicangnll/Rikugan/main/update.json"
-    BACKUP_DIR = ".rikugan_backup"
+    UPDATE_URL = "https://raw.githubusercontent.com/alicangnll/Spectra/main/update.json"
+    BACKUP_DIR = ".spectra_backup"
 
     def __init__(self):
         """Initialize updater."""
-        self.config = RikuganConfig()
+        self.config = SpectraConfig()
         self.current_version = self._get_current_version()
 
     def _get_current_version(self) -> str:
-        """Get current Rikugan version."""
+        """Get current Spectra version."""
         # Try to get from constants
         try:
             from ..constants import PLUGIN_VERSION
@@ -78,11 +78,11 @@ class Updater:
             try:
                 import ida_kernwin
 
-                ida_kernwin.msg("[Rikugan] Checking for updates...\n")
+                ida_kernwin.msg("[Spectra] Checking for updates...\n")
             except ImportError:
                 pass
 
-            request = urllib.request.Request(self.UPDATE_URL, headers={"User-Agent": f"Rikugan/{self.current_version}"})
+            request = urllib.request.Request(self.UPDATE_URL, headers={"User-Agent": f"Spectra/{self.current_version}"})
 
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 data = json.loads(response.read().decode())
@@ -110,7 +110,7 @@ class Updater:
                 try:
                     import ida_kernwin
 
-                    ida_kernwin.msg(f"[Rikugan] Update available: {self.current_version} → {latest_version}\n")
+                    ida_kernwin.msg(f"[Spectra] Update available: {self.current_version} → {latest_version}\n")
                 except ImportError:
                     pass
                 for item in changelog:
@@ -120,7 +120,7 @@ class Updater:
                 try:
                     import ida_kernwin
 
-                    ida_kernwin.msg("[Rikugan] Already up to date\n")
+                    ida_kernwin.msg("[Spectra] Already up to date\n")
                 except ImportError:
                     pass
 
@@ -131,7 +131,7 @@ class Updater:
             try:
                 import ida_kernwin
 
-                ida_kernwin.msg(f"[Rikugan] Update check failed: {e}\n")
+                ida_kernwin.msg(f"[Spectra] Update check failed: {e}\n")
             except ImportError:
                 pass
             return None
@@ -140,7 +140,7 @@ class Updater:
             try:
                 import ida_kernwin
 
-                ida_kernwin.msg(f"[Rikugan] Update error: {e}\n")
+                ida_kernwin.msg(f"[Spectra] Update error: {e}\n")
             except ImportError:
                 pass
             return None
@@ -162,12 +162,12 @@ class Updater:
                 dest_dir = Path(dest_dir)
 
             dest_dir.mkdir(parents=True, exist_ok=True)
-            download_path = dest_dir / "rikugan_update.zip"
+            download_path = dest_dir / "spectra_update.zip"
 
             log_info(f"Downloading update from {update_info.download_url}")
 
             request = urllib.request.Request(
-                update_info.download_url, headers={"User-Agent": f"Rikugan/{self.current_version}"}
+                update_info.download_url, headers={"User-Agent": f"Spectra/{self.current_version}"}
             )
 
             with urllib.request.urlopen(request, timeout=300) as response:
@@ -205,7 +205,7 @@ class Updater:
 
             # Backup current directory
             current_dir = Path(__file__).parent.parent.parent
-            if current_dir.name == "rikugan":
+            if current_dir.name == "spectra":
                 # We're in the package directory
                 source_dir = current_dir.parent
             else:
@@ -259,16 +259,16 @@ class Updater:
             with zipfile.ZipFile(download_path, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
 
-            # Find Rikugan directory in extracted package
+            # Find Spectra directory in extracted package
             extracted_root = extract_dir
             for root in extract_dir.iterdir():
-                if (root / "rikugan_plugin.py").exists():
+                if (root / "spectra_plugin.py").exists():
                     extracted_root = root
                     break
 
             # Copy files to current installation
             current_dir = Path(__file__).parent.parent.parent
-            if current_dir.name == "rikugan":
+            if current_dir.name == "spectra":
                 source_dir = current_dir.parent
             else:
                 source_dir = current_dir
@@ -283,18 +283,18 @@ class Updater:
             log_info(f"Installing to {source_dir}...")
             log_info(f"Source directory type: {'symlink' if original_source_dir.is_symlink() else 'regular'}")
 
-            # Copy rikugan directory
-            rikugan_src = extracted_root / "rikugan"
-            if rikugan_src.exists():
-                rikugan_dst = source_dir / "rikugan"
-                self._copy_directory(rikugan_src, rikugan_dst)
+            # Copy spectra directory
+            spectra_src = extracted_root / "spectra"
+            if spectra_src.exists():
+                spectra_dst = source_dir / "spectra"
+                self._copy_directory(spectra_src, spectra_dst)
 
             # Copy plugin file
-            plugin_src = extracted_root / "rikugan_plugin.py"
+            plugin_src = extracted_root / "spectra_plugin.py"
             if plugin_src.exists():
                 import shutil
 
-                shutil.copy2(plugin_src, source_dir / "rikugan_plugin.py")
+                shutil.copy2(plugin_src, source_dir / "spectra_plugin.py")
 
             # Copy update.json
             update_src = extracted_root / "update.json"
@@ -395,7 +395,7 @@ class Updater:
             log_info(f"Restoring from {latest_backup}")
 
             current_dir = Path(__file__).parent.parent.parent
-            if current_dir.name == "rikugan":
+            if current_dir.name == "spectra":
                 source_dir = current_dir.parent
             else:
                 source_dir = current_dir
@@ -423,7 +423,7 @@ class Updater:
 
 
 def check_for_updates() -> UpdateInfo | None:
-    """Check for Rikugan updates.
+    """Check for Spectra updates.
 
     Returns:
         UpdateInfo if update available, None otherwise.
@@ -433,7 +433,7 @@ def check_for_updates() -> UpdateInfo | None:
 
 
 def install_update(update_info: UpdateInfo) -> bool:
-    """Install Rikugan update.
+    """Install Spectra update.
 
     Args:
         update_info: Update information.
@@ -453,7 +453,7 @@ def install_update(update_info: UpdateInfo) -> bool:
 
 
 def restore_backup() -> bool:
-    """Restore Rikugan from backup.
+    """Restore Spectra from backup.
 
     Returns:
         True if restoration successful, False otherwise.

@@ -1,6 +1,6 @@
 # BNIL Reading & Writing Guide
 
-## Reading IL via Rikugan Tools
+## Reading IL via Spectra Tools
 
 ```
 get_il("0x401000", "mlil")

@@ -1,4 +1,4 @@
-"""Smart function naming tool for Rikugan.
+"""Smart function naming tool for Spectra.
 
 Provides AI-powered function name suggestions based on pattern recognition,
 import analysis, string reference analysis, and call graph position.
@@ -161,7 +161,7 @@ class FunctionNamerTool(Tool):
 
 
 def get_tool_definition() -> ToolDefinition:
-    """Return tool definition for Rikugan tool registry."""
+    """Return tool definition for Spectra tool registry."""
     return ToolDefinition(
         name=FunctionNamerTool.name,
         description=FunctionNamerTool.description,

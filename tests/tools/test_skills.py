@@ -12,12 +12,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.skills.loader import (
+from spectra.skills.loader import (
     _parse_frontmatter,
     _split_frontmatter,
     discover_skills,
 )
-from rikugan.skills.registry import SkillRegistry
+from spectra.skills.registry import SkillRegistry
 
 
 class TestFrontmatterParser(unittest.TestCase):
@@ -103,7 +103,7 @@ class TestDiscoverSkills(unittest.TestCase):
             with open(os.path.join(refs_dir, "extra.md"), "w") as f:
                 f.write("Reference content")
 
-            with patch("rikugan.skills.loader._load_references") as load_refs:
+            with patch("spectra.skills.loader._load_references") as load_refs:
                 skills = discover_skills(tmpdir)
 
             self.assertEqual(len(skills), 1)

@@ -1,4 +1,4 @@
-"""JADX integration package for Rikugan.
+"""JADX integration package for Spectra.
 
 Provides Android APK reverse engineering capabilities using JADX decompiler.
 """

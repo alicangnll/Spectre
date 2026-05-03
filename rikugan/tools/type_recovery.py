@@ -1,4 +1,4 @@
-"""Type library auto-detection tool for Rikugan.
+"""Type library auto-detection tool for Spectra.
 
 Automatically detects and applies standard type libraries (Windows, Linux, etc.)
 to recover structure definitions and function signatures.
@@ -171,7 +171,7 @@ class TypeRecoveryTool(Tool):
 
 
 def get_tool_definition() -> ToolDefinition:
-    """Return tool definition for Rikugan tool registry."""
+    """Return tool definition for Spectra tool registry."""
     return ToolDefinition(
         name=TypeRecoveryTool.name,
         description=TypeRecoveryTool.description,

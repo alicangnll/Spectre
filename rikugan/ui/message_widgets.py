@@ -408,7 +408,7 @@ class AssistantMessageWidget(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 6, 8, 6)
 
-        self._role_label = QLabel("Rikugan")
+        self._role_label = QLabel("Spectra")
         self._role_label.setStyleSheet("color: #569cd6; font-weight: bold; font-size: 11px;")
         layout.addWidget(self._role_label)
 
@@ -938,7 +938,7 @@ class UserQuestionWidget(QFrame):
         layout.setContentsMargins(8, 6, 8, 6)
         layout.setSpacing(6)
 
-        self._header = QLabel("Rikugan asks:")
+        self._header = QLabel("Spectra asks:")
         self._header.setStyleSheet("color: #dcdcaa; font-weight: bold; font-size: 11px;")
         layout.addWidget(self._header)
 

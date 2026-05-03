@@ -407,7 +407,7 @@ mode: {mode}
                 "Agent Created",
                 f"Agent '{name}' has been created successfully!\n\n"
                 f"Location: {skill_dir}\n\n"
-                f"The agent will be available after Rikugan reloads.\n"
+                f"The agent will be available after Spectra reloads.\n"
                 f"Use: /{name}",
             )
 

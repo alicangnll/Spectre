@@ -1,1 +1,1 @@
-"""IDA Pro host integration for Rikugan."""
+"""IDA Pro host integration for Spectra."""

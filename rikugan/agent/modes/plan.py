@@ -107,7 +107,7 @@ def _execute_step(
 
 
 def persist_plan(loop: AgentLoop, user_goal: str, steps: list[str]) -> None:
-    """Save an approved plan to RIKUGAN.md for cross-session reference."""
+    """Save an approved plan to SPECTRA.md for cross-session reference."""
     from ..loop import append_to_memory_file
 
     idb_dir = ""
@@ -116,16 +116,16 @@ def persist_plan(loop: AgentLoop, user_goal: str, steps: list[str]) -> None:
     if not idb_dir:
         return
 
-    md_path = os.path.join(idb_dir, "RIKUGAN.md")
+    md_path = os.path.join(idb_dir, "SPECTRA.md")
     try:
         timestamp = time.strftime("%Y-%m-%d %H:%M")
         lines = [f"\n## Plan ({timestamp})\n", f"Goal: {user_goal[:200]}\n"]
         lines += [f"{i}. {step}\n" for i, step in enumerate(steps, 1)]
         lines.append("\n")
         append_to_memory_file(md_path, "".join(lines))
-        log_info(f"Plan persisted to RIKUGAN.md ({len(steps)} steps)")
+        log_info(f"Plan persisted to SPECTRA.md ({len(steps)} steps)")
     except OSError as e:
-        log_error(f"Failed to persist plan to RIKUGAN.md: {e}")
+        log_error(f"Failed to persist plan to SPECTRA.md: {e}")
 
 
 def run_plan_mode(

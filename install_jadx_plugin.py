@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Rikugan JADX Plugin Installer
+Spectra JADX Plugin Installer
 
-Automatically installs Rikugan as a JADX plugin.
+Automatically installs Spectra as a JADX plugin.
 Supports Linux, macOS, and Windows.
 """
 
@@ -38,53 +38,53 @@ def get_jadx_plugin_dir() -> Path:
 
 
 def install_plugin() -> int:
-    """Install Rikugan as JADX plugin."""
+    """Install Spectra as JADX plugin."""
 
     print("="*60)
-    print("  Rikugan JADX Plugin Installer")
+    print("  Spectra JADX Plugin Installer")
     print("="*60)
 
-    # Get current directory (Rikugan root)
-    rikugan_root = Path(__file__).parent.absolute()
+    # Get current directory (Spectra root)
+    spectra_root = Path(__file__).parent.absolute()
     plugin_dir = get_jadx_plugin_dir()
 
     # Create plugin directory
-    rikugan_plugin_dir = plugin_dir / "rikugan"
-    rikugan_plugin_dir.mkdir(parents=True, exist_ok=True)
+    spectra_plugin_dir = plugin_dir / "spectra"
+    spectra_plugin_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n📁 Installing to: {rikugan_plugin_dir}")
+    print(f"\n📁 Installing to: {spectra_plugin_dir}")
 
     # Copy main script
-    script_source = rikugan_root / "rikugan_jadx.py"
-    script_dest = rikugan_plugin_dir / "rikugan_jadx.py"
+    script_source = spectra_root / "spectra_jadx.py"
+    script_dest = spectra_plugin_dir / "spectra_jadx.py"
 
     if script_source.exists():
         shutil.copy2(script_source, script_dest)
-        print(f"✅ Copied: rikugan_jadx.py")
+        print(f"✅ Copied: spectra_jadx.py")
     else:
         print(f"❌ Error: {script_source} not found")
         return 1
 
-    # Copy rikugan module
-    rikugan_module_source = rikugan_root / "rikugan"
-    rikugan_module_dest = rikugan_plugin_dir / "rikugan"
+    # Copy spectra module
+    spectra_module_source = spectra_root / "spectra"
+    spectra_module_dest = spectra_plugin_dir / "spectra"
 
-    if rikugan_module_source.exists():
-        if rikugan_module_dest.exists():
-            shutil.rmtree(rikugan_module_dest)
-        shutil.copytree(rikugan_module_source, rikugan_module_dest)
-        print(f"✅ Copied: rikugan/ module")
+    if spectra_module_source.exists():
+        if spectra_module_dest.exists():
+            shutil.rmtree(spectra_module_dest)
+        shutil.copytree(spectra_module_source, spectra_module_dest)
+        print(f"✅ Copied: spectra/ module")
     else:
-        print(f"❌ Error: {rikugan_module_source} not found")
+        print(f"❌ Error: {spectra_module_source} not found")
         return 1
 
     # Create plugin.json
     plugin_config = {
-        "name": "Rikugan",
+        "name": "Spectra",
         "version": __version__,
         "description": "AI-powered Android APK analysis assistant",
         "author": "Ali Can Gönüllü",
-        "main": "rikugan_jadx.py",
+        "main": "spectra_jadx.py",
         "enabled": True,
         "dependencies": [
             "anthropic>=0.18.0",
@@ -100,7 +100,7 @@ def install_plugin() -> int:
         ]
     }
 
-    config_path = rikugan_plugin_dir / "plugin.json"
+    config_path = spectra_plugin_dir / "plugin.json"
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(plugin_config, f, indent=2, ensure_ascii=False)
     print(f"✅ Created: plugin.json")
@@ -121,26 +121,26 @@ def install_plugin() -> int:
         }
     }
 
-    config_file_path = rikugan_plugin_dir / "config.json"
+    config_file_path = spectra_plugin_dir / "config.json"
     with open(config_file_path, "w", encoding="utf-8") as f:
         json.dump(default_config, f, indent=2, ensure_ascii=False)
     print(f"✅ Created: config.json")
 
     # Create README
-    readme_content = """# Rikugan JADX Plugin
+    readme_content = """# Spectra JADX Plugin
 
 AI-powered Android APK analysis assistant for JADX decompiler.
 
 ## Usage
 
 ### From JADX GUI:
-Tools → Rikugan → Analyze APK
+Tools → Spectra → Analyze APK
 
 ### From CLI:
 ```bash
-python rikugan_jadx.py analyze app.apk -o output
-python rikugan_jadx.py search app.apk "API_KEY"
-python rikugan_jadx.py interactive app.apk
+python spectra_jadx.py analyze app.apk -o output
+python spectra_jadx.py search app.apk "API_KEY"
+python spectra_jadx.py interactive app.apk
 ```
 
 ## Features
@@ -170,10 +170,10 @@ Edit `config.json` to customize:
 ## Support
 
 For issues and updates:
-https://github.com/alicangnll/Rikugan
+https://github.com/alicangnll/Spectra
 """
 
-    readme_path = rikugan_plugin_dir / "README.md"
+    readme_path = spectra_plugin_dir / "README.md"
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(readme_content)
     print(f"✅ Created: README.md")
@@ -181,35 +181,35 @@ https://github.com/alicangnll/Rikugan
     print("\n" + "="*60)
     print("  Installation Complete!")
     print("="*60)
-    print(f"\n📦 Plugin installed to: {rikugan_plugin_dir}")
+    print(f"\n📦 Plugin installed to: {spectra_plugin_dir}")
     print(f"🔧 Plugin config: {config_file_path}")
     print(f"\n📖 Next steps:")
     print(f"   1. Configure API key in: {config_file_path}")
     print(f"   2. Restart JADX if running")
-    print(f"   3. Check Tools → Rikugan menu in JADX GUI")
+    print(f"   3. Check Tools → Spectra menu in JADX GUI")
     print(f"\n📚 Documentation: See README.md in plugin directory")
 
     return 0
 
 
 def uninstall_plugin() -> int:
-    """Uninstall Rikugan JADX plugin."""
+    """Uninstall Spectra JADX plugin."""
 
     print("="*60)
-    print("  Rikugan JADX Plugin Uninstaller")
+    print("  Spectra JADX Plugin Uninstaller")
     print("="*60)
 
     plugin_dir = get_jadx_plugin_dir()
-    rikugan_plugin_dir = plugin_dir / "rikugan"
+    spectra_plugin_dir = plugin_dir / "spectra"
 
-    if not rikugan_plugin_dir.exists():
-        print("❌ Rikugan plugin not found")
+    if not spectra_plugin_dir.exists():
+        print("❌ Spectra plugin not found")
         return 1
 
-    print(f"\n🗑️  Removing: {rikugan_plugin_dir}")
+    print(f"\n🗑️  Removing: {spectra_plugin_dir}")
 
     try:
-        shutil.rmtree(rikugan_plugin_dir)
+        shutil.rmtree(spectra_plugin_dir)
         print("✅ Plugin uninstalled successfully")
         return 0
     except Exception as e:
@@ -223,7 +223,7 @@ def main() -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Install/uninstall Rikugan as JADX plugin"
+        description="Install/uninstall Spectra as JADX plugin"
     )
     parser.add_argument(
         "--uninstall",

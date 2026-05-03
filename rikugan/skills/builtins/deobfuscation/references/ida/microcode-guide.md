@@ -1,6 +1,6 @@
 # Microcode Reading & Writing Guide
 
-## Reading Microcode via Rikugan Tools
+## Reading Microcode via Spectra Tools
 
 ```
 get_microcode("0x401000", "MMAT_LOCOPT")

@@ -57,7 +57,7 @@ class ToolsPanel(QWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         self.setObjectName("tools_panel")
-        self.setWindowTitle("Rikugan Tools")
+        self.setWindowTitle("Spectra Tools")
         self.setStyleSheet(_PANEL_STYLE)
         # No minimum size — this widget is embedded in IDA dockable forms
         # and Binary Ninja sidebars, which can be any size.

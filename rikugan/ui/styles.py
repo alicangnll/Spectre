@@ -1,9 +1,9 @@
-"""Dark-theme stylesheet for Rikugan UI."""
+"""Dark-theme stylesheet for Spectra UI."""
 
 from __future__ import annotations
 
 DARK_THEME = """
-QWidget#rikugan_panel {
+QWidget#spectra_panel {
     background-color: #1e1e1e;
     color: #d4d4d4;
 }

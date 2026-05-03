@@ -13,13 +13,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.agent.system_prompt import build_system_prompt, _BASE_PROMPT, _load_persistent_memory
+from spectra.agent.system_prompt import build_system_prompt, _BASE_PROMPT, _load_persistent_memory
 
 
 class TestBuildSystemPrompt(unittest.TestCase):
     def test_base_prompt_only(self):
         prompt = build_system_prompt()
-        self.assertIn("Rikugan", prompt)
+        self.assertIn("Spectra", prompt)
         self.assertIn("reverse engineering", prompt)
 
     def test_with_binary_info(self):
@@ -111,7 +111,7 @@ class TestBasePromptContent(unittest.TestCase):
 class TestPersistentMemoryCaching(unittest.TestCase):
     def test_reuses_cached_memory_when_file_unchanged(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "RIKUGAN.md")
+            md_path = os.path.join(tmpdir, "SPECTRA.md")
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("first value\n")
 
@@ -127,7 +127,7 @@ class TestPersistentMemoryCaching(unittest.TestCase):
 
     def test_invalidates_cache_when_file_changes(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "RIKUGAN.md")
+            md_path = os.path.join(tmpdir, "SPECTRA.md")
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("first value\n")
 
@@ -142,7 +142,7 @@ class TestPersistentMemoryCaching(unittest.TestCase):
 
     def test_invalidates_cache_when_size_changes_with_same_mtime(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "RIKUGAN.md")
+            md_path = os.path.join(tmpdir, "SPECTRA.md")
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("first value\n")
 
@@ -159,7 +159,7 @@ class TestPersistentMemoryCaching(unittest.TestCase):
 
     def test_invalidates_cache_when_mtime_ns_changes(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            md_path = os.path.join(tmpdir, "RIKUGAN.md")
+            md_path = os.path.join(tmpdir, "SPECTRA.md")
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("first value\n")
 

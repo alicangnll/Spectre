@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Rikugan JADX Plugin - Hybrid Android APK Analysis Assistant
+Spectra JADX Plugin - Hybrid Android APK Analysis Assistant
 
 This script works in multiple modes:
 1. **Standalone CLI**: Direct execution from terminal
-2. **IDA Pro Plugin**: Integrated with IDA Pro's Rikugan
-3. **Binary Ninja Plugin**: Integrated with Binary Ninja's Rikugan
+2. **IDA Pro Plugin**: Integrated with IDA Pro's Spectra
+3. **Binary Ninja Plugin**: Integrated with Binary Ninja's Spectra
 4. **JADX Plugin**: Loadable inside JADX as a native plugin
 
 Usage:
     # Standalone CLI
-    python rikugan_jadx.py analyze app.apk -o ./decompiled
+    python spectra_jadx.py analyze app.apk -o ./decompiled
 
     # As JADX plugin (after installation)
-    jadx --plugin rikugan app.apk -d output
-    # Or from JADX GUI: Tools → Rikugan → Analyze APK
+    jadx --plugin spectra app.apk -d output
+    # Or from JADX GUI: Tools → Spectra → Analyze APK
 
 Requirements:
     - JADX: https://github.com/skylot/jadx
     - Python 3.10+
-    - Rikugan dependencies (for IDA/BN integration)
+    - Spectra dependencies (for IDA/BN integration)
 
 Author: Ali Can Gönüllü
 License: MIT
@@ -36,17 +36,17 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
-# Add Rikugan to path
-rikugan_path = Path(__file__).parent
-sys.path.insert(0, str(rikugan_path))
+# Add Spectra to path
+spectra_path = Path(__file__).parent
+sys.path.insert(0, str(spectra_path))
 
-# Try to import Rikugan components
+# Try to import Spectra components
 try:
-    from rikugan.jadx import JadxAnalyzer
-    RIKUGAN_AVAILABLE = True
+    from spectra.jadx import JadxAnalyzer
+    SPECTRA_AVAILABLE = True
 except ImportError:
-    RIKUGAN_AVAILABLE = False
-    print("Warning: Rikugan core not available, running in standalone mode")
+    SPECTRA_AVAILABLE = False
+    print("Warning: Spectra core not available, running in standalone mode")
 
 # Detect execution environment
 ENV_STANDALONE = "standalone"
@@ -84,7 +84,7 @@ CURRENT_ENV = detect_environment()
 
 
 class JadxPluginWrapper:
-    """JADX plugin wrapper for Rikugan integration."""
+    """JADX plugin wrapper for Spectra integration."""
 
     def __init__(self):
         self.plugin_dir = Path(__file__).parent
@@ -122,7 +122,7 @@ class JadxPluginWrapper:
     def get_plugin_info(self) -> Dict[str, Any]:
         """Return plugin metadata for JADX."""
         return {
-            "name": "Rikugan",
+            "name": "Spectra",
             "version": __version__,
             "description": "AI-powered Android APK analysis assistant",
             "author": "Ali Can Gönüllü",
@@ -137,17 +137,17 @@ class JadxPluginWrapper:
                 "binary_ninja_integration"
             ],
             "environment": CURRENT_ENV,
-            "rikugan_available": RIKUGAN_AVAILABLE
+            "spectra_available": SPECTRA_AVAILABLE
         }
 
     def initialize(self) -> bool:
         """Initialize plugin based on environment."""
         try:
-            if RIKUGAN_AVAILABLE:
+            if SPECTRA_AVAILABLE:
                 self.analyzer = JadxAnalyzer()
                 return True
             else:
-                print("Warning: Rikugan core not available, limited functionality")
+                print("Warning: Spectra core not available, limited functionality")
                 return False
         except Exception as e:
             print(f"Plugin initialization error: {e}")
@@ -161,7 +161,7 @@ class JadxPluginWrapper:
         try:
             # Set default output directory
             if not output_dir:
-                output_dir = str(Path(apk_path).parent / f"{Path(apk_path).stem}_rikugan_analysis")
+                output_dir = str(Path(apk_path).parent / f"{Path(apk_path).stem}_spectra_analysis")
 
             # Decompile
             decompiled_dir = self.analyzer.decompile_apk(apk_path, output_dir)
@@ -415,7 +415,7 @@ def cmd_class(args) -> int:
 
 def cmd_interactive(args) -> int:
     """Interactive AI mode."""
-    print_section("Rikugan Interactive Mode")
+    print_section("Spectra Interactive Mode")
 
     try:
         plugin = JadxPluginWrapper()
@@ -467,9 +467,9 @@ def cmd_interactive(args) -> int:
                     break
 
                 # Process question
-                print(f"\nRikugan: Processing '{user_input}'...")
+                print(f"\nSpectra: Processing '{user_input}'...")
                 response = process_basic_question(user_input, context, plugin)
-                print(f"Rikugan: {response}\n")
+                print(f"Spectra: {response}\n")
 
             except KeyboardInterrupt:
                 print("\nGoodbye!")
@@ -536,7 +536,7 @@ def cmd_plugin_info(args) -> int:
     plugin = JadxPluginWrapper()
     info = plugin.get_plugin_info()
 
-    print_section("Rikugan JADX Plugin Info")
+    print_section("Spectra JADX Plugin Info")
     print_json(info)
 
     return 0
@@ -550,7 +550,7 @@ def main() -> int:
 
     # JADX plugin mode
     if CURRENT_ENV == ENV_JADX:
-        print("Rikugan JADX Plugin Mode")
+        print("Spectra JADX Plugin Mode")
         # Handle JADX-specific plugin initialization
         if "--jadx-init" in sys.argv:
             plugin = JadxPluginWrapper()
@@ -571,7 +571,7 @@ def main() -> int:
 
     # Standard CLI mode
     parser = argparse.ArgumentParser(
-        description="Rikugan JADX Plugin - Hybrid Android APK Analysis",
+        description="Spectra JADX Plugin - Hybrid Android APK Analysis",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

@@ -1,20 +1,20 @@
-"""Binary Ninja QWidget wrapper around the shared Rikugan panel core."""
+"""Binary Ninja QWidget wrapper around the shared Spectra panel core."""
 
 from __future__ import annotations
 
-from ...ui.panel_core import RikuganPanelCore
+from ...ui.panel_core import SpectraPanelCore
 from ...ui.qt_compat import QVBoxLayout, QWidget
 from .session_controller import BinaryNinjaSessionController
 
 
-class RikuganPanel(QWidget):
+class SpectraPanel(QWidget):
     """Binary Ninja panel widget."""
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._core: RikuganPanelCore | None = RikuganPanelCore(
+        self._core: SpectraPanelCore | None = SpectraPanelCore(
             controller_factory=BinaryNinjaSessionController,
             ui_hooks_factory=None,
             parent=self,

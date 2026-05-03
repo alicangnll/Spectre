@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING, Any
 
-from ...core.config import RikuganConfig
+from ...core.config import SpectraConfig
 from ...core.logging import log_debug
 from ...core.profile import (
     BUILTIN_PROFILES,
@@ -52,7 +52,7 @@ _GROUP_STYLE = (
 class ProfilesTab(QWidget):
     """Tab for managing analysis profiles."""
 
-    def __init__(self, config: RikuganConfig, service: SettingsService, parent: QWidget = None):
+    def __init__(self, config: SpectraConfig, service: SettingsService, parent: QWidget = None):
         super().__init__(parent)
         self._config = config
         self._service = service
@@ -594,7 +594,7 @@ class ProfilesTab(QWidget):
     # Apply
     # ------------------------------------------------------------------
 
-    def apply_to_config(self, config: RikuganConfig) -> None:
+    def apply_to_config(self, config: SpectraConfig) -> None:
         self._save_current_to_working_copy()
         config.active_profile = self._profile_combo.currentText() or "default"
         config.custom_profiles = copy.deepcopy(self._custom_profiles)

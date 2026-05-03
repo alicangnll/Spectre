@@ -1,4 +1,4 @@
-"""Core data types for Rikugan."""
+"""Core data types for Spectra."""
 
 from __future__ import annotations
 

@@ -2,7 +2,7 @@
 
 All data originating from binary analysis (strings, function names, decompiled
 code, comments), external sources (MCP servers), or user-controlled files
-(skills, RIKUGAN.md) is considered **untrusted**.  This module provides:
+(skills, SPECTRA.md) is considered **untrusted**.  This module provides:
 
 1. **Delimiter quoting** — wraps untrusted content in XML-style tags so the
    model can distinguish data from instructions.
@@ -136,7 +136,7 @@ _ROLE_MARKER_RE = re.compile(
     <system>                |
     </system>               |
     <\|endoftext\|>         |
-    \[RIKUGAN_SYSTEM\]      |  # prevent self-referencing injection
+    \[SPECTRA_SYSTEM\]      |  # prevent self-referencing injection
     \n\nHuman:\s              |  # Anthropic turn delimiters
     \n\nAssistant:\s
     """,
@@ -291,7 +291,7 @@ def sanitize_binary_context(content: str, context_type: str = "binary_data") -> 
 
 
 def sanitize_memory(content: str) -> str:
-    """Sanitize persistent memory (RIKUGAN.md) content for the system prompt."""
+    """Sanitize persistent memory (SPECTRA.md) content for the system prompt."""
     if not content:
         return content
     text = strip_injection_markers(content)

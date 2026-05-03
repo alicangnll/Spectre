@@ -1,11 +1,11 @@
-"""Skills settings tab: enable/disable Rikugan, Claude Code, and Codex skills."""
+"""Skills settings tab: enable/disable Spectra, Claude Code, and Codex skills."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.config import RikuganConfig
+from ...core.config import SpectraConfig
 from ...core.logging import log_debug
 from...skills.loader import SkillDefinition
 from ..qt_compat import (
@@ -26,13 +26,13 @@ if TYPE_CHECKING:
 
 
 class SkillsTab(QWidget):
-    """Tab for managing skills: Rikugan built-in/user skills + external skills."""
+    """Tab for managing skills: Spectra built-in/user skills + external skills."""
 
-    def __init__(self, config: RikuganConfig, service: SettingsService, parent: QWidget = None):
+    def __init__(self, config: SpectraConfig, service: SettingsService, parent: QWidget = None):
         super().__init__(parent)
         self._config = config
         self._service = service
-        self._rikugan_checks: dict[str, QCheckBox] = {}
+        self._spectra_checks: dict[str, QCheckBox] = {}
         self._external_checks: dict[str, QCheckBox] = {}
         self._skill_details: dict[str, SkillDefinition] = {}  # Store full skill data
         self._build_ui()
@@ -46,9 +46,9 @@ class SkillsTab(QWidget):
         container = QWidget()
         layout = QVBoxLayout(container)
 
-        # Rikugan skills (pre-loaded by service)
-        rikugan_group = self._build_rikugan_group(self._service.skills.rikugan)
-        layout.addWidget(rikugan_group)
+        # Spectra skills (pre-loaded by service)
+        spectra_group = self._build_spectra_group(self._service.skills.spectra)
+        layout.addWidget(spectra_group)
 
         # External skills (pre-loaded by service)
         for source_key, skills in sorted(self._service.skills.external.items()):
@@ -72,9 +72,9 @@ class SkillsTab(QWidget):
         )
         outer.addWidget(self._description_text)
 
-    def _build_rikugan_group(self, skills: list[SkillDefinition]) -> QGroupBox:
-        """Build the Rikugan skills group box."""
-        group = QGroupBox("Rikugan Skills")
+    def _build_spectra_group(self, skills: list[SkillDefinition]) -> QGroupBox:
+        """Build the Spectra skills group box."""
+        group = QGroupBox("Spectra Skills")
         layout = QVBoxLayout(group)
 
         disabled_set = set(self._config.disabled_skills)
@@ -86,11 +86,11 @@ class SkillsTab(QWidget):
         # Add "Select All" button row
         button_row = QHBoxLayout()
         select_all_btn = QPushButton("Select All")
-        select_all_btn.setToolTip("Enable all Rikugan skills")
-        select_all_btn.clicked.connect(lambda: self._select_all_rikugan_skills(True))
+        select_all_btn.setToolTip("Enable all Spectra skills")
+        select_all_btn.clicked.connect(lambda: self._select_all_spectra_skills(True))
         deselect_all_btn = QPushButton("Deselect All")
-        deselect_all_btn.setToolTip("Disable all Rikugan skills")
-        deselect_all_btn.clicked.connect(lambda: self._select_all_rikugan_skills(False))
+        deselect_all_btn.setToolTip("Disable all Spectra skills")
+        deselect_all_btn.clicked.connect(lambda: self._select_all_spectra_skills(False))
         button_row.addWidget(select_all_btn)
         button_row.addWidget(deselect_all_btn)
         button_row.addStretch()
@@ -103,14 +103,14 @@ class SkillsTab(QWidget):
             self._skill_details[skill.slug] = skill
             # Connect state change event to show description (use int() for Qt 6 compat)
             cb.stateChanged.connect(lambda state, s=skill.slug: self._on_skill_state_changed(s, int(state)))
-            self._rikugan_checks[skill.slug] = cb
+            self._spectra_checks[skill.slug] = cb
             layout.addWidget(cb)
 
         return group
 
-    def _select_all_rikugan_skills(self, checked: bool) -> None:
-        """Select or deselect all Rikugan skills."""
-        for checkbox in self._rikugan_checks.values():
+    def _select_all_spectra_skills(self, checked: bool) -> None:
+        """Select or deselect all Spectra skills."""
+        for checkbox in self._spectra_checks.values():
             checkbox.setChecked(checked)
 
     def _build_external_group(self, source_key: str, skills: list[SkillDefinition]) -> QGroupBox:
@@ -203,10 +203,10 @@ class SkillsTab(QWidget):
 
         self._description_text.setText("\n".join(desc_lines))
 
-    def apply_to_config(self, config: RikuganConfig) -> None:
+    def apply_to_config(self, config: SpectraConfig) -> None:
         """Write checkbox state back to config fields."""
-        # Disabled Rikugan skills (unchecked = disabled)
-        config.disabled_skills = [slug for slug, cb in self._rikugan_checks.items() if not cb.isChecked()]
+        # Disabled Spectra skills (unchecked = disabled)
+        config.disabled_skills = [slug for slug, cb in self._spectra_checks.items() if not cb.isChecked()]
 
         # Enabled external skills (checked = enabled)
         config.enabled_external_skills = [ext_id for ext_id, cb in self._external_checks.items() if cb.isChecked()]

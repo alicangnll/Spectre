@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rikugan uninstaller for Linux and macOS
+# Spectra uninstaller for Linux and macOS
 # Usage: ./uninstall.sh [--all] [--ida] [--binja] [--keep-deps] [--force]
 #   --all        Uninstall from all hosts (default)
 #   --ida        Uninstall from IDA Pro only
@@ -25,7 +25,7 @@ banner() {
     printf "\n${BOLD}"
     cat << 'EOF'
     ╔══════════════════════════════════════════╗
-    ║            六眼  Rikugan                 ║
+    ║            六眼  Spectra                 ║
     ║           Uninstall Script               ║
     ╚══════════════════════════════════════════╝
 EOF
@@ -105,7 +105,7 @@ remove_directory() {
 # ─── IDA Pro uninstallation ───────────────────────────────────────────────
 
 uninstall_ida() {
-    info "Uninstalling Rikugan from IDA Pro..."
+    info "Uninstalling Spectra from IDA Pro..."
     echo ""
 
     local ida_dirs=()
@@ -150,7 +150,7 @@ uninstall_ida() {
 # ─── Binary Ninja uninstallation ───────────────────────────────────────────
 
 uninstall_binja() {
-    info "Uninstalling Rikugan from Binary Ninja..."
+    info "Uninstalling Spectra from Binary Ninja..."
     echo ""
 
     local bn_dirs=()
@@ -199,7 +199,7 @@ uninstall_repo() {
             remove_directory "$repo_dir"
         else
             warn "Repository directory exists: $repo_dir"
-            info "This directory contains the Rikugan source code."
+            info "This directory contains the Spectra source code."
             info "You may want to keep it for future use or manual inspection."
             echo ""
             read -p "Remove repository directory? [y/N] " -n 1 -r
@@ -246,7 +246,7 @@ confirm_uninstall() {
     [[ "$UNINSTALL_IDA" == true ]] && targets+=("IDA Pro")
     [[ "$UNINSTALL_BINJA" == true ]] && targets+=("Binary Ninja")
 
-    warn "This will remove Rikugan from: ${targets[*]}"
+    warn "This will remove Spectra from: ${targets[*]}"
     warn "Configuration and user data will be permanently deleted."
     echo ""
     read -p "Continue with uninstallation? [y/N] " -n 1 -r
@@ -293,9 +293,9 @@ main() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     printf "${NC}"
     echo ""
-    info "Thank you for using Rikugan!"
+    info "Thank you for using Spectra!"
     info "If you have any feedback, please visit:"
-    echo "  https://github.com/alicangnll/Rikugan/issues"
+    echo "  https://github.com/alicangnll/Spectra/issues"
     echo ""
 }
 

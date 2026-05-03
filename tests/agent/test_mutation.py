@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.agent.mutation import (
+from spectra.agent.mutation import (
     MutationRecord,
     build_reverse_record,
     capture_pre_state,

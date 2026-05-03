@@ -9,7 +9,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_error, log_info
 from ..core.types import TokenUsage
 from ..providers.base import LLMProvider
@@ -53,7 +53,7 @@ class SubagentManager:
         self,
         provider: LLMProvider,
         tool_registry: ToolRegistry,
-        config: RikuganConfig,
+        config: SpectraConfig,
         host_name: str,
         skill_registry: SkillRegistry | None = None,
     ) -> None:
@@ -124,7 +124,7 @@ class SubagentManager:
             target=self._run_agent,
             args=(agent_id, task, max_turns, system_addendum, cancel),
             daemon=True,
-            name=f"rikugan-subagent-{agent_id[:6]}",
+            name=f"spectra-subagent-{agent_id[:6]}",
         )
         thread.start()
         log_info(f"Subagent spawned: id={agent_id}, name={name!r}, type={agent_type}")

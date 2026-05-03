@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rikugan installer for Binary Ninja (Linux/macOS)
+# Spectra installer for Binary Ninja (Linux/macOS)
 # Usage: ./install_binaryninja.sh [BN_USER_DIR]
 #   BN_USER_DIR  Optional path to Binary Ninja user directory
 
@@ -204,9 +204,9 @@ else
 fi
 
 echo ""
-ok "Rikugan Binary Ninja plugin installed successfully!"
+ok "Spectra Binary Ninja plugin installed successfully!"
 info "Plugin: $PLUGIN_LINK"
 info "Config: $CONFIG_DIR/"
 info "Skills: $SKILLS_DIR/"
 echo ""
-info "Restart Binary Ninja. Open: Tools -> Rikugan -> Open Panel."
+info "Restart Binary Ninja. Open: Tools -> Spectra -> Open Panel."

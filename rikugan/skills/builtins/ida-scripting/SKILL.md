@@ -2,7 +2,7 @@
 name: IDA Scripting
 description: Write and execute IDAPython scripts — full API reference included
 tags: [scripting, ida, python, automation]
-author: Rikugan
+author: Spectra
 version: 1.0
 ---
 Task: Help the user write IDAPython scripts. You have `execute_python` which runs code with all `ida_*` modules, `idaapi`, `idautils`, and `idc` pre-loaded.

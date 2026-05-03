@@ -79,7 +79,7 @@ Evidence: <relevant decompiled code snippet>
 
 ## Security Analysis Tools Integration
 
-Rikugan provides specialized security analysis features to support vulnerability auditing:
+Spectra provides specialized security analysis features to support vulnerability auditing:
 
 **Suspicious API Highlighting:**
 - Dangerous APIs are automatically highlighted with color-coded severity

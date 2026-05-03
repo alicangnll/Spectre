@@ -1,4 +1,4 @@
-"""Code bookmarking tool for Rikugan.
+"""Code bookmarking tool for Spectra.
 
 Allows users to bookmark functions, addresses, and code regions with
 notes, categories, and tags for easy navigation and organization.
@@ -284,7 +284,7 @@ class BookmarkManagerTool(Tool):
 
 
 def get_tool_definition() -> ToolDefinition:
-    """Return tool definition for Rikugan tool registry."""
+    """Return tool definition for Spectra tool registry."""
     return ToolDefinition(
         name=BookmarkManagerTool.name,
         description=BookmarkManagerTool.description,

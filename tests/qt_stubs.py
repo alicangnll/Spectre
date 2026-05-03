@@ -1,10 +1,10 @@
 """Shared PySide6 stub injection for UI tests.
 
-Must be called BEFORE importing any rikugan.ui module. Example::
+Must be called BEFORE importing any spectra.ui module. Example::
 
     from tests.qt_stubs import ensure_pyside6_stubs
     ensure_pyside6_stubs()
-    from rikugan.ui.some_module import ...
+    from spectra.ui.some_module import ...
 """
 
 from __future__ import annotations

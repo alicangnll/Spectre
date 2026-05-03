@@ -1,1 +1,1 @@
-"""Rikugan test suite."""
+"""Spectra test suite."""

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rikugan installer for Linux and macOS
+# Spectra installer for Linux and macOS
 # Usage: ./install.sh [IDA_USER_DIR]
 #   IDA_USER_DIR  Optional path to IDA user directory (default: auto-detect)
 
@@ -479,19 +479,19 @@ install_link() {
     ok "$name -> $dst"
 }
 
-info "Installing Rikugan into $PLUGINS_DIR..."
+info "Installing Spectra into $PLUGINS_DIR..."
 install_link "$SCRIPT_DIR/rikugan_plugin.py" "$PLUGINS_DIR/rikugan_plugin.py" "rikugan_plugin.py"
 install_link "$SCRIPT_DIR/rikugan"        "$PLUGINS_DIR/rikugan"        "rikugan/"
 
 # ── Done ──────────────────────────────────────────────────────────────
 
 echo ""
-ok "Rikugan installed successfully!"
+ok "Spectra installed successfully!"
 info "Plugin:  $PLUGINS_DIR/rikugan_plugin.py"
 info "Package: $PLUGINS_DIR/rikugan"
 info "Config:  $CONFIG_DIR/"
 info "Skills:  $SKILLS_DIR/"
 echo ""
-info "Open IDA and press Ctrl+Shift+I to start Rikugan."
+info "Open IDA and press Ctrl+Shift+I to start Spectra."
 info "First run: click Settings to configure your LLM provider and API key."
 info "For Binary Ninja installation, run: ./install_binaryninja.sh"

@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Rikugan installer for Windows
+:: Spectra installer for Windows
 :: Usage: install.bat [IDA_USER_DIR]
 ::   IDA_USER_DIR  Optional path to IDA user directory (default: auto-detect)
 
@@ -178,7 +178,7 @@ if exist "%BUILTINS_SRC%\" (
 
 :: ── Install plugin (copy) ────────────────────────────────────────────
 
-echo [*] Installing Rikugan into %PLUGINS_DIR%...
+echo [*] Installing Spectra into %PLUGINS_DIR%...
 
 :: rikugan_plugin.py
 if exist "%PLUGINS_DIR%\rikugan_plugin.py" (
@@ -224,13 +224,13 @@ if !errorlevel! equ 0 (
 :: ── Done ─────────────────────────────────────────────────────────────
 
 echo.
-echo [+] Rikugan installed successfully!
+echo [+] Spectra installed successfully!
 echo [*] Plugin:  %PLUGINS_DIR%\rikugan_plugin.py
 echo [*] Package: %PLUGINS_DIR%\rikugan
 echo [*] Config:  %CONFIG_DIR%\
 echo [*] Skills:  %SKILLS_DIR%\
 echo.
-echo [*] Open IDA and press Ctrl+Shift+I to start Rikugan.
+echo [*] Open IDA and press Ctrl+Shift+I to start Spectra.
 echo [*] First run: click Settings to configure your LLM provider and API key.
 echo [*] For Binary Ninja installation, run install_binaryninja.bat
 

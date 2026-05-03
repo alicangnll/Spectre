@@ -26,7 +26,7 @@ class LLMProvider(ABC):
     * ``_build_request_kwargs`` -- assemble the full request dict
     * ``_call_api`` -- invoke the SDK and return the raw response
     * ``_normalize_response`` -- convert the raw response to a ``Message``
-    * ``_handle_api_error`` -- translate SDK exceptions to Rikugan errors
+    * ``_handle_api_error`` -- translate SDK exceptions to Spectra errors
     * ``_stream_chunks`` -- yield ``StreamChunk`` objects from the provider stream
 
     Subclasses must also implement: ``name``, ``capabilities``,
@@ -96,7 +96,7 @@ class LLMProvider(ABC):
 
     @abstractmethod
     def _handle_api_error(self, e: Exception) -> NoReturn:
-        """Translate a provider SDK exception into a Rikugan error."""
+        """Translate a provider SDK exception into a Spectra error."""
 
     @abstractmethod
     def _stream_chunks(

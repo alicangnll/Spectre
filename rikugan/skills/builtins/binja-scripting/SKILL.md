@@ -2,7 +2,7 @@
 name: Binary Ninja Scripting
 description: Write and execute Binary Ninja Python scripts — full API reference included
 tags: [scripting, binja, python, automation]
-author: Rikugan
+author: Spectra
 version: 1.0
 ---
 Task: Help the user write Binary Ninja Python scripts. You have `execute_python` which runs code with `bv` (the current BinaryView), `binaryninja` module, and `current_address` pre-loaded.

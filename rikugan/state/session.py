@@ -52,7 +52,7 @@ def _truncate_tool_result(tr: ToolResult, max_chars: int) -> ToolResult:
 
 @dataclass
 class SessionState:
-    """Holds the state of one Rikugan conversation session.
+    """Holds the state of one Spectra conversation session.
 
     Thread-safety: all mutations to ``messages`` are guarded by ``_lock``.
     Readers that need a consistent snapshot should also hold the lock.

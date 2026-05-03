@@ -1,7 +1,7 @@
-"""JADX integration for Rikugan - Android APK reverse engineering.
+"""JADX integration for Spectra - Android APK reverse engineering.
 
 This module provides tools for analyzing Android APKs using JADX decompiler.
-JADX exports APKs to Java source code, which Rikugan can then analyze.
+JADX exports APKs to Java source code, which Spectra can then analyze.
 """
 
 from __future__ import annotations
@@ -439,13 +439,13 @@ class JadxAnalyzer:
 
 
 def create_jadx_tools(analyzer: JadxAnalyzer) -> list[dict[str, Any]]:
-    """Create Rikugan tool definitions for JADX analysis.
+    """Create Spectra tool definitions for JADX analysis.
 
     Args:
         analyzer: JadxAnalyzer instance.
 
     Returns:
-        List of tool definitions compatible with Rikugan tool registry.
+        List of tool definitions compatible with Spectra tool registry.
     """
     from ..tools.base import ToolDefinition, ParameterSchema
 

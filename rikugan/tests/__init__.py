@@ -1,6 +1,6 @@
 """Test package shim for pytest importlib collection.
 
-Pytest can resolve repository tests as ``rikugan.tests.*`` when collecting from
+Pytest can resolve repository tests as ``spectra.tests.*`` when collecting from
 the source tree. Extend this package path to the top-level ``tests/`` directory
 so both import styles resolve to the same test modules.
 """

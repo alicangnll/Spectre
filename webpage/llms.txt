@@ -1,8 +1,8 @@
-# Rikugan (六眼)
+# Spectra (六眼)
 
 > An agentic AI reverse-engineering assistant that runs natively inside IDA Pro and Binary Ninja.
 
-Rikugan is a plugin that embeds a full agentic LLM loop — with its own tool framework, skills system, context management, and chat UI — directly inside your disassembler. It is not an MCP client or a wrapper; it runs in-process with access to the host's scripting API.
+Spectra is a plugin that embeds a full agentic LLM loop — with its own tool framework, skills system, context management, and chat UI — directly inside your disassembler. It is not an MCP client or a wrapper; it runs in-process with access to the host's scripting API.
 
 ## Pages
 
@@ -60,7 +60,7 @@ Clone the repo, then run the platform installer:
 - `./install_ida.sh` (Linux/macOS) or `install_ida.bat` (Windows)
 - `./install_binaryninja.sh` (Linux/macOS) or `install_binaryninja.bat` (Windows)
 
-Installers create plugin links, install Python dependencies, and initialize the Rikugan config directory.
+Installers create plugin links, install Python dependencies, and initialize the Spectra config directory.
 
 ## Source
 

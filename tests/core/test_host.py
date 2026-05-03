@@ -1,9 +1,9 @@
-"""Tests for rikugan.core.host standalone-testable functions."""
+"""Tests for spectra.core.host standalone-testable functions."""
 
 from __future__ import annotations
 
-import rikugan.core.host as host_mod
-from rikugan.core.host import (
+import spectra.core.host as host_mod
+from spectra.core.host import (
     HOST_BINARY_NINJA,
     HOST_IDA,
     HOST_STANDALONE,

@@ -1,4 +1,4 @@
-"""Rikugan configuration with JSON persistence."""
+"""Spectra configuration with JSON persistence."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class ProviderConfig:
 
 
 @dataclass
-class RikuganConfig:
+class SpectraConfig:
     provider: ProviderConfig = field(default_factory=ProviderConfig)
     providers: dict[str, dict[str, Any]] = field(default_factory=dict)
     custom_providers: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -71,7 +71,7 @@ class RikuganConfig:
     preserve_context: bool = False  # disable tool result truncation + context compaction
 
     # Development mode
-    auto_reload: bool = False  # automatically reload Rikugan on source file changes
+    auto_reload: bool = False  # automatically reload Spectra on source file changes
 
     # OAuth consent — user must accept risk before keychain autoload
     oauth_consent_accepted: bool = False
@@ -301,7 +301,7 @@ class RikuganConfig:
         return get_profile(self.active_profile, self.custom_profiles)
 
     @classmethod
-    def load_or_create(cls) -> RikuganConfig:
+    def load_or_create(cls) -> SpectraConfig:
         cfg = cls()
         cfg.load()
         return cfg

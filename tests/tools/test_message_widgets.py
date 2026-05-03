@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.message_widgets — pure logic helpers."""
+"""Tests for spectra.ui.message_widgets — pure logic helpers."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import unittest
 from tests.qt_stubs import ensure_pyside6_stubs
 ensure_pyside6_stubs()
 
-from rikugan.ui.message_widgets import _split_thinking  # noqa: E402
+from spectra.ui.message_widgets import _split_thinking  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

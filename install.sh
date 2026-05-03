@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# Rikugan — universal installer (Linux / macOS)
+# Spectra — universal installer (Linux / macOS)
 #
-#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --ida
-#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --binja
-#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- --both
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash -s -- --ida
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash -s -- --binja
+#   curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash -s -- --both
 #
 # Environment variables:
 #   RIKUGAN_DIR     — where to clone the repo   (default: ~/.rikugan)
@@ -16,7 +16,7 @@
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-REPO_URL="https://github.com/alicangnll/Rikugan.git"
+REPO_URL="https://github.com/alicangnll/Spectra.git"
 INSTALL_DIR="${RIKUGAN_DIR:-$HOME/.rikugan}"
 BRANCH="${RIKUGAN_BRANCH:-main}"
 
@@ -33,7 +33,7 @@ banner() {
     printf "\n${BOLD}"
     cat << 'EOF'
     ╔══════════════════════════════════════════╗
-    ║            六眼  Rikugan                 ║
+    ║            六眼  Spectra                 ║
     ║     Reverse Engineering AI Agent         ║
     ║        IDA Pro  ·  Binary Ninja          ║
     ╚══════════════════════════════════════════╝
@@ -49,7 +49,7 @@ for arg in "$@"; do
         --binja|--bn) TARGET="binja" ;;
         --both)      TARGET="both"  ;;
         --help|-h)
-            echo "Usage: curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install.sh | bash -s -- [OPTIONS]"
+            echo "Usage: curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash -s -- [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --ida       Install for IDA Pro only"
@@ -126,7 +126,7 @@ clone_or_update() {
             warn "$INSTALL_DIR exists but is not a git repo — backing up"
             mv "$INSTALL_DIR" "${INSTALL_DIR}.bak.$(date +%s)"
         fi
-        info "Cloning Rikugan into $INSTALL_DIR..."
+        info "Cloning Spectra into $INSTALL_DIR..."
         git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$INSTALL_DIR" --quiet
         ok "Cloned successfully"
     fi
@@ -212,7 +212,7 @@ main() {
     if $failed; then
         warn "Installation completed with errors. Check the output above."
     else
-        ok "Rikugan installation complete!"
+        ok "Spectra installation complete!"
     fi
     printf "${DIM}  Install location: ${INSTALL_DIR}${NC}\n"
     printf "${DIM}  To update later:  cd ${INSTALL_DIR} && git pull${NC}\n"

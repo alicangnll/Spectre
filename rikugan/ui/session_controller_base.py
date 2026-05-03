@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..agent.loop import AgentLoop, BackgroundAgentRunner
 from ..agent.turn import TurnEvent
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.host import get_database_instance_id, set_database_instance_id
 from ..core.logging import log_debug, log_error, log_info
 from ..mcp.manager import MCPManager
@@ -37,11 +37,11 @@ def _normalize_db_path(path: str) -> str:
 
 
 class SessionControllerBase:
-    """Non-Qt orchestrator for Rikugan sessions."""
+    """Non-Qt orchestrator for Spectra sessions."""
 
     def __init__(
         self,
-        config: RikuganConfig,
+        config: SpectraConfig,
         tool_registry_factory: Callable[[], ToolRegistry],
         database_path_getter: Callable[[], str],
         host_name: str,
@@ -60,7 +60,7 @@ class SessionControllerBase:
         self._runtime_init_thread = threading.Thread(
             target=self._initialize_runtime,
             daemon=True,
-            name="rikugan-runtime-init",
+            name="spectra-runtime-init",
         )
         self._runtime_init_thread.start()
 
@@ -150,7 +150,7 @@ class SessionControllerBase:
         """Check if auto-reload should be enabled for development."""
         # Check environment variable
         import os
-        if os.getenv("RIKUGAN_AUTO_RELOAD", "").lower() in ("1", "true", "yes"):
+        if os.getenv("SPECTRA_AUTO_RELOAD", "").lower() in ("1", "true", "yes"):
             return True
 
         return False
@@ -452,7 +452,7 @@ class SessionControllerBase:
             target=self._mcp_manager.reload,
             args=(self._tool_registry,),
             daemon=True,
-            name="rikugan-mcp-reload",
+            name="spectra-mcp-reload",
         )
         thread.start()
 

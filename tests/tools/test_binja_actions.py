@@ -1,11 +1,11 @@
-"""Tests for rikugan.binja.ui.actions — prompt-generating command handlers."""
+"""Tests for spectra.binja.ui.actions — prompt-generating command handlers."""
 
 from __future__ import annotations
 
 import unittest
 from unittest.mock import MagicMock
 
-from rikugan.binja.ui.actions import (
+from spectra.binja.ui.actions import (
     ACTION_DEFS,
     build_context,
     handle_annotate,

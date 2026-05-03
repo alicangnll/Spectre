@@ -6,7 +6,7 @@ import queue
 import threading
 from typing import Any
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_error
 from ..core.token_limiter import get_token_limiter
 from ..core.types import ModelInfo
@@ -177,11 +177,11 @@ class _AddProviderDialog(QDialog):
 
 
 class SettingsDialog(QDialog):
-    """Configuration dialog for Rikugan."""
+    """Configuration dialog for Spectra."""
 
     def __init__(
         self,
-        config: RikuganConfig,
+        config: SpectraConfig,
         registry: ProviderRegistry | None = None,
         tool_registry: Any | None = None,
         parent: QWidget = None,
@@ -200,7 +200,7 @@ class SettingsDialog(QDialog):
         self._shown = False
         self._closed = False
         self.encryption_password: str = ""
-        self.setWindowTitle("Rikugan Settings")
+        self.setWindowTitle("Spectra Settings")
         screen = QApplication.primaryScreen()
         if screen:
             avail = screen.availableGeometry()
@@ -453,7 +453,7 @@ class SettingsDialog(QDialog):
         self._encrypt_keys_cb.setChecked(self._config.encrypt_api_keys)
         self._encrypt_keys_cb.setEnabled(crypto_available())
         self._encrypt_keys_cb.setToolTip(
-            "Encrypt all stored API keys with a password.\nYou must enter this password each time Rikugan starts."
+            "Encrypt all stored API keys with a password.\nYou must enter this password each time Spectra starts."
             if crypto_available()
             else "Requires the 'cryptography' package (pip install cryptography)."
         )
@@ -933,12 +933,12 @@ class SettingsDialog(QDialog):
 
         # Check for updates button
         self._check_update_btn = QPushButton("Check for Updates")
-        self._check_update_btn.setToolTip("Check GitHub for the latest Rikugan version")
+        self._check_update_btn.setToolTip("Check GitHub for the latest Spectra version")
         self._check_update_btn.clicked.connect(self._on_check_updates)
         layout.addWidget(self._check_update_btn)
 
         # Update button (initially disabled)
-        self._update_btn = QPushButton("Update Rikugan")
+        self._update_btn = QPushButton("Update Spectra")
         self._update_btn.setEnabled(False)
         self._update_btn.setToolTip("Download and install the latest version")
         self._update_btn.clicked.connect(self._on_update)
@@ -1047,7 +1047,7 @@ class SettingsDialog(QDialog):
                 max_total = self._max_total_tokens_spin.value()
                 action = self._token_limiter_action_combo.currentText()
 
-                print(f"[Rikugan] Saving token limiter: enabled={enabled}, action={action}, max_total={max_total}")
+                print(f"[Spectra] Saving token limiter: enabled={enabled}, action={action}, max_total={max_total}")
 
                 # Convert to dict for JSON serialization
                 self._config.token_limiter = {
@@ -1060,7 +1060,7 @@ class SettingsDialog(QDialog):
                     "action": action,
                 }
 
-                print(f"[Rikugan] Config token_limiter set: {self._config.token_limiter}")
+                print(f"[Spectra] Config token_limiter set: {self._config.token_limiter}")
 
                 # Reset token limiter with new config
                 from ..core.token_limiter import reset_token_limiter
@@ -1071,7 +1071,7 @@ class SettingsDialog(QDialog):
 
             except Exception as e:
                 log_error(f"Failed to save token limiter settings: {e}")
-                print(f"[Rikugan] Error saving token limiter: {e}")
+                print(f"[Spectra] Error saving token limiter: {e}")
                 import traceback
 
                 traceback.print_exc()
@@ -1086,8 +1086,8 @@ class SettingsDialog(QDialog):
     def _load_token_limiter_settings(self) -> None:
         """Load token limiter settings from config."""
         try:
-            print("[Rikugan] _load_token_limiter_settings called")
-            print(f"[Rikugan] Config has token_limiter: {hasattr(self._config, 'token_limiter')}")
+            print("[Spectra] _load_token_limiter_settings called")
+            print(f"[Spectra] Config has token_limiter: {hasattr(self._config, 'token_limiter')}")
 
             # Read directly from config, not from limiter instance
             # to avoid cache issues
@@ -1102,7 +1102,7 @@ class SettingsDialog(QDialog):
                 max_output = tl_config.get("max_output_tokens", 50000)
                 max_total = tl_config.get("max_total_tokens", 200000)
                 action = tl_config.get("action", "error")
-                print(f"[Rikugan] Config token_limiter: {tl_config}")
+                print(f"[Spectra] Config token_limiter: {tl_config}")
             else:
                 # Default values
                 enabled = False
@@ -1110,29 +1110,29 @@ class SettingsDialog(QDialog):
                 max_output = 50000
                 max_total = 200000
                 action = "error"
-                print("[Rikugan] Using default values")
+                print("[Spectra] Using default values")
 
-            print(f"[Rikugan] Setting checkbox to: enabled={enabled}")
+            print(f"[Spectra] Setting checkbox to: enabled={enabled}")
             self._token_limiter_enabled_cb.setChecked(enabled)
             self._max_input_tokens_spin.setValue(max_input)
             self._max_output_tokens_spin.setValue(max_output)
             self._max_total_tokens_spin.setValue(max_total)
             self._token_limiter_action_combo.setCurrentText(action)
 
-            print(f"[Rikugan] Loaded token limiter settings: enabled={enabled}, action={action}")
-            print(f"[Rikugan] Checkbox state after load: {self._token_limiter_enabled_cb.isChecked()}")
+            print(f"[Spectra] Loaded token limiter settings: enabled={enabled}, action={action}")
+            print(f"[Spectra] Checkbox state after load: {self._token_limiter_enabled_cb.isChecked()}")
 
             # Update session usage display
             self._update_token_usage_display()
         except Exception as e:
             log_error(f"Failed to load token limiter settings: {e}")
-            print(f"[Rikugan] Error loading token limiter settings: {e}")
+            print(f"[Spectra] Error loading token limiter settings: {e}")
             import traceback
 
             traceback.print_exc()
 
     def _load_current_version(self) -> None:
-        """Load and display current Rikugan version."""
+        """Load and display current Spectra version."""
         try:
             updater = Updater()
             version = updater._get_current_version()
@@ -1167,12 +1167,12 @@ class SettingsDialog(QDialog):
             self._session_remaining_tokens_label.setText(f"{remaining_tokens.get(TokenType.TOTAL, 0):,}")
 
             print(
-                f"[Rikugan] Token usage display: Input={input_tokens:,}, Output={output_tokens:,}, Total={total_tokens:,}"
+                f"[Spectra] Token usage display: Input={input_tokens:,}, Output={output_tokens:,}, Total={total_tokens:,}"
             )
 
         except Exception as e:
             log_error(f"Failed to update token usage display: {e}")
-            print(f"[Rikugan] Error updating token display: {e}")
+            print(f"[Spectra] Error updating token display: {e}")
 
     def _on_reset_token_usage(self) -> None:
         """Reset session token usage."""
@@ -1185,7 +1185,7 @@ class SettingsDialog(QDialog):
             log_error(f"Failed to reset token usage: {e}")
 
     def _on_check_updates(self) -> None:
-        """Check for Rikugan updates."""
+        """Check for Spectra updates."""
         self._check_update_btn.setEnabled(False)
         self._update_status_label.setText("Checking...")
 
@@ -1225,7 +1225,7 @@ class SettingsDialog(QDialog):
         self._update_check_result(update_info, error)
 
     def _on_update(self) -> None:
-        """Install Rikugan update."""
+        """Install Spectra update."""
         self._update_btn.setEnabled(False)
         self._update_status_label.setText("Downloading update...")
 
@@ -1310,10 +1310,10 @@ class SettingsDialog(QDialog):
         try:
             from .agent_creator_dialog import AgentCreatorDialog
             from pathlib import Path
-            import rikugan.skills
+            import spectra.skills
 
             # Get the built-in skills directory directly
-            skills_dir = Path(rikugan.skills.__file__).parent / "builtins"
+            skills_dir = Path(spectra.skills.__file__).parent / "builtins"
 
             dlg = AgentCreatorDialog(skills_dir, parent=self)
             qt_run(dlg)

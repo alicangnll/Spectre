@@ -1,13 +1,13 @@
-"""Core error classes for Rikugan."""
+"""Core error classes for Spectra."""
 
 
-class RikuganError(Exception):
-    """Base exception for all Rikugan errors."""
+class SpectraError(Exception):
+    """Base exception for all Spectra errors."""
 
     pass
 
 
-class ProviderError(RikuganError):
+class ProviderError(SpectraError):
     """Exception raised for LLM provider errors."""
 
     def __init__(
@@ -47,7 +47,7 @@ class ContextLengthError(ProviderError):
         super().__init__(message, provider, status_code=400)
 
 
-class ConfigurationError(RikuganError):
+class ConfigurationError(SpectraError):
     """Exception raised for configuration errors."""
 
     pass
@@ -57,13 +57,13 @@ class ConfigurationError(RikuganError):
 ConfigError = ConfigurationError
 
 
-class ToolExecutionError(RikuganError):
+class ToolExecutionError(SpectraError):
     """Exception raised when tool execution fails."""
 
     pass
 
 
-class ToolError(RikuganError):
+class ToolError(SpectraError):
     """Exception raised when a tool encounters an error.
 
     This is the base class for all tool-related errors.
@@ -87,13 +87,13 @@ class ToolValidationError(ToolError):
     pass
 
 
-class SkillError(RikuganError):
+class SkillError(SpectraError):
     """Exception raised when a skill encounters an error."""
 
     pass
 
 
-class AgentError(RikuganError):
+class AgentError(SpectraError):
     """Exception raised when the agent encounters an error."""
 
     pass
@@ -111,13 +111,13 @@ class SessionError(AgentError):
     pass
 
 
-class UIError(RikuganError):
+class UIError(SpectraError):
     """Exception raised when UI operation fails."""
 
     pass
 
 
-class MCPError(RikuganError):
+class MCPError(SpectraError):
     """Exception raised when MCP (Model Context Protocol) operation fails."""
 
     pass

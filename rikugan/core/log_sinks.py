@@ -1,7 +1,7 @@
 """Logging sink implementations: host output, crash-safe file, and structured JSONL.
 
 Each sink is a self-contained ``logging.Handler`` subclass. The bootstrap
-module (``logging.py``) wires them into the Rikugan logger — importers
+module (``logging.py``) wires them into the Spectra logger — importers
 never need to depend on individual sinks.
 """
 
@@ -50,12 +50,12 @@ def _resolve_host_sink() -> Callable[[str, int], None] | None:
                 try:
                     ida_kernwin.msg(f"{msg}\n")
                 except RuntimeError as e:
-                    sys.stderr.write(f"[Rikugan] IDA output window unavailable: {e}\n")
+                    sys.stderr.write(f"[Spectra] IDA output window unavailable: {e}\n")
 
             _host_sink = _ida_sink
             return _host_sink
         except ImportError as exc:
-            sys.stderr.write(f"[Rikugan] ida_kernwin import failed: {exc}\n")
+            sys.stderr.write(f"[Spectra] ida_kernwin import failed: {exc}\n")
 
     if BINARY_NINJA_AVAILABLE:
         try:
@@ -72,12 +72,12 @@ def _resolve_host_sink() -> Callable[[str, int], None] | None:
                     else:
                         _bn_log.log_info(msg)
                 except Exception as e:
-                    sys.stderr.write(f"[Rikugan] binaryninja log emit failed: {e}\n")
+                    sys.stderr.write(f"[Spectra] binaryninja log emit failed: {e}\n")
 
             _host_sink = _bn_sink
             return _host_sink
         except ImportError as exc:
-            sys.stderr.write(f"[Rikugan] binaryninja.log import failed: {exc}\n")
+            sys.stderr.write(f"[Spectra] binaryninja.log import failed: {exc}\n")
 
     return None
 
@@ -110,9 +110,9 @@ IDAHandler = HostOutputHandler
 
 def _log_file_path() -> str:
     base = get_user_config_base_dir()
-    d = os.path.join(base, "rikugan")
+    d = os.path.join(base, "spectra")
     os.makedirs(d, exist_ok=True)
-    return os.path.join(d, "rikugan_debug.log")
+    return os.path.join(d, "spectra_debug.log")
 
 
 class _FlushFileHandler(logging.FileHandler):
@@ -125,7 +125,7 @@ class _FlushFileHandler(logging.FileHandler):
             if stream is not None:
                 stream.flush()
         except OSError as exc:
-            sys.stderr.write(f"[Rikugan] log flush failed: {exc}\n")
+            sys.stderr.write(f"[Spectra] log flush failed: {exc}\n")
 
 
 # ---------------------------------------------------------------------------

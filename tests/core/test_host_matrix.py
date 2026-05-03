@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 
 # ---------------------------------------------------------------------------
-# Host detection flags (rikugan.core.host)
+# Host detection flags (spectra.core.host)
 # ---------------------------------------------------------------------------
 
 class TestHostDetectionFlags(unittest.TestCase):
@@ -20,20 +20,20 @@ class TestHostDetectionFlags(unittest.TestCase):
 
     def test_flags_are_bool(self):
         """Host flags should be bool, regardless of host stubs."""
-        from rikugan.core.host import IDA_AVAILABLE, BINARY_NINJA_AVAILABLE, HAS_HEXRAYS
+        from spectra.core.host import IDA_AVAILABLE, BINARY_NINJA_AVAILABLE, HAS_HEXRAYS
         self.assertIsInstance(IDA_AVAILABLE, bool)
         self.assertIsInstance(BINARY_NINJA_AVAILABLE, bool)
         self.assertIsInstance(HAS_HEXRAYS, bool)
 
     def test_hexrays_requires_ida(self):
         """HAS_HEXRAYS should only be True if IDA_AVAILABLE is True."""
-        from rikugan.core.host import IDA_AVAILABLE, HAS_HEXRAYS
+        from spectra.core.host import IDA_AVAILABLE, HAS_HEXRAYS
         if HAS_HEXRAYS:
             self.assertTrue(IDA_AVAILABLE)
 
     def test_mutual_exclusion(self):
         """IDA and BN cannot both be the active host at once."""
-        from rikugan.core.host import is_ida, is_binary_ninja
+        from spectra.core.host import is_ida, is_binary_ninja
         self.assertFalse(is_ida() and is_binary_ninja())
 
 
@@ -45,11 +45,11 @@ class TestRegistryDispatchWrapper(unittest.TestCase):
     """Verify dispatch_wrapper is applied at execution time."""
 
     def _make_registry(self, wrapper=None):
-        from rikugan.tools.registry import ToolRegistry
+        from spectra.tools.registry import ToolRegistry
         return ToolRegistry(dispatch_wrapper=wrapper)
 
     def _register_echo(self, registry):
-        from rikugan.tools.base import tool
+        from spectra.tools.base import tool
         @tool(name="echo_test", description="Echo for testing")
         def echo_test(text: str) -> str:
             """Echo."""
@@ -90,7 +90,7 @@ class TestRegistryDispatchWrapper(unittest.TestCase):
 
         reg = self._make_registry(wrapper=error_wrapper)
         self._register_echo(reg)
-        from rikugan.core.errors import ToolError
+        from spectra.core.errors import ToolError
         with self.assertRaises(ToolError):
             reg.execute("echo_test", {"text": "fail"})
 
@@ -120,7 +120,7 @@ class TestIdasyncStandalone(unittest.TestCase):
     """Verify idasync in standalone mode (no host) is a direct call."""
 
     def test_direct_call_standalone(self):
-        from rikugan.core.thread_safety import idasync
+        from spectra.core.thread_safety import idasync
 
         @idasync
         def add(a, b):
@@ -130,7 +130,7 @@ class TestIdasyncStandalone(unittest.TestCase):
         self.assertEqual(result, 7)
 
     def test_preserves_function_name(self):
-        from rikugan.core.thread_safety import idasync
+        from spectra.core.thread_safety import idasync
 
         @idasync
         def my_func():
@@ -139,7 +139,7 @@ class TestIdasyncStandalone(unittest.TestCase):
         self.assertEqual(my_func.__name__, "my_func")
 
     def test_exception_propagation(self):
-        from rikugan.core.thread_safety import idasync
+        from spectra.core.thread_safety import idasync
 
         @idasync
         def failing():
@@ -154,7 +154,7 @@ class TestIdasyncWithMockedHosts(unittest.TestCase):
 
     def test_ida_main_thread_direct(self):
         """On IDA main thread, idasync should call directly (no execute_sync)."""
-        import rikugan.core.thread_safety as ts
+        import spectra.core.thread_safety as ts
 
         mock_kernwin = MagicMock()
         original_ida = ts._IDA_AVAILABLE
@@ -178,7 +178,7 @@ class TestIdasyncWithMockedHosts(unittest.TestCase):
 
     def test_bn_main_thread_direct(self):
         """On BN main thread, idasync should call directly."""
-        import rikugan.core.thread_safety as ts
+        import spectra.core.thread_safety as ts
 
         original_ida = ts._IDA_AVAILABLE
         original_bn = ts._BN_AVAILABLE
@@ -212,7 +212,7 @@ class TestToolDecoratorHostAgnostic(unittest.TestCase):
     """Verify @tool creates definitions without any host-specific behavior."""
 
     def test_tool_creates_definition(self):
-        from rikugan.tools.base import tool
+        from spectra.tools.base import tool
 
         @tool(name="test_host_agnostic", description="Test tool")
         def test_host_agnostic(address: int) -> str:
@@ -228,8 +228,8 @@ class TestToolDecoratorHostAgnostic(unittest.TestCase):
 
     def test_tool_handler_no_thread_dispatch(self):
         """@tool handler should NOT wrap with idasync — dispatch is registry's job."""
-        from rikugan.tools.base import tool
-        import rikugan.core.thread_safety as ts
+        from spectra.tools.base import tool
+        import spectra.core.thread_safety as ts
 
         call_log = []
         original_idasync = ts.idasync

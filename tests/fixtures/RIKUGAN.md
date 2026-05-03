@@ -1,4 +1,4 @@
-# Rikugan Persistent Memory
+# Spectra Persistent Memory
 
 This file persists across sessions. The agent reads the first 200 lines into its system prompt.
 

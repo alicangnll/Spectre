@@ -12,7 +12,7 @@ import base64
 import json
 import os
 
-_VERIFY_SENTINEL = "rikugan-encryption-v1"
+_VERIFY_SENTINEL = "spectra-encryption-v1"
 _PBKDF2_ITERATIONS = 600_000
 
 try:

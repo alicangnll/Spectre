@@ -1,6 +1,6 @@
-"""Auto-reload mechanism for Rikugan development.
+"""Auto-reload mechanism for Spectra development.
 
-Watches for source file changes and automatically reloads Rikugan:
+Watches for source file changes and automatically reloads Spectra:
 - Monitors Python source files for modifications
 - Debounces rapid changes to avoid excessive reloads
 - Preserves user state across reloads where possible
@@ -48,16 +48,16 @@ def _get_file_hash(filepath: str) -> str:
         return ""
 
 
-def _get_rikugan_source_files() -> list[str]:
-    """Get all Python source files in Rikugan package.
+def _get_spectra_source_files() -> list[str]:
+    """Get all Python source files in Spectra package.
 
     Returns:
         List of file paths
     """
     try:
-        # Find rikugan package directory
-        import rikugan
-        package_dir = Path(rikugan.__file__).parent
+        # Find spectra package directory
+        import spectra
+        package_dir = Path(spectra.__file__).parent
 
         # Find all Python files
         source_files = []
@@ -78,7 +78,7 @@ def _initialize_file_hashes() -> None:
     """Initialize file hash tracking for all source files."""
     global _file_hashes
 
-    source_files = _get_rikugan_source_files()
+    source_files = _get_spectra_source_files()
     for filepath in source_files:
         _file_hashes[filepath] = _get_file_hash(filepath)
 
@@ -100,21 +100,21 @@ def _check_for_changes() -> list[str]:
     return changed_files
 
 
-def _reload_rikugan() -> None:
-    """Reload Rikugan modules and notify callbacks."""
+def _reload_spectra() -> None:
+    """Reload Spectra modules and notify callbacks."""
     from .logging import log_info, log_warning, log_error
 
     try:
-        log_info("Reloading Rikugan due to source changes...")
+        log_info("Reloading Spectra due to source changes...")
 
-        # Reload main rikugan package
-        if "rikugan" in sys.modules:
-            importlib.reload(sys.modules["rikugan"])
+        # Reload main spectra package
+        if "spectra" in sys.modules:
+            importlib.reload(sys.modules["spectra"])
 
-        # Reload all rikugan submodules
+        # Reload all spectra submodules
         modules_to_reload = [
             name for name in sys.modules
-            if name.startswith("rikugan.") and not name.startswith("__")
+            if name.startswith("spectra.") and not name.startswith("__")
         ]
 
         for module_name in sorted(modules_to_reload, key=lambda x: x.count(".")):
@@ -123,7 +123,7 @@ def _reload_rikugan() -> None:
             except Exception as e:
                 log_warning(f"Failed to reload {module_name}: {e}")
 
-        log_info("Rikugan reloaded successfully")
+        log_info("Spectra reloaded successfully")
 
         # Notify callbacks (e.g., UI refresh)
         for callback in _reload_callbacks:
@@ -133,7 +133,7 @@ def _reload_rikugan() -> None:
                 log_error(f"Reload callback error: {e}")
 
     except Exception as e:
-        log_error(f"Failed to reload Rikugan: {e}")
+        log_error(f"Failed to reload Spectra: {e}")
 
 
 def _file_watcher_loop() -> None:
@@ -142,7 +142,7 @@ def _file_watcher_loop() -> None:
 
     global _last_reload_time
 
-    log_info("File watcher started - monitoring Rikugan source files")
+    log_info("File watcher started - monitoring Spectra source files")
 
     while _watcher_running:
         try:
@@ -163,7 +163,7 @@ def _file_watcher_loop() -> None:
 
                     # Trigger reload
                     _last_reload_time = current_time
-                    _reload_rikugan()
+                    _reload_spectra()
 
             # Sleep before next check (poll every 500ms)
             _watcher_stop_event.wait(0.5)
@@ -196,7 +196,7 @@ def start_file_watcher() -> bool:
 
     _watcher_thread = threading.Thread(
         target=_file_watcher_loop,
-        name="RikuganFileWatcher",
+        name="SpectraFileWatcher",
         daemon=True
     )
     _watcher_thread.start()
@@ -249,10 +249,10 @@ def unregister_reload_callback(callback: Callable[[], None]) -> None:
 
 
 def trigger_manual_reload() -> None:
-    """Manually trigger a Rikugan reload."""
+    """Manually trigger a Spectra reload."""
     global _last_reload_time
     _last_reload_time = time.time()
-    _reload_rikugan()
+    _reload_spectra()
 
 
 # Alias for convenience
@@ -269,7 +269,7 @@ def enable_auto_reload() -> bool:
     from .logging import log_info
 
     if start_file_watcher():
-        log_info("Auto-reload enabled - Rikugan will reload on source changes")
+        log_info("Auto-reload enabled - Spectra will reload on source changes")
         return True
     else:
         log_info("ℹ️ Auto-reload already enabled")

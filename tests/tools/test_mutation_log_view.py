@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.mutation_log_view — pure list logic."""
+"""Tests for spectra.ui.mutation_log_view — pure list logic."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def _make_record(reversible: bool = True, description: str = "desc", tool_name: 
 
 def _make_panel():
     """Build a MutationLogPanel with all Qt calls mocked out."""
-    from rikugan.ui.mutation_log_view import MutationLogPanel
+    from spectra.ui.mutation_log_view import MutationLogPanel
     panel = object.__new__(MutationLogPanel)
     panel._entries = []
     panel._count_label = MagicMock()

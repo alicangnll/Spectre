@@ -2,7 +2,7 @@
 name: Smart Patch (Binary Ninja)
 description: Patch binary code in Binary Ninja using natural language — read, assemble, write, verify
 tags: [patching, assembly, binary, binja]
-author: Rikugan
+author: Spectra
 version: 2.0
 allowed_tools:
   - read_disassembly

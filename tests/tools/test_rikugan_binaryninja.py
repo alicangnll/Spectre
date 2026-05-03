@@ -1,4 +1,4 @@
-"""Tests for rikugan.binja.bootstrap — BN plugin registration and helpers."""
+"""Tests for spectra.binja.bootstrap — BN plugin registration and helpers."""
 
 from __future__ import annotations
 
@@ -17,22 +17,22 @@ _bn_stub = types.ModuleType("binaryninja")
 sys.modules.setdefault("binaryninja", _bn_stub)
 sys.modules.setdefault("binaryninjaui", None)  # type: ignore[assignment]
 
-# Stub rikugan.binja.ui dependencies that require Qt
-_panel_mod = types.ModuleType("rikugan.binja.ui.panel")
-_panel_mod.RikuganPanel = type("RikuganPanel", (), {})  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.ui.panel", _panel_mod)
+# Stub spectra.binja.ui dependencies that require Qt
+_panel_mod = types.ModuleType("spectra.binja.ui.panel")
+_panel_mod.SpectraPanel = type("SpectraPanel", (), {})  # type: ignore[attr-defined]
+sys.modules.setdefault("spectra.binja.ui.panel", _panel_mod)
 
-_actions_mod = types.ModuleType("rikugan.binja.ui.actions")
+_actions_mod = types.ModuleType("spectra.binja.ui.actions")
 _actions_mod.ACTION_DEFS = ()  # type: ignore[attr-defined]
 _actions_mod.build_context = MagicMock(return_value={})  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.ui.actions", _actions_mod)
+sys.modules.setdefault("spectra.binja.ui.actions", _actions_mod)
 
-_fn_utils_mod = types.ModuleType("rikugan.binja.tools.fn_utils")
+_fn_utils_mod = types.ModuleType("spectra.binja.tools.fn_utils")
 _fn_utils_mod.get_function_at = MagicMock(return_value=None)  # type: ignore[attr-defined]
 _fn_utils_mod.get_function_name = MagicMock(return_value="")  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.tools.fn_utils", _fn_utils_mod)
+sys.modules.setdefault("spectra.binja.tools.fn_utils", _fn_utils_mod)
 
-from rikugan.binja import bootstrap as bnj  # noqa: E402
+from spectra.binja import bootstrap as bnj  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +198,7 @@ class TestGetSidebarPanel(unittest.TestCase):
         mock_sidebar.widget.return_value = None
         with patch.object(bnj, "_active_sidebar", return_value=mock_sidebar):
             bnj._get_sidebar_panel(create_if_missing=True)
-        mock_sidebar.activate.assert_called_once_with(bnj.RIKUGAN_SIDEBAR_NAME)
+        mock_sidebar.activate.assert_called_once_with(bnj.SPECTRA_SIDEBAR_NAME)
 
     def test_returns_panel_from_widget(self):
         mock_panel = MagicMock(spec=object)

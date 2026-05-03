@@ -12,17 +12,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.core.types import (
+from spectra.core.types import (
     Message, ModelInfo, ProviderCapabilities, Role,
     StreamChunk, TokenUsage,
 )
-from rikugan.core.config import RikuganConfig
-from rikugan.agent.loop import AgentLoop
-from rikugan.agent.turn import TurnEvent, TurnEventType
-from rikugan.tools.base import ParameterSchema, ToolDefinition
-from rikugan.tools.registry import ToolRegistry
-from rikugan.state.session import SessionState
-from rikugan.providers.base import LLMProvider
+from spectra.core.config import SpectraConfig
+from spectra.agent.loop import AgentLoop
+from spectra.agent.turn import TurnEvent, TurnEventType
+from spectra.tools.base import ParameterSchema, ToolDefinition
+from spectra.tools.registry import ToolRegistry
+from spectra.state.session import SessionState
+from spectra.providers.base import LLMProvider
 
 
 class MockProvider(LLMProvider):
@@ -140,7 +140,7 @@ class TestExplorationModeEvents(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=_make_registry(),
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -171,7 +171,7 @@ class TestExplorationModeEvents(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=_make_registry(),
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -204,7 +204,7 @@ class TestExplorationModeEvents(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=_make_registry(),
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -229,7 +229,7 @@ class TestExplorationModeEvents(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=_make_registry(),
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -269,7 +269,7 @@ class TestMutationTracking(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=registry,
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -308,7 +308,7 @@ class TestMutationTracking(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=registry,
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 
@@ -340,7 +340,7 @@ class TestSpawnSubagentPseudoTool(unittest.TestCase):
         loop = AgentLoop(
             provider=provider,
             tool_registry=_make_registry(),
-            config=RikuganConfig(),
+            config=SpectraConfig(),
             session=SessionState(),
         )
 

@@ -1,23 +1,23 @@
-# Rikugan Development Features
+# Spectra Development Features
 
-This document describes development-oriented features in Rikugan that help during plugin development and malware analysis workflows.
+This document describes development-oriented features in Spectra that help during plugin development and malware analysis workflows.
 
 ## Auto-Reload (Development Mode)
 
-Rikugan can automatically reload itself when source files change, making development faster without requiring IDA restarts.
+Spectra can automatically reload itself when source files change, making development faster without requiring IDA restarts.
 
 ### Enabling Auto-Reload
 
 **Method 1: Environment Variable**
 ```bash
 # Set environment variable before starting IDA
-export RIKUGAN_AUTO_RELOAD=1
+export SPECTRA_AUTO_RELOAD=1
 ida64 /path/to/binary
 ```
 
 **Method 2: Configuration**
 ```python
-# In Rikugan config (settings.json)
+# In Spectra config (settings.json)
 {
     "auto_reload": true
 }
@@ -29,7 +29,7 @@ ida64 /path/to/binary
 
 ### How It Works
 
-1. **File Watching**: Monitors all Python source files in the Rikugan package
+1. **File Watching**: Monitors all Python source files in the Spectra package
 2. **Change Detection**: Checks file hashes every 500ms
 3. **Debouncing**: Waits 2 seconds after the last change before reloading
 4. **Hot Reload**: Reloads modules while preserving IDA session state
@@ -39,29 +39,29 @@ ida64 /path/to/binary
 
 ```bash
 # Terminal 1: Start IDA with auto-reload enabled
-export RIKUGAN_AUTO_RELOAD=1
+export SPECTRA_AUTO_RELOAD=1
 ida64 /path/to/malware
 
-# Terminal 2: Edit Rikugan source code
+# Terminal 2: Edit Spectra source code
 vim rikugan/ui/markdown.py
 
 # Auto-reload happens automatically when you save!
-# Check IDA console for: "Reloading Rikugan due to source changes..."
+# Check IDA console for: "Reloading Spectra due to source changes..."
 ```
 
 ### Status Messages
 
 - `File watcher started` - Auto-reload is monitoring for changes
 - `Changed: rikugan/ui/markdown.py` - File was modified
-- `Reloading Rikugan...` - Reload in progress
-- `Rikugan reloaded successfully` - Reload completed
+- `Reloading Spectra...` - Reload in progress
+- `Spectra reloaded successfully` - Reload completed
 - `Auto-reload disabled` - Auto-reload stopped
 
 ### Troubleshooting
 
 **Auto-reload not working?**
-- Check that `RIKUGAN_AUTO_RELOAD=1` is set
-- Verify file permissions on Rikugan source files
+- Check that `SPECTRA_AUTO_RELOAD=1` is set
+- Verify file permissions on Spectra source files
 - Check IDA console for error messages
 
 **Reload causes errors?**
@@ -165,7 +165,7 @@ print(f"Critical findings: {len(critical)}")
 
 ## Suspicious API Highlighting
 
-Rikugan automatically highlights dangerous API calls in AI responses with color-coded severity levels.
+Spectra automatically highlights dangerous API calls in AI responses with color-coded severity levels.
 
 ### API Categories
 
@@ -218,7 +218,7 @@ Click any address link in AI responses to jump to that location in IDA's disasse
 
 ## Anti-Debug Detection
 
-Rikugan detects common anti-debugging techniques used by malware.
+Spectra detects common anti-debugging techniques used by malware.
 
 ### Detection Categories
 
@@ -242,4 +242,4 @@ Rikugan detects common anti-debugging techniques used by malware.
 
 ### Usage
 
-Rikugan automatically scans for anti-debug techniques during analysis and reports findings in AI responses.
+Spectra automatically scans for anti-debug techniques during analysis and reports findings in AI responses.

@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.settings_dialog — pure logic helpers."""
+"""Tests for spectra.ui.settings_dialog — pure logic helpers."""
 
 from __future__ import annotations
 
@@ -15,17 +15,17 @@ ensure_pyside6_stubs()
 # Reinstall these unconditionally because other tests may leave behind
 # incomplete stubs that are missing attributes needed here.
 for _mod_name in [
-    "rikugan.core.config",
-    "rikugan.core.logging",
-    "rikugan.core.types",
-    "rikugan.providers.anthropic_provider",
-    "rikugan.providers.auth_cache",
-    "rikugan.providers.ollama_provider",
-    "rikugan.providers.registry",
+    "spectra.core.config",
+    "spectra.core.logging",
+    "spectra.core.types",
+    "spectra.providers.anthropic_provider",
+    "spectra.providers.auth_cache",
+    "spectra.providers.ollama_provider",
+    "spectra.providers.registry",
 ]:
     _stub = types.ModuleType(_mod_name)
     for _attr in [
-        "RikuganConfig",
+        "SpectraConfig",
         "log_debug",
         "log_error",
         "log_info",
@@ -40,12 +40,12 @@ for _mod_name in [
     sys.modules[_mod_name] = _stub
 
 # Ensure DEFAULT_OLLAMA_URL is a string on the stub (real module already has it)
-_ollama_mod = sys.modules.get("rikugan.providers.ollama_provider")
+_ollama_mod = sys.modules.get("spectra.providers.ollama_provider")
 if _ollama_mod is not None and not isinstance(getattr(_ollama_mod, "DEFAULT_OLLAMA_URL", None), str):
     _ollama_mod.DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
 # Install real resolve_auth_cached logic on the stub so tests can exercise it
-_ac_stub = sys.modules["rikugan.providers.auth_cache"]
+_ac_stub = sys.modules["spectra.providers.auth_cache"]
 _ac_stub._cached_oauth = None
 _ac_stub.resolve_anthropic_auth = MagicMock(return_value=("tok", "api_key"))
 
@@ -62,7 +62,7 @@ def _resolve_auth_cached_impl(explicit_key=""):
 _ac_stub.resolve_auth_cached = _resolve_auth_cached_impl
 _ac_stub.invalidate_cache = MagicMock()
 
-from rikugan.ui.settings_dialog import _AddProviderDialog, _ModelFetcher  # noqa: E402
+from spectra.ui.settings_dialog import _AddProviderDialog, _ModelFetcher  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +243,7 @@ class TestAddProviderDialogValidate(unittest.TestCase):
 
 
 def _import_dialog():
-    from rikugan.ui.settings_dialog import SettingsDialog
+    from spectra.ui.settings_dialog import SettingsDialog
 
     return SettingsDialog
 

@@ -1,4 +1,4 @@
-"""Shared Rikugan panel widget used by host-specific wrappers."""
+"""Shared Spectra panel widget used by host-specific wrappers."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Any
 
 from ..agent.mutation import MutationRecord
 from ..agent.turn import TurnEvent, TurnEventType
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug, log_error, log_info
 from ..core.types import Role
 from ..providers.auth_cache import resolve_auth_cached
@@ -237,18 +237,18 @@ class _AddButtonTabBar(QTabBar):
             self._add_btn.move(0, 0)
 
 
-class RikuganPanelCore(QWidget):
+class SpectraPanelCore(QWidget):
     """Host-agnostic chat panel widget."""
 
     def __init__(
         self,
-        controller_factory: Callable[[RikuganConfig], Any],
+        controller_factory: Callable[[SpectraConfig], Any],
         ui_hooks_factory: Callable[[Callable[[], Any]], Any] | None = None,
         tools_form_factory: Callable[..., Any] | None = None,
         parent: QWidget = None,
     ):
         super().__init__(parent)
-        self._config = RikuganConfig.load_or_create()
+        self._config = SpectraConfig.load_or_create()
         log_debug(
             f"Config loaded: provider={self._config.provider.name} model={self._config.provider.model}",
         )
@@ -293,7 +293,7 @@ class RikuganPanelCore(QWidget):
 
         for _attempt in range(3):
             dlg = QDialog()
-            dlg.setWindowTitle("Rikugan — Encrypted API Keys")
+            dlg.setWindowTitle("Spectra — Encrypted API Keys")
             dlg.setMinimumWidth(350)
             layout = QVBoxLayout(dlg)
             layout.addWidget(QLabel("Enter password to decrypt API keys:"))
@@ -374,7 +374,7 @@ class RikuganPanelCore(QWidget):
 
     def _build_ui(self) -> None:
         self.setStyleSheet(DARK_THEME)
-        self.setObjectName("rikugan_panel")
+        self.setObjectName("spectra_panel")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -727,7 +727,7 @@ class RikuganPanelCore(QWidget):
             include_subagents = cb.isChecked()
 
         label = self._ctrl.tab_label(tab_id).replace("/", "-").replace("\\", "-")
-        default_name = f"rikugan-{label}-{time.strftime('%Y%m%d-%H%M%S')}.md"
+        default_name = f"spectra-{label}-{time.strftime('%Y%m%d-%H%M%S')}.md"
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Export Chat",
@@ -749,7 +749,7 @@ class RikuganPanelCore(QWidget):
         include_subagents: bool = False,
     ) -> None:
         """Write session messages to a Markdown file."""
-        lines = ["# Rikugan Chat Export\n"]
+        lines = ["# Spectra Chat Export\n"]
         lines.append(f"- **Model**: {session.model_name or 'unknown'}")
         lines.append(f"- **Exported**: {time.strftime('%Y-%m-%d %H:%M:%S')}")
         if session.idb_path:
@@ -764,7 +764,7 @@ class RikuganPanelCore(QWidget):
                 lines.append(f"## You\n\n{msg.content}\n")
             elif msg.role == Role.ASSISTANT:
                 if msg.content:
-                    lines.append(f"## Rikugan\n\n{msg.content}\n")
+                    lines.append(f"## Spectra\n\n{msg.content}\n")
                 for tc in msg.tool_calls:
                     lines.append(f"**Tool call**: `{tc.name}`\n")
                     lines.append(_export_format_tool_args(tc))
@@ -902,7 +902,7 @@ class RikuganPanelCore(QWidget):
                 self._input_area.set_enabled(True)
                 if is_running:
                     self._input_area.setPlaceholderText(
-                        "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
+                        "Spectra is thinking... press Enter (or Queue) to queue a follow-up."
                     )
                 else:
                     self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
@@ -1032,7 +1032,7 @@ class RikuganPanelCore(QWidget):
                 self._input_area.set_enabled(True)
                 if running:
                     self._input_area.setPlaceholderText(
-                        "Rikugan is thinking... press Enter (or Queue) to queue a follow-up."
+                        "Spectra is thinking... press Enter (or Queue) to queue a follow-up."
                     )
                 else:
                     self._input_area.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
@@ -1155,10 +1155,10 @@ class RikuganPanelCore(QWidget):
         try:
             from .agent_creator_dialog import AgentCreatorDialog
             from pathlib import Path
-            import rikugan.skills
+            import spectra.skills
 
             # Get the built-in skills directory directly
-            skills_dir = Path(rikugan.skills.__file__).parent / "builtins"
+            skills_dir = Path(spectra.skills.__file__).parent / "builtins"
 
             dlg = AgentCreatorDialog(skills_dir, parent=self)
             qt_run(dlg)
@@ -2007,11 +2007,11 @@ Please make the code as readable and maintainable as possible."""
             import idc
 
             # Try to get cached translation from function comment
-            # Format: [RIKUGAN_CACHE]\n{code}
+            # Format: [SPECTRA_CACHE]\n{code}
             func_comment = idc.get_func_cmt(func_addr, 0) or ""
-            if "[RIKUGAN_CACHE]" in func_comment:
+            if "[SPECTRA_CACHE]" in func_comment:
                 # Extract the cached code
-                parts = func_comment.split("[RIKUGAN_CACHE]", 1)
+                parts = func_comment.split("[SPECTRA_CACHE]", 1)
                 if len(parts) > 1:
                     cached_code = parts[1].strip()
                     log_info(f"Found cached translation for 0x{func_addr:X}")
@@ -2030,12 +2030,12 @@ Please make the code as readable and maintainable as possible."""
 
             # Store in function comment with special marker
             existing_comment = idc.get_func_cmt(func_addr, 0) or ""
-            cached_marker = f"[RIKUGAN_CACHE]\n{code}"
+            cached_marker = f"[SPECTRA_CACHE]\n{code}"
 
             # Append or replace existing cache
-            if "[RIKUGAN_CACHE]" in existing_comment:
+            if "[SPECTRA_CACHE]" in existing_comment:
                 # Replace existing cache
-                parts = existing_comment.split("[RIKUGAN_CACHE]", 1)
+                parts = existing_comment.split("[SPECTRA_CACHE]", 1)
                 new_comment = parts[0] + cached_marker
             else:
                 # Append cache to existing comment
@@ -2155,7 +2155,7 @@ Please make the code as readable and maintainable as possible."""
                 self._progress_label.setText("Translation failed")
                 self._progress_label.setStyleSheet("color: #f44747; font-size: 12px;")
         else:
-            self._result_text.setPlainText("Error: Rikugan input area not available")
+            self._result_text.setPlainText("Error: Spectra input area not available")
             self._progress_label.setText("Error")
 
     def show_result(self, text: str) -> None:
@@ -2341,7 +2341,7 @@ Please make the code as readable and maintainable as possible."""
             return
         # undo_all calls tool_registry.execute which goes through
         # TPE + idasync — must run off the main thread to avoid deadlock.
-        threading.Thread(target=engine.undo_all, daemon=True, name="rikugan-undo-renames").start()
+        threading.Thread(target=engine.undo_all, daemon=True, name="spectra-undo-renames").start()
 
     def _on_renamer_seek(self, address: int) -> None:
         """Navigate the host disassembly view to the given address."""

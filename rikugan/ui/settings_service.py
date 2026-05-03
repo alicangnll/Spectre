@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_error
 from ..mcp.config import MCPServerConfig, load_mcp_config, save_mcp_config
 from ..skills.loader import SkillDefinition
@@ -18,7 +18,7 @@ from ..skills.loader import SkillDefinition
 class DiscoveredSkills:
     """Pre-loaded skill discovery results."""
 
-    rikugan: list[SkillDefinition] = field(default_factory=list)
+    spectra: list[SkillDefinition] = field(default_factory=list)
     external: dict[str, list[SkillDefinition]] = field(default_factory=dict)
 
 
@@ -26,7 +26,7 @@ class DiscoveredSkills:
 class DiscoveredMCP:
     """Pre-loaded MCP server discovery results."""
 
-    rikugan: list[MCPServerConfig] = field(default_factory=list)
+    spectra: list[MCPServerConfig] = field(default_factory=list)
     external: dict[str, list[MCPServerConfig]] = field(default_factory=dict)
 
 
@@ -37,7 +37,7 @@ class SettingsService:
     surface a clean controller boundary.
     """
 
-    def __init__(self, config: RikuganConfig, tool_registry=None):
+    def __init__(self, config: SpectraConfig, tool_registry=None):
         self._config = config
         self._skills = self._discover_skills()
         self._mcp = self._discover_mcp()
@@ -56,7 +56,7 @@ class SettingsService:
         return self._tools_by_category
 
     def save_mcp_servers(self, servers: list[MCPServerConfig]) -> None:
-        """Persist Rikugan MCP server configs to disk."""
+        """Persist Spectra MCP server configs to disk."""
         try:
             save_mcp_config(servers, self._config.mcp_config_path)
         except Exception as e:
@@ -73,10 +73,10 @@ class SettingsService:
 
             registry = SkillRegistry(self._config.skills_dir)
             registry.discover()
-            result.rikugan = registry.list_skills()
+            result.spectra = registry.list_skills()
         except Exception as e:
-            log_error(f"Failed to discover Rikugan skills: {e}")
-            result.rikugan = []
+            log_error(f"Failed to discover Spectra skills: {e}")
+            result.spectra = []
 
         try:
             from ..core.external_sources import discover_all_external_skills
@@ -91,10 +91,10 @@ class SettingsService:
     def _discover_mcp(self) -> DiscoveredMCP:
         result = DiscoveredMCP()
         try:
-            result.rikugan = load_mcp_config(self._config.mcp_config_path)
+            result.spectra = load_mcp_config(self._config.mcp_config_path)
         except Exception as e:
-            log_error(f"Failed to load Rikugan MCP config: {e}")
-            result.rikugan = []
+            log_error(f"Failed to load Spectra MCP config: {e}")
+            result.spectra = []
 
         try:
             from ..core.external_sources import discover_all_external_mcp

@@ -54,20 +54,20 @@ def handle_smart_patch(ctx: dict[str, Any]) -> str:
 
 ACTION_DEFS: tuple[tuple[str, str, Callable[[dict[str, Any]], str], bool], ...] = (
     (
-        "Send to Rikugan",
-        "Send selection or address to Rikugan input",
+        "Send to Spectra",
+        "Send selection or address to Spectra input",
         handle_send_to,
         False,
     ),
-    ("Explain this", "Explain the current function with Rikugan", handle_explain, True),
+    ("Explain this", "Explain the current function with Spectra", handle_explain, True),
     (
-        "Rename with Rikugan",
+        "Rename with Spectra",
         "Analyze and rename the current function",
         handle_rename,
         True,
     ),
     (
-        "Deobfuscate with Rikugan",
+        "Deobfuscate with Spectra",
         "Deobfuscate the current function",
         handle_deobfuscate_bn,
         True,

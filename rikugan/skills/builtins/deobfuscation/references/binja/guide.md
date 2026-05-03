@@ -8,7 +8,7 @@ Full tool listing in `tools.md`. Recognition patterns and methodology in `algori
 
 ### Path A: Built-in IL Tools (preferred)
 
-Use Rikugan's built-in tools for targeted, per-function deobfuscation. Read the IL, identify patterns, apply precise modifications.
+Use Spectra's built-in tools for targeted, per-function deobfuscation. Read the IL, identify patterns, apply precise modifications.
 
 ```
 1. get_il(addr, "mlil")                   — read IL, identify obfuscation patterns

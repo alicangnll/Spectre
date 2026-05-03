@@ -2,7 +2,7 @@
 name: Smart Patch (IDA Pro)
 description: Patch binary code in IDA Pro using natural language — read, assemble, write, verify
 tags: [patching, assembly, binary, ida]
-author: Rikugan
+author: Spectra
 version: 2.0
 allowed_tools:
   - read_disassembly

@@ -122,7 +122,7 @@ class GeminiProvider(LLMProvider):
         ]
 
     def _handle_api_error(self, e: Exception) -> NoReturn:
-        """Raise the appropriate Rikugan error from a Gemini API error.
+        """Raise the appropriate Spectra error from a Gemini API error.
 
         Uses typed exception checks from google.api_core.exceptions when
         available, falling back to string matching for older SDK versions.

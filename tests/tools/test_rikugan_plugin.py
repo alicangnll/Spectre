@@ -1,4 +1,4 @@
-"""Tests for rikugan_plugin.py — pure logic helpers."""
+"""Tests for spectra_plugin.py — pure logic helpers."""
 
 from __future__ import annotations
 
@@ -27,8 +27,8 @@ _idaapi_mock.PLUGIN_MULTI = 1
 _idaapi_mock.PLUGIN_FIX = 2
 
 # Force re-import so IDA mocks are active for this module's import
-sys.modules.pop("rikugan_plugin", None)
-import rikugan_plugin as rp  # noqa: E402
+sys.modules.pop("spectra_plugin", None)
+import spectra_plugin as rp  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -37,12 +37,12 @@ import rikugan_plugin as rp  # noqa: E402
 
 class TestGuardedImport(unittest.TestCase):
     def test_marker_attribute_set(self):
-        self.assertTrue(getattr(rp._guarded_import, "_rikugan_guarded", False))
+        self.assertTrue(getattr(rp._guarded_import, "_spectra_guarded", False))
 
     def test_not_double_wrapped(self):
         # builtins.__import__ should be _guarded_import (or something marked)
         current = builtins.__import__
-        self.assertTrue(getattr(current, "_rikugan_guarded", False))
+        self.assertTrue(getattr(current, "_spectra_guarded", False))
 
     def test_non_reentrant_calls_original(self):
         """Non-reentrant calls should go through the stored shiboken import."""
@@ -116,17 +116,17 @@ class TestGuardedImport(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# RikuganPlugmod.term
+# SpectraPlugmod.term
 # ---------------------------------------------------------------------------
 
 def _make_plugmod():
-    """Create a RikuganPlugmod without calling __init__."""
-    pm = object.__new__(rp.RikuganPlugmod)
+    """Create a SpectraPlugmod without calling __init__."""
+    pm = object.__new__(rp.SpectraPlugmod)
     pm._panel = None
     return pm
 
 
-class TestRikuganPlugmodTerm(unittest.TestCase):
+class TestSpectraPlugmodTerm(unittest.TestCase):
     def test_term_closes_panel(self):
         pm = _make_plugmod()
         mock_panel = MagicMock()
@@ -153,7 +153,7 @@ class TestRikuganPlugmodTerm(unittest.TestCase):
         pm.term()  # must not raise, exception should be caught
 
 
-class TestRikuganPlugmodRun(unittest.TestCase):
+class TestSpectraPlugmodRun(unittest.TestCase):
     def test_run_returns_true(self):
         pm = _make_plugmod()
         pm._panel = MagicMock()  # panel exists — toggle_panel calls show()
@@ -168,7 +168,7 @@ class TestRikuganPlugmodRun(unittest.TestCase):
         mock_toggle.assert_called_once()
 
 
-class TestRikuganPlugmodTogglePanel(unittest.TestCase):
+class TestSpectraPlugmodTogglePanel(unittest.TestCase):
     def test_toggle_panel_imports_panel_directly_without_pkg_walk(self):
         pm = _make_plugmod()
         mock_panel_instance = MagicMock()
@@ -176,8 +176,8 @@ class TestRikuganPlugmodTogglePanel(unittest.TestCase):
         real_import_module = importlib.import_module
 
         def fake_import(name, *args, **kwargs):
-            if name == "rikugan.ida.ui.panel":
-                return types.SimpleNamespace(RikuganPanel=mock_panel_cls)
+            if name == "spectra.ida.ui.panel":
+                return types.SimpleNamespace(SpectraPanel=mock_panel_cls)
             return real_import_module(name)
 
         with patch.object(rp.importlib, "import_module", side_effect=fake_import) as mock_import:
@@ -187,7 +187,7 @@ class TestRikuganPlugmodTogglePanel(unittest.TestCase):
         mock_panel_cls.assert_called_once()
         mock_panel_instance.show.assert_called_once()
         imported = [call.args[0] for call in mock_import.call_args_list]
-        self.assertIn("rikugan.ida.ui.panel", imported)
+        self.assertIn("spectra.ida.ui.panel", imported)
 
 
 # ---------------------------------------------------------------------------
@@ -195,9 +195,9 @@ class TestRikuganPlugmodTogglePanel(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class TestPluginEntry(unittest.TestCase):
-    def test_returns_rikugan_plugin(self):
+    def test_returns_spectra_plugin(self):
         result = rp.PLUGIN_ENTRY()
-        self.assertIsInstance(result, rp.RikuganPlugin)
+        self.assertIsInstance(result, rp.SpectraPlugin)
 
 
 if __name__ == "__main__":

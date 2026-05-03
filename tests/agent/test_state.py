@@ -13,10 +13,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
-from rikugan.state.session import SessionState
-from rikugan.state.history import SessionHistory
-from rikugan.core.config import RikuganConfig
+from spectra.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
+from spectra.state.session import SessionState
+from spectra.state.history import SessionHistory
+from spectra.core.config import SpectraConfig
 
 
 class TestSessionState(unittest.TestCase):
@@ -114,7 +114,7 @@ class TestMessageSerialization(unittest.TestCase):
 class TestSessionHistory(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
-        self.config = RikuganConfig(_config_dir=self.tmpdir)
+        self.config = SpectraConfig(_config_dir=self.tmpdir)
 
     def test_save_and_load_session(self):
         history = SessionHistory(self.config)
@@ -161,7 +161,7 @@ class TestSessionHistory(unittest.TestCase):
             self.assertIsInstance(data["messages"], int)
             return data
 
-        with patch("rikugan.state.history.json.load", side_effect=fail_if_messages_loaded):
+        with patch("spectra.state.history.json.load", side_effect=fail_if_messages_loaded):
             sessions = history.list_sessions()
 
         self.assertEqual(len(sessions), 1)

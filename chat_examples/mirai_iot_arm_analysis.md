@@ -1,4 +1,4 @@
-# Rikugan Chat Export - MalwareBazaar sample - Mirai Variant
+# Spectra Chat Export - MalwareBazaar sample - Mirai Variant
 
 - **Model**: claude-opus-4-6
 - **Exported**: 2026-03-03 02:00:41
@@ -10,7 +10,7 @@
 
 rip a part this linux malware, discover what he does
 
-## Rikugan
+## Spectra
 
 
 
@@ -141,7 +141,7 @@ Segments:
   .bss              0x36828–0x44a18  (0xe1f0 bytes)  RW
 ```
 
-## Rikugan
+## Spectra
 
 Interesting — **statically linked ARM ELF**, no imports at all. 730 functions, all self-contained. This is typical for IoT malware. Let me sweep for strings — looking for network indicators, persistence paths, C2 patterns, and common malware signatures.
 
@@ -249,7 +249,7 @@ No strings matching 'http'
 No strings matching 'shell'
 ```
 
-## Rikugan
+## Spectra
 
 Self-aware malware — reads `/proc/self/exe`, `/proc/net/tcp`, `/proc/%s/maps`. Let me dig deeper into network, DDoS, and bot-related strings.
 
@@ -341,7 +341,7 @@ No strings matching 'listen'
 No strings matching 'bind'
 ```
 
-## Rikugan
+## Spectra
 
 **`botd_single_lock`** — that's a bot daemon lock file. This is a botnet agent. Let me search for more bot-related strings, C2 commands, and DDoS patterns.
 
@@ -519,7 +519,7 @@ No strings matching 'telnet'
 No strings matching 'wget'
 ```
 
-## Rikugan
+## Spectra
 
 Strings are sparse — this malware likely uses encrypted/obfuscated strings. Let me look at the full string table for anything interesting, and find xrefs to the key strings we found.
 
@@ -651,7 +651,7 @@ Cross-references to 0x27bf4 (aProcNetTcp):
   0xfe98  [dr_O        ]  in ?
 ```
 
-## Rikugan
+## Spectra
 
 Jackpot! Key findings:
 - **`185.196.41.180`** — C2 IP address
@@ -764,7 +764,7 @@ Strings 80–160 of 279:
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Most of those are just errno strings from the statically-linked libc. Let me now decompile the critical functions — the main function, the bot lock function, the C2 connection function, and the process disguise function.
 
@@ -1003,7 +1003,7 @@ int sub_E0F4()
 
 ```
 
-## Rikugan
+## Spectra
 
 Excellent! This is getting very clear. Let me now look at the main entry point and a few more critical functions.
 
@@ -1125,7 +1125,7 @@ int sub_E3A4()
 
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at more of the main function's behavior — specifically the C2 command processing loop and the network connection setup. Let me also check what happens with the encrypted/obfuscated string.
 
@@ -1315,7 +1315,7 @@ int sub_C624()
 
 ```
 
-## Rikugan
+## Spectra
 
 Let me look at the process-killing function and the command dispatch functions more closely.
 
@@ -1497,7 +1497,7 @@ int sub_C4F0()
 
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the key helper functions — the process classification/killing logic and the network port scanning function.
 
@@ -1761,7 +1761,7 @@ int __fastcall sub_BB64(int result, int a2, int a3)
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 This is a massive function — the process classification and killing logic. Let me now look at the encrypted string table and the main function more carefully.
 
@@ -1882,7 +1882,7 @@ The bot registers **6 DDoS attack commands** (command IDs 0–5):
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Outstanding — both subagents delivered comprehensive results. Let me now log all the critical findings and rename the key functions.
 
@@ -2050,7 +2050,7 @@ Finding logged: [data_structure] Two encrypted string tables: (1) RC4-variant wi
 Finding logged: [hypothesis] 6 DDoS attack handlers registered at command table 0x31988: UDP flood (0xA088), TCP SYN flood (0x9E68), TCP ACK flood (0x9C10), multi-vector (0x94B0), GRE/IP flood (0x825C), and variant (0x8910). Command packets use binary protocol with | delimiter.
 ```
 
-## Rikugan
+## Spectra
 
 Now let me rename all the key functions to make the IDB readable:
 
@@ -2373,7 +2373,7 @@ Renamed 0xa6b0: sub_A6B0 → ChaCha20_Crypt
 Renamed 0xb0d4: sub_B0D4 → HMAC_SHA256
 ```
 
-## Rikugan
+## Spectra
 
 Now let me save all findings to persistent memory:
 
@@ -2430,34 +2430,34 @@ Two encrypted string tables: (1) RC4-variant at byte_3F6B8, 40 entries (idx 3-42
 **Result** (`save_memory`):
 
 ```
-Saved to RIKUGAN.md: [architecture] Binary: d40ddd30871943adb3c447e4202774d8baa8f820ef2606314232049f9ef541e5.elf — ARM Mirai-variant IoT botnet. Statically linked, 730 functions, no imports. Enhanced crypto: ChaCha20 session encryption + XXTEA key exchange + HMAC-SHA256 authentication (vs original Mirai's XOR).
+Saved to SPECTRA.md: [architecture] Binary: d40ddd30871943adb3c447e4202774d8baa8f820ef2606314232049f9ef541e5.elf — ARM Mirai-variant IoT botnet. Statically linked, 730 functions, no imports. Enhanced crypto: ChaCha20 session encryption + XXTEA key exchange + HMAC-SHA256 authentication (vs original Mirai's XOR).
 ```
 
 **Result** (`save_memory`):
 
 ```
-Saved to RIKUGAN.md: [architecture] C2: 185[.]196[.]41[.]180:34942/TCP. Pre-shared XXTEA key: "PJbiNbbeasddDfs". Bot generates random ChaCha20 key+nonce, XXTEA-encrypts them, sends with HMAC-SHA256 tag as handshake. All subsequent traffic ChaCha20-encrypted.
+Saved to SPECTRA.md: [architecture] C2: 185[.]196[.]41[.]180:34942/TCP. Pre-shared XXTEA key: "PJbiNbbeasddDfs". Bot generates random ChaCha20 key+nonce, XXTEA-encrypts them, sends with HMAC-SHA256 tag as handshake. All subsequent traffic ChaCha20-encrypted.
 ```
 
 **Result** (`save_memory`):
 
 ```
-Saved to RIKUGAN.md: [prior_analysis] Key functions renamed: BotMain(0xD248), BotMainLoop(0xC9B4), TelnetScanner(0xCB34), DisguiseAsKworker(0xE0F4), ClassifyAndKillProcess(0xBB64), KillCompetingBots(0xAD5C), SetupOomEvasion(0xCFE0), ParseAttackCommand(0xA3BC), DecryptString_RC4(0xF4D4), DecryptString_XOR(0xB27C), XXTEA_Encrypt(0x12488), ChaCha20_Crypt(0xA6B0), HMAC_SHA256(0xB0D4), EnumTcpConnections(0xFDB0)
+Saved to SPECTRA.md: [prior_analysis] Key functions renamed: BotMain(0xD248), BotMainLoop(0xC9B4), TelnetScanner(0xCB34), DisguiseAsKworker(0xE0F4), ClassifyAndKillProcess(0xBB64), KillCompetingBots(0xAD5C), SetupOomEvasion(0xCFE0), ParseAttackCommand(0xA3BC), DecryptString_RC4(0xF4D4), DecryptString_XOR(0xB27C), XXTEA_Encrypt(0x12488), ChaCha20_Crypt(0xA6B0), HMAC_SHA256(0xB0D4), EnumTcpConnections(0xFDB0)
 ```
 
 **Result** (`save_memory`):
 
 ```x86asm
-Saved to RIKUGAN.md: [data_structure] Two encrypted string tables: (1) RC4-variant at byte_3F6B8, 40 entries (idx 3-42), key 0xDEADBEEF/0xCAFEBABE/0xE0A4CBD6/0xBADC0DE5, accessed via DecryptString_RC4(0xF4D4). (2) XOR table at off_319CC, 19 entries (idx 0-18), per-entry XOR key, accessed via DecryptString_XOR(0xB27C). Contains anti-analysis tools, process whitelists, port lists, IoT paths.
+Saved to SPECTRA.md: [data_structure] Two encrypted string tables: (1) RC4-variant at byte_3F6B8, 40 entries (idx 3-42), key 0xDEADBEEF/0xCAFEBABE/0xE0A4CBD6/0xBADC0DE5, accessed via DecryptString_RC4(0xF4D4). (2) XOR table at off_319CC, 19 entries (idx 0-18), per-entry XOR key, accessed via DecryptString_XOR(0xB27C). Contains anti-analysis tools, process whitelists, port lists, IoT paths.
 ```
 
 **Result** (`save_memory`):
 
 ```
-Saved to RIKUGAN.md: [prior_analysis] 6 DDoS attack commands: DDoS_TcpSynFlood(0x9E68), DDoS_TcpAckFlood(0x9C10), DDoS_MultiVector(0x94B0), DDoS_GreIpFlood(0x825C). Command table at 0x31988. Binary protocol with | delimiter, packet format: 2-byte duration + 1-byte type + 1-byte target count + per-target (4-byte IP + 1-byte CIDR) + options.
+Saved to SPECTRA.md: [prior_analysis] 6 DDoS attack commands: DDoS_TcpSynFlood(0x9E68), DDoS_TcpAckFlood(0x9C10), DDoS_MultiVector(0x94B0), DDoS_GreIpFlood(0x825C). Command table at 0x31988. Binary protocol with | delimiter, packet format: 2-byte duration + 1-byte type + 1-byte target count + per-target (4-byte IP + 1-byte CIDR) + options.
 ```
 
-## Rikugan
+## Spectra
 
 Here's the complete teardown:
 
@@ -2600,7 +2600,7 @@ Goal: rip a part this linux malware, discover what he does
 
 its ok, well done
 
-## Rikugan
+## Spectra
 
 Thanks! That was a fun one to tear apart. 
 

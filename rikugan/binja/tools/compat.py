@@ -27,7 +27,7 @@ def require_bv() -> Any:
     bv = get_binary_ninja_view()
     if bv is None:
         raise ToolError(
-            "No active BinaryView. Open a binary in Binary Ninja and invoke Rikugan from that view.",
+            "No active BinaryView. Open a binary in Binary Ninja and invoke Spectra from that view.",
         )
     return bv
 

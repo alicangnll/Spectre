@@ -1,4 +1,4 @@
-"""Bridge MCP tools into Rikugan ToolRegistry."""
+"""Bridge MCP tools into Spectra ToolRegistry."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _make_mcp_handler(client: MCPClient, tool_name: str) -> Callable:
 
 
 def register_mcp_tools(client: MCPClient, registry: ToolRegistry, prefix: str = "") -> int:
-    """Register all tools from an MCP client into the Rikugan ToolRegistry.
+    """Register all tools from an MCP client into the Spectra ToolRegistry.
 
     Returns the number of tools registered.
     """
@@ -64,13 +64,13 @@ def register_mcp_tools(client: MCPClient, registry: ToolRegistry, prefix: str = 
     count = 0
 
     for mcp_tool in tools:
-        rikugan_name = f"{prefix}{mcp_tool.name}"
+        spectra_name = f"{prefix}{mcp_tool.name}"
         description = f"[MCP:{client.name}] {mcp_tool.description}"
         parameters = _mcp_schema_to_parameters(mcp_tool.input_schema)
         handler = _make_mcp_handler(client, mcp_tool.name)
 
         defn = ToolDefinition(
-            name=rikugan_name,
+            name=spectra_name,
             description=description,
             parameters=parameters,
             category=f"mcp:{client.name}",

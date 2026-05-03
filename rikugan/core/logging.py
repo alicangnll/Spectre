@@ -1,6 +1,6 @@
-"""Rikugan logging bootstrap.
+"""Spectra logging bootstrap.
 
-This module is the single public API that all rikugan modules import.
+This module is the single public API that all spectra modules import.
 Sink implementations live in ``core.log_sinks`` — changes to file
 rotation policy, host integration, or telemetry format do not
 propagate to importers of this module.
@@ -35,18 +35,18 @@ def get_logger() -> logging.Logger:
     global _logger
     if _logger is not None:
         return _logger
-    _logger = logging.getLogger("Rikugan")
+    _logger = logging.getLogger("Spectra")
     _logger.setLevel(logging.DEBUG)
 
     fmt = logging.Formatter(
-        "[Rikugan %(asctime)s.%(msecs)03d %(levelname)s %(threadName)s] %(message)s",
+        "[Spectra %(asctime)s.%(msecs)03d %(levelname)s %(threadName)s] %(message)s",
         datefmt="%H:%M:%S",
     )
 
     # Host output handler (INFO and above to avoid spamming)
     host_handler = HostOutputHandler()
     host_handler.setLevel(logging.INFO)
-    host_handler.setFormatter(logging.Formatter("[Rikugan] %(levelname)s: %(message)s"))
+    host_handler.setFormatter(logging.Formatter("[Spectra] %(levelname)s: %(message)s"))
     _logger.addHandler(host_handler)
 
     # File handler (DEBUG — everything, flush immediately)
@@ -56,7 +56,7 @@ def get_logger() -> logging.Logger:
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(fmt)
         _logger.addHandler(file_handler)
-        _logger.debug(f"=== Rikugan debug log started — {time.strftime('%Y-%m-%d %H:%M:%S')} ===")
+        _logger.debug(f"=== Spectra debug log started — {time.strftime('%Y-%m-%d %H:%M:%S')} ===")
         _logger.debug(f"Log file: {path}")
         _logger.debug(f"Python: {sys.version}")
         _logger.debug(f"Thread: {threading.current_thread().name}")
@@ -65,13 +65,13 @@ def get_logger() -> logging.Logger:
 
     # Structured JSON log (JSONL format for machine parsing / analytics)
     try:
-        json_path = os.path.join(os.path.dirname(_log_file_path()), "rikugan_structured.jsonl")
+        json_path = os.path.join(os.path.dirname(_log_file_path()), "spectra_structured.jsonl")
         json_handler = _FlushFileHandler(json_path, mode="a", encoding="utf-8")
         json_handler.setLevel(logging.INFO)
         json_handler.setFormatter(_JSONFormatter())
         _logger.addHandler(json_handler)
     except OSError as e:
-        sys.stderr.write(f"[Rikugan] Could not open structured log file: {e}\n")
+        sys.stderr.write(f"[Spectra] Could not open structured log file: {e}\n")
 
     return _logger
 

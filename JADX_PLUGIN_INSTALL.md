@@ -1,6 +1,6 @@
-# Rikugan JADX Plugin Installation Guide
+# Spectra JADX Plugin Installation Guide
 
-Complete installation guide for Rikugan's hybrid JADX plugin system that works in 4 different modes.
+Complete installation guide for Spectra's hybrid JADX plugin system that works in 4 different modes.
 
 ## Table of Contents
 
@@ -16,8 +16,8 @@ Complete installation guide for Rikugan's hybrid JADX plugin system that works i
 ### Automated Installation (Recommended)
 
 ```bash
-# Clone or download Rikugan
-cd /path/to/Rikugan
+# Clone or download Spectra
+cd /path/to/Spectra
 
 # Run universal installer
 python install_jadx_plugin.py
@@ -25,7 +25,7 @@ python install_jadx_plugin.py
 
 **What this does:**
 - Detects installed platforms (JADX, IDA Pro, Binary Ninja)
-- Installs Rikugan as JADX native plugin
+- Installs Spectra as JADX native plugin
 - Enables integration with IDA/Binary Ninja (if available)
 - Sets up configuration files
 - Installs Python dependencies
@@ -33,7 +33,7 @@ python install_jadx_plugin.py
 
 **Alternative one-liner:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alicangnll/Rikugan/main/install_jadx_plugin.py | python3
+curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install_jadx_plugin.py | python3
 ```
 
 ## Installation Modes
@@ -57,8 +57,8 @@ brew install jadx
 # Verify installation
 jadx --version
 
-# Install Rikugan plugin
-cd /path/to/Rikugan
+# Install Spectra plugin
+cd /path/to/Spectra
 python install_jadx_plugin.py
 
 # Verify plugin installation
@@ -76,8 +76,8 @@ sudo ln -s $(pwd)/bin/jadx /usr/local/bin/jadx
 # Verify
 jadx --version
 
-# Install Rikugan plugin
-cd /path/to/Rikugan
+# Install Spectra plugin
+cd /path/to/Spectra
 python install_jadx_plugin.py
 ```
 
@@ -89,8 +89,8 @@ python install_jadx_plugin.py
 # Add to PATH
 setx PATH "%PATH%;C:\jadx\bin"
 
-# Install Rikugan plugin
-cd C:\path\to\Rikugan
+# Install Spectra plugin
+cd C:\path\to\Spectra
 python install_jadx_plugin.py
 ```
 
@@ -101,13 +101,13 @@ python rikugan_jadx.py plugin-info
 
 # Should show:
 # Environment: JADX
-# Rikugan available: True
+# Spectra available: True
 ```
 
 #### Usage
 ```bash
 # From JADX GUI
-Tools → Rikugan → Analyze APK
+Tools → Spectra → Analyze APK
 
 # From JADX CLI
 jadx --plugin rikugan app.apk -d output
@@ -123,7 +123,7 @@ python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
 #### Installation
 
 ```bash
-cd /path/to/Rikugan
+cd /path/to/Spectra
 
 # Make executable
 chmod +x rikugan_jadx.py
@@ -156,25 +156,25 @@ rikugan-jadx interactive app.apk
 
 #### Prerequisites
 - IDA Pro 7.5+ installed
-- Rikugan plugin for IDA installed
+- Spectra plugin for IDA installed
 - JADX installed (for decompilation)
 
 #### Installation
 
 ```bash
-# Rikugan should already be installed in IDA Pro
+# Spectra should already be installed in IDA Pro
 # JADX integration is automatic via /jadx skill
 
 # Verify in IDA Pro:
 # 1. Open IDA Pro
-# 2. Press Ctrl+Shift+I to open Rikugan
+# 2. Press Ctrl+Shift+I to open Spectra
 # 3. Type: /jadx Analyze this APK at /path/to/app.apk
 ```
 
 #### Usage in IDA Pro
 
 ```
-# In Rikugan chat panel (Ctrl+Shift+I):
+# In Spectra chat panel (Ctrl+Shift+I):
 
 # Analyze APK
 /jadx Analyze this APK at /path/to/malware.apk
@@ -195,25 +195,25 @@ rikugan-jadx interactive app.apk
 
 #### Prerequisites
 - Binary Ninja 3.4+ installed
-- Rikugan plugin for Binary Ninja installed
+- Spectra plugin for Binary Ninja installed
 - JADX installed (for decompilation)
 
 #### Installation
 
 ```bash
-# Rikugan should already be installed in Binary Ninja
+# Spectra should already be installed in Binary Ninja
 # JADX integration is automatic via /jadx skill
 
 # Verify in Binary Ninja:
 # 1. Open Binary Ninja
-# 2. Tools → Rikugan → Open Chat
+# 2. Tools → Spectra → Open Chat
 # 3. Type: /jadx Analyze this APK at /path/to/app.apk
 ```
 
 #### Usage in Binary Ninja
 
 ```
-# In Rikugan chat panel (Ctrl+Shift+I):
+# In Spectra chat panel (Ctrl+Shift+I):
 
 # Analyze APK
 /jadx Analyze this APK at /path/to/app.apk
@@ -232,8 +232,8 @@ rikugan-jadx interactive app.apk
 # Install dependencies
 brew install jadx python3
 
-# Install Rikugan plugin
-cd /path/to/Rikugan
+# Install Spectra plugin
+cd /path/to/Spectra
 python install_jadx_plugin.py
 
 # Add to PATH (optional)
@@ -252,8 +252,8 @@ wget https://github.com/skylot/jadx/releases/download/v1.4.7/jadx-1.4.7.zip
 unzip jadx-1.4.7.zip
 sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
 
-# Install Rikugan plugin
-cd /path/to/Rikugan
+# Install Spectra plugin
+cd /path/to/Spectra
 python install_jadx_plugin.py
 ```
 
@@ -267,8 +267,8 @@ python install_jadx_plugin.py
 # Extract to C:\jadx
 # Add C:\jadx\bin to system PATH
 
-# Install Rikugan plugin
-cd C:\path\to\Rikugan
+# Install Spectra plugin
+cd C:\path\to\Spectra
 python install_jadx_plugin.py
 ```
 
@@ -316,23 +316,23 @@ python install_jadx_plugin.py
 
 ```bash
 # Set AI provider
-export RIKUGAN_AI_PROVIDER="anthropic"  # or "openai", "local"
+export SPECTRA_AI_PROVIDER="anthropic"  # or "openai", "local"
 
 # Set API key
-export RIKUGAN_API_KEY="your-api-key"
+export SPECTRA_API_KEY="your-api-key"
 
 # Set model
-export RIKUGAN_MODEL="claude-sonnet-4-20250514"
+export SPECTRA_MODEL="claude-sonnet-4-20250514"
 
 # Set output directory
-export RIKUGAN_OUTPUT_DIR="/path/to/analysis"
+export SPECTRA_OUTPUT_DIR="/path/to/analysis"
 ```
 
 ### JADX Integration Settings
 
 **For JADX GUI:**
 1. Open JADX
-2. File → Settings → Plugins → Rikugan
+2. File → Settings → Plugins → Spectra
 3. Configure:
    - Enable on startup: Yes
    - Auto-analyze: Yes
@@ -356,7 +356,7 @@ python rikugan_jadx.py plugin-info
 
 # Expected output:
 # {
-#   "name": "Rikugan",
+#   "name": "Spectra",
 #   "version": "1.2.5",
 #   "environment": "standalone",
 #   "rikugan_available": true
@@ -375,7 +375,7 @@ echo "quit" | python rikugan_jadx.py interactive test.apk
 ### Verify JADX Integration
 
 ```bash
-# Check if JADX detects Rikugan plugin
+# Check if JADX detects Spectra plugin
 jadx --list-plugins | grep rikugan
 
 # Or manually check plugin directory
@@ -433,7 +433,7 @@ sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
 python rikugan_jadx.py analyze app.apk --jadx /path/to/jadx
 ```
 
-#### Issue 2: "Rikugan core not available"
+#### Issue 2: "Spectra core not available"
 
 **Solution:**
 ```bash
@@ -441,9 +441,9 @@ python rikugan_jadx.py analyze app.apk --jadx /path/to/jadx
 python -c "import rikugan; print(rikugan.__version__)"
 
 # If not found, add to PYTHONPATH
-export PYTHONPATH="/path/to/Rikugan:$PYTHONPATH"
+export PYTHONPATH="/path/to/Spectra:$PYTHONPATH"
 
-# Or install Rikugan dependencies
+# Or install Spectra dependencies
 pip install anthropic httpx cryptography
 ```
 
@@ -488,8 +488,8 @@ chmod -R 755 ~/.jadx/plugins/rikugan/
 
 ```bash
 # Enable debug logging
-export RIKUGAN_DEBUG=1
-export RIKUGAN_LOG_LEVEL=debug
+export SPECTRA_DEBUG=1
+export SPECTRA_LOG_LEVEL=debug
 
 # Run with verbose output
 python rikugan_jadx.py analyze app.apk -o ./output --verbose
@@ -546,7 +546,7 @@ sudo chmod +x /usr/local/bin/rikugan-jadx
 
 ```bash
 # Install in development mode
-cd /path/to/Rikugan
+cd /path/to/Spectra
 
 # Create development environment
 python -m venv venv
@@ -555,7 +555,7 @@ source venv/bin/activate
 # Install in editable mode
 pip install -e .
 
-# Plugin will use development version of Rikugan
+# Plugin will use development version of Spectra
 python rikugan_jadx.py analyze app.apk -o ./output
 ```
 
@@ -575,16 +575,16 @@ rm -f /usr/local/bin/rikugan-jadx
 rm -f ~/.jadx/plugins/rikugan/config.json
 
 # Note: IDA/Binary Ninja integration remains
-# To remove Rikugan entirely, uninstall from those platforms
+# To remove Spectra entirely, uninstall from those platforms
 ```
 
 ### Plugin-Only Removal
 
 ```bash
-# Keep Rikugan core, remove only JADX plugin
+# Keep Spectra core, remove only JADX plugin
 rm -rf ~/.jadx/plugins/rikugan
 
-# Rikugan will still work in IDA/Binary Ninja
+# Spectra will still work in IDA/Binary Ninja
 ```
 
 ## Upgrading
@@ -592,7 +592,7 @@ rm -rf ~/.jadx/plugins/rikugan
 ### Upgrade Plugin
 
 ```bash
-cd /path/to/Rikugan
+cd /path/to/Spectra
 git pull origin main  # Or download new version
 
 # Reinstall plugin
@@ -606,7 +606,7 @@ python install_jadx_plugin.py --force
 python rikugan_jadx.py --version
 
 # Compare with latest
-curl -s https://api.github.com/repos/alicangnll/Rikugan/releases/latest | grep tag_name
+curl -s https://api.github.com/repos/alicangnll/Spectra/releases/latest | grep tag_name
 ```
 
 ## Next Steps
@@ -641,8 +641,8 @@ After installation:
 
 For issues and questions:
 - **Documentation:** [JADX_README.md](JADX_README.md)
-- **Issues:** https://github.com/alicangnll/Rikugan/issues
-- **Discussions:** https://github.com/alicangnll/Rikugan/discussions
+- **Issues:** https://github.com/alicangnll/Spectra/issues
+- **Discussions:** https://github.com/alicangnll/Spectra/discussions
 
 ## Appendix: Installation Directory Structure
 
@@ -652,7 +652,7 @@ For issues and questions:
 ├── plugin.json              # JADX plugin metadata
 ├── config.json              # Plugin configuration
 ├── README.md                # This file
-└── rikugan/                  # Rikugan core module
+└── rikugan/                  # Spectra core module
     ├── jadx/
     │   ├── __init__.py
     │   └── api.py           # JADX API wrapper

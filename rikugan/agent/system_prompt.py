@@ -19,19 +19,19 @@ if TYPE_CHECKING:
 _HOST_PROMPTS = {"IDA Pro": IDA_BASE_PROMPT, "Binary Ninja": BINJA_BASE_PROMPT}
 _BASE_PROMPT = IDA_BASE_PROMPT  # backward compat alias
 
-# Maximum number of lines to load from RIKUGAN.md
+# Maximum number of lines to load from SPECTRA.md
 _MAX_MEMORY_LINES = 200
 
 
 def _load_persistent_memory(idb_dir: str = "") -> str | None:
-    """Load RIKUGAN.md from the IDB/BNDB directory (first 200 lines).
+    """Load SPECTRA.md from the IDB/BNDB directory (first 200 lines).
 
     The file acts as persistent cross-session memory for the agent.
     """
     if not idb_dir:
         return None
 
-    md_path = os.path.join(idb_dir, "RIKUGAN.md")
+    md_path = os.path.join(idb_dir, "SPECTRA.md")
     if not os.path.isfile(md_path):
         _PERSISTENT_MEMORY_CACHE.pop(md_path, None)
         return None
@@ -43,7 +43,7 @@ def _load_persistent_memory(idb_dir: str = "") -> str | None:
             getattr(stat_result, "st_size", None),
         )
     except OSError as e:
-        log_debug(f"Failed to stat RIKUGAN.md: {e}")
+        log_debug(f"Failed to stat SPECTRA.md: {e}")
         _PERSISTENT_MEMORY_CACHE.pop(md_path, None)
         return None
 
@@ -65,7 +65,7 @@ def _load_persistent_memory(idb_dir: str = "") -> str | None:
             log_debug(f"Loaded persistent memory from {md_path} ({len(lines)} lines)")
             return content
     except OSError as e:
-        log_debug(f"Failed to load RIKUGAN.md: {e}")
+        log_debug(f"Failed to load SPECTRA.md: {e}")
         _PERSISTENT_MEMORY_CACHE.pop(md_path, None)
 
     return None
@@ -90,7 +90,7 @@ def build_system_prompt(
     # Sanitized to prevent poisoned memory files from injecting instructions.
     memory = _load_persistent_memory(idb_dir or "")
     if memory:
-        parts.append(f"\n## Persistent Memory (RIKUGAN.md)\n{sanitize_memory(memory)}")
+        parts.append(f"\n## Persistent Memory (SPECTRA.md)\n{sanitize_memory(memory)}")
 
     # Binary context is untrusted — function names, strings, and metadata
     # originate from the analyzed binary and could contain adversarial content.

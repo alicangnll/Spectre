@@ -1,27 +1,27 @@
-"""IDA PluginForm wrapper around the shared Rikugan panel core."""
+"""IDA PluginForm wrapper around the shared Spectra panel core."""
 
 from __future__ import annotations
 
 import importlib
 from typing import Any
 
-from rikugan.ui.panel_core import RikuganPanelCore
-from rikugan.ui.qt_compat import QT_BINDING, QVBoxLayout, QWidget
+from spectra.ui.panel_core import SpectraPanelCore
+from spectra.ui.qt_compat import QT_BINDING, QVBoxLayout, QWidget
 
-from .actions import RikuganUIHooks
+from .actions import SpectraUIHooks
 from .session_controller import IdaSessionController
 
 idaapi = importlib.import_module("idaapi")
 
 
-class RikuganPanel(idaapi.PluginForm):
+class SpectraPanel(idaapi.PluginForm):
     """IDA dockable form embedding the shared panel core widget."""
 
     def __init__(self):
         super().__init__()
         self._form_widget: QWidget | None = None
         self._root: QWidget | None = None
-        self._core: RikuganPanelCore | None = None
+        self._core: SpectraPanelCore | None = None
 
     def OnCreate(self, form: Any) -> None:
         if QT_BINDING == "PyQt5":
@@ -39,9 +39,9 @@ class RikuganPanel(idaapi.PluginForm):
 
         root_layout = QVBoxLayout(self._root)
         root_layout.setContentsMargins(0, 0, 0, 0)
-        self._core = RikuganPanelCore(
+        self._core = SpectraPanelCore(
             controller_factory=IdaSessionController,
-            ui_hooks_factory=lambda panel_getter: RikuganUIHooks(panel_getter=panel_getter),
+            ui_hooks_factory=lambda panel_getter: SpectraUIHooks(panel_getter=panel_getter),
             parent=self._root,
         )
         root_layout.addWidget(self._core)
@@ -55,7 +55,7 @@ class RikuganPanel(idaapi.PluginForm):
 
     def show(self):
         return self.Show(
-            "Rikugan",
+            "Spectra",
             options=(idaapi.PluginForm.WOPN_TAB | idaapi.PluginForm.WOPN_PERSIST),
         )
 

@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.input_area — pure logic helpers."""
+"""Tests for spectra.ui.input_area — pure logic helpers."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from tests.qt_stubs import ensure_pyside6_stubs
 ensure_pyside6_stubs()
 
-from rikugan.ui.input_area import InputArea, _SkillPopup  # noqa: E402
+from spectra.ui.input_area import InputArea, _SkillPopup  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# Rikugan Chat Export
+# Spectra Chat Export
 
 - **Model**: claude-opus-4-6
 - **Exported**: 2026-03-02 12:30:21
@@ -9,7 +9,7 @@
 
 Solve this Virtualization challenge
 
-## Rikugan
+## Spectra
 
 
 
@@ -110,7 +110,7 @@ Imports:
     0x602588  strtoul
 ```
 
-## Rikugan
+## Spectra
 
 Good. I see `main` at `0x4005f4`, a format string "Call this program with %i arguments", and `%lu` for output. Let me decompile the key functions.
 
@@ -189,7 +189,7 @@ var_64 = var_60 - 1
 jump(*((sx.q(var_60) << 4) + 0x602408))
 ```
 
-## Rikugan
+## Spectra
 
 This is a virtualization-based obfuscation. The function at `0x4006d1` is the VM dispatcher. It reads bytecode from `0x602060` and uses a handler table at `0x602400`. Let me examine the VM data structures.
 
@@ -265,7 +265,7 @@ This is a virtualization-based obfuscation. The function at `0x4006d1` is the VM
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 I can see the VM handler table at `0x602400`. Each entry is 16 bytes: opcode (byte) + handler address. Let me extract the handler addresses and decompile them all. The opcodes and handlers are:
 
@@ -405,7 +405,7 @@ No function at 0x40080b
 No function at 0x400b77
 ```
 
-## Rikugan
+## Spectra
 
 The handlers aren't separate functions — they're all part of the VM dispatcher function. Let me read the full disassembly of the VM function and also read more bytecode.
 
@@ -475,7 +475,7 @@ The handlers aren't separate functions — they're all part of the VM dispatcher
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 The dispatcher uses interpolation search to find the handler. The actual handlers are at the jump targets. Let me read the disassembly of all the handler code blocks.
 
@@ -666,7 +666,7 @@ The dispatcher uses interpolation search to find the handler. The actual handler
   0x00400ca5  mov     qword [rsp-0x20], r12
 ```
 
-## Rikugan
+## Spectra
 
 Now I have all the handlers. This is a stack-based VM. Let me map out the instruction set:
 
@@ -737,7 +737,7 @@ Let me write a Python script to disassemble and emulate the VM bytecode.
   0x00602440  42 00 00 00 00 00 00 00  f2 0b 40 00 00 00 00 00  |B.........@.....|
 ```
 
-## Rikugan
+## Spectra
 
 Now I have all the bytecode. Let me write a comprehensive emulator to trace the VM execution and understand the computation.
 
@@ -1117,7 +1117,7 @@ VM Disassembly:
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Excellent! Now I have the full VM disassembly. Let me symbolically trace this to understand the computation.
 
@@ -1345,7 +1345,7 @@ local[3] = rotation_result
 
 ```
 
-## Rikugan
+## Spectra
 
 Good, I can see the pattern. Let me build a proper numeric emulator to compute the exact output for any input.
 
@@ -1595,7 +1595,7 @@ TypeError: unsupported operand type(s) for |: 'int' and 'tuple'
 
 ```
 
-## Rikugan
+## Spectra
 
 I need to fix the pointer resolution. The issue is that `resolve_ptr` for `input_base`/`output_base` returns a tuple, but it should return the actual pointer to the array. Let me fix the emulator.
 
@@ -1770,7 +1770,7 @@ ValueError: Store to local_base
 
 ```
 
-## Rikugan
+## Spectra
 
 The issue is that `local_base` with an offset needs to be treated as a `local` pointer after the offset is computed. Let me fix the pointer model.
 
@@ -1968,7 +1968,7 @@ VM(3735928559) = 8604545675861791222
 
 ```
 
-## Rikugan
+## Spectra
 
 The emulator works. Now let me verify against the actual binary. Let me check what the binary format expects and produce the final answer.
 
@@ -2316,7 +2316,7 @@ local vars after first 4 stores: ['0x34d870fb', '0xfffffffffdfcf9fb', '0x46bc4aa
 
 ```
 
-## Rikugan
+## Spectra
 
 I see local[3] gets stored twice - the second store overwrites it. Let me trace the full computation symbolically.
 
@@ -2525,7 +2525,7 @@ All match! Symbolic formula is correct.
 
 ```
 
-## Rikugan
+## Spectra
 
 The symbolic formula matches the VM emulator perfectly. Now let me annotate the binary with the solution and provide a clean summary.
 
@@ -2617,7 +2617,7 @@ Constants used:
 
 ```
 
-## Rikugan
+## Spectra
 
 Now let me rename and annotate the binary to reflect the analysis.
 
@@ -2699,7 +2699,7 @@ Set comment at 0x602060: VM bytecode start (896 bytes). Stack-based VM with 21 o
 Set comment at 0x602400: VM handler dispatch table. 21 entries, 16 bytes each: [opcode(8), handler_addr(8)]. Sorted by opcode for interpolation search.
 ```
 
-## Rikugan
+## Spectra
 
 Here's the complete solution:
 

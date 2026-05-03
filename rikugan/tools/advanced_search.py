@@ -1,4 +1,4 @@
-"""Advanced search tool for Rikugan.
+"""Advanced search tool for Spectra.
 
 Provides sophisticated search capabilities including function similarity,
 code pattern matching, string reference search, and combined criteria search.
@@ -203,7 +203,7 @@ class AdvancedSearchTool(Tool):
 
 
 def get_tool_definition() -> ToolDefinition:
-    """Return tool definition for Rikugan tool registry."""
+    """Return tool definition for Spectra tool registry."""
     return ToolDefinition(
         name=AdvancedSearchTool.name,
         description=AdvancedSearchTool.description,

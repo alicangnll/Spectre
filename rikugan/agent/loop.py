@@ -12,7 +12,7 @@ import traceback
 from collections.abc import Generator
 from typing import Any
 
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.errors import (
     CancellationError,
     ProviderError,
@@ -55,7 +55,7 @@ from .turn import TurnEvent, TurnEventType
 _MIN_CONTEXT_WINDOW_TOKENS = 8_000
 
 _MEMORY_HEADER = (
-    "# Rikugan Persistent Memory\n\n"
+    "# Spectra Persistent Memory\n\n"
     "This file persists across sessions. "
     "The agent reads the first 200 lines into its system prompt.\n\n"
 )
@@ -111,7 +111,7 @@ def _parse_user_command(user_message: str) -> _ParsedCommand:
 
 
 def append_to_memory_file(md_path: str, content: str) -> None:
-    """Create RIKUGAN.md with header if missing, then append *content*."""
+    """Create SPECTRA.md with header if missing, then append *content*."""
     if not os.path.exists(md_path):
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(_MEMORY_HEADER)
@@ -214,7 +214,7 @@ _SAVE_MEMORY_SCHEMA = {
     "function": {
         "name": "save_memory",
         "description": (
-            "Save a fact to persistent memory (RIKUGAN.md). "
+            "Save a fact to persistent memory (SPECTRA.md). "
             "Use this to remember important findings across sessions: "
             "function purposes, naming conventions, architecture notes, "
             "or analysis results that would be useful in future sessions."
@@ -354,7 +354,7 @@ class AgentLoop:
         self,
         provider: LLMProvider,
         tool_registry: ToolRegistry,
-        config: RikuganConfig,
+        config: SpectraConfig,
         session: SessionState,
         skill_registry: SkillRegistry | None = None,
         host_name: str = "IDA Pro",
@@ -596,7 +596,7 @@ class AgentLoop:
         return _parse_plan_impl(text)
 
     def _handle_memory_command(self) -> Generator[TurnEvent, None, None]:
-        """Show current RIKUGAN.md contents in chat."""
+        """Show current SPECTRA.md contents in chat."""
         idb_dir = ""
         if self.session.idb_path:
             idb_dir = os.path.dirname(self.session.idb_path)
@@ -604,11 +604,11 @@ class AgentLoop:
             yield TurnEvent.text_done("No IDB/BNDB path set — persistent memory is not available.")
             return
 
-        md_path = os.path.join(idb_dir, "RIKUGAN.md")
+        md_path = os.path.join(idb_dir, "SPECTRA.md")
         if not os.path.isfile(md_path):
             yield TurnEvent.text_done(
                 f"No persistent memory file found.\n\n"
-                f"A `RIKUGAN.md` file will be created in `{idb_dir}` "
+                f"A `SPECTRA.md` file will be created in `{idb_dir}` "
                 f"when the agent first uses `save_memory`."
             )
             return
@@ -617,11 +617,11 @@ class AgentLoop:
             with open(md_path, encoding="utf-8") as f:
                 content = f.read()
             if not content.strip():
-                yield TurnEvent.text_done("RIKUGAN.md exists but is empty.")
+                yield TurnEvent.text_done("SPECTRA.md exists but is empty.")
             else:
                 yield TurnEvent.text_done(f"**Persistent Memory** (`{md_path}`):\n\n{content}")
         except OSError as e:
-            yield TurnEvent.error_event(f"Failed to read RIKUGAN.md: {e}")
+            yield TurnEvent.error_event(f"Failed to read SPECTRA.md: {e}")
 
     def _handle_undo_command(self, raw_cmd: str) -> Generator[TurnEvent, None, None]:
         """Undo the last N mutations."""
@@ -742,7 +742,7 @@ class AgentLoop:
             issues.append("No IDB/BNDB path — persistent memory disabled")
 
         # Format output
-        lines = ["**Rikugan Doctor**\n"]
+        lines = ["**Spectra Doctor**\n"]
         if ok:
             lines.append("**OK:**")
             for item in ok:
@@ -1219,14 +1219,14 @@ class AgentLoop:
                 content = "Error: No IDB/BNDB path set; cannot determine where to save memory."
                 is_err = True
             else:
-                md_path = os.path.join(idb_dir, "RIKUGAN.md")
+                md_path = os.path.join(idb_dir, "SPECTRA.md")
                 try:
                     append_to_memory_file(md_path, f"- [{category}] {fact}\n")
-                    content = f"Saved to RIKUGAN.md: [{category}] {fact}"
+                    content = f"Saved to SPECTRA.md: [{category}] {fact}"
                     is_err = False
                     log_info(f"save_memory: [{category}] {fact[:80]}")
                 except OSError as e:
-                    content = f"Error writing RIKUGAN.md: {e}"
+                    content = f"Error writing SPECTRA.md: {e}"
                     is_err = True
         tr = ToolResult(tool_call_id=tc.id, name=tc.name, content=content, is_error=is_err)
         yield TurnEvent.tool_result_event(tc.id, tc.name, content, is_err)

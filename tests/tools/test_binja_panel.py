@@ -1,4 +1,4 @@
-"""Tests for rikugan.binja.ui.panel — Binary Ninja QWidget wrapper."""
+"""Tests for spectra.binja.ui.panel — Binary Ninja QWidget wrapper."""
 
 from __future__ import annotations
 
@@ -10,27 +10,27 @@ from unittest.mock import MagicMock
 from tests.qt_stubs import ensure_pyside6_stubs, _qt_class
 ensure_pyside6_stubs()
 
-# Stub out binaryninja and the heavy rikugan modules panel.py imports
+# Stub out binaryninja and the heavy spectra modules panel.py imports
 sys.modules.setdefault("binaryninja", types.ModuleType("binaryninja"))
 
-_panel_core_mod = types.ModuleType("rikugan.ui.panel_core")
-_panel_core_mod.RikuganPanelCore = _qt_class("RikuganPanelCore")
-sys.modules.setdefault("rikugan.ui.panel_core", _panel_core_mod)
+_panel_core_mod = types.ModuleType("spectra.ui.panel_core")
+_panel_core_mod.SpectraPanelCore = _qt_class("SpectraPanelCore")
+sys.modules.setdefault("spectra.ui.panel_core", _panel_core_mod)
 
-_session_mod = types.ModuleType("rikugan.binja.ui.session_controller")
+_session_mod = types.ModuleType("spectra.binja.ui.session_controller")
 _session_mod.BinaryNinjaSessionController = MagicMock()
-sys.modules["rikugan.binja.ui.session_controller"] = _session_mod
+sys.modules["spectra.binja.ui.session_controller"] = _session_mod
 
-from rikugan.binja.ui.panel import RikuganPanel  # noqa: E402
+from spectra.binja.ui.panel import SpectraPanel  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_panel() -> RikuganPanel:
-    """Create a RikuganPanel bypassing __init__ and inject a mock _core."""
-    panel = object.__new__(RikuganPanel)
+def _make_panel() -> SpectraPanel:
+    """Create a SpectraPanel bypassing __init__ and inject a mock _core."""
+    panel = object.__new__(SpectraPanel)
     panel._core = MagicMock()
     panel.parent = MagicMock(return_value=None)
     panel.setParent = MagicMock()
@@ -41,7 +41,7 @@ def _make_panel() -> RikuganPanel:
 # explicit delegation methods
 # ---------------------------------------------------------------------------
 
-class TestRikuganPanelDelegation(unittest.TestCase):
+class TestSpectraPanelDelegation(unittest.TestCase):
     def test_prefill_delegates_to_core(self):
         panel = _make_panel()
         panel.prefill_input("hello", auto_submit=True)
@@ -69,7 +69,7 @@ class TestRikuganPanelDelegation(unittest.TestCase):
 # mount — layout integration logic
 # ---------------------------------------------------------------------------
 
-class TestRikuganPanelMount(unittest.TestCase):
+class TestSpectraPanelMount(unittest.TestCase):
     def test_mount_adds_to_existing_layout_when_not_in_it(self):
         panel = _make_panel()
         parent = MagicMock()

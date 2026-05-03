@@ -1,10 +1,10 @@
-"""Tests for rikugan.core.crypto — API key encryption."""
+"""Tests for spectra.core.crypto — API key encryption."""
 
 from __future__ import annotations
 
 import pytest
 
-from rikugan.core.crypto import decrypt_keys, encrypt_keys, is_available
+from spectra.core.crypto import decrypt_keys, encrypt_keys, is_available
 
 
 @pytest.mark.skipif(not is_available(), reason="cryptography not installed")

@@ -12,18 +12,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.core.types import (
+from spectra.core.types import (
     Message, ModelInfo, ProviderCapabilities, Role, ToolCall,
     StreamChunk, TokenUsage,
 )
-from rikugan.core.config import RikuganConfig
-from rikugan.agent.loop import AgentLoop, BackgroundAgentRunner
-from rikugan.agent.exploration_mode import ExplorationState
-from rikugan.agent.turn import TurnEventType
-from rikugan.tools.base import ParameterSchema, ToolDefinition
-from rikugan.tools.registry import ToolRegistry
-from rikugan.state.session import SessionState
-from rikugan.providers.base import LLMProvider
+from spectra.core.config import SpectraConfig
+from spectra.agent.loop import AgentLoop, BackgroundAgentRunner
+from spectra.agent.exploration_mode import ExplorationState
+from spectra.agent.turn import TurnEventType
+from spectra.tools.base import ParameterSchema, ToolDefinition
+from spectra.tools.registry import ToolRegistry
+from spectra.state.session import SessionState
+from spectra.providers.base import LLMProvider
 
 
 class MockProvider(LLMProvider):
@@ -108,7 +108,7 @@ def _tool_call_response(tool_name: str, args: Dict[str, Any], call_id: str = "ca
 
 class TestAgentLoop(unittest.TestCase):
     def _make_loop(self, provider: MockProvider, tools: Optional[ToolRegistry] = None) -> AgentLoop:
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False  # Skip IDA API calls
         session = SessionState(provider_name="mock", model_name="mock-model")
         return AgentLoop(
@@ -134,7 +134,7 @@ class TestAgentLoop(unittest.TestCase):
 
     def test_session_records_messages(self):
         provider = MockProvider(responses=[_text_response("Hi there")])
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -234,7 +234,7 @@ class TestAgentLoop(unittest.TestCase):
 
     def test_usage_tracked(self):
         provider = MockProvider(responses=[_text_response("Hi")])
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -246,7 +246,7 @@ class TestAgentLoop(unittest.TestCase):
 
     def test_usage_fallback_when_provider_omits_usage(self):
         provider = MockProvider(responses=[_text_response_no_usage("Hi")])
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -284,7 +284,7 @@ class TestAgentLoop(unittest.TestCase):
 class TestBackgroundAgentRunner(unittest.TestCase):
     def test_run_in_background(self):
         provider = MockProvider(responses=[_text_response("Background response")])
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         session = SessionState()
         loop = AgentLoop(provider, ToolRegistry(), config, session)
@@ -309,7 +309,7 @@ class TestSkillInvocation(unittest.TestCase):
     def test_skill_rewrite(self):
         """Test that /slug messages get rewritten with skill body."""
         import tempfile
-        from rikugan.skills.registry import SkillRegistry
+        from spectra.skills.registry import SkillRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             skill_dir = os.path.join(tmpdir, "test-skill")
@@ -321,7 +321,7 @@ class TestSkillInvocation(unittest.TestCase):
             registry.discover()
 
             provider = MockProvider(responses=[_text_response("Skill response")])
-            config = RikuganConfig()
+            config = SpectraConfig()
             config.auto_context = False
             session = SessionState()
             loop = AgentLoop(provider, ToolRegistry(), config, session, skill_registry=registry)
@@ -342,7 +342,7 @@ class TestProfileEnforcement(unittest.TestCase):
         self, profile_name: str, provider: MockProvider,
         tools: ToolRegistry = None, custom_profiles: dict = None,
     ) -> AgentLoop:
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         config.active_profile = profile_name
         if custom_profiles:
@@ -357,7 +357,7 @@ class TestProfileEnforcement(unittest.TestCase):
 
     def test_private_profile_skips_binary_info(self):
         """Private profile should not call get_binary_info."""
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = True  # Enable auto-context
         config.active_profile = "private"
 
@@ -396,7 +396,7 @@ class TestProfileEnforcement(unittest.TestCase):
         ))
 
         # Use private profile which has all ioc_filters enabled
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         config.active_profile = "private"
         session = SessionState(provider_name="mock", model_name="mock-model")
@@ -470,7 +470,7 @@ class TestProfileEnforcement(unittest.TestCase):
                 "ioc_filters": {"hashes": True, "ipv4": False, "urls": False},
             }
         }
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         config.active_profile = "hash-only"
         config.custom_profiles = custom_profiles
@@ -514,7 +514,7 @@ class TestProfileEnforcement(unittest.TestCase):
                 ],
             }
         }
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         config.active_profile = "custom-rules"
         config.custom_profiles = custom_profiles
@@ -547,7 +547,7 @@ class TestProfileEnforcement(unittest.TestCase):
             category="test",
         ))
 
-        config = RikuganConfig()
+        config = SpectraConfig()
         config.auto_context = False
         config.active_profile = "default"
         session = SessionState(provider_name="mock", model_name="mock-model")

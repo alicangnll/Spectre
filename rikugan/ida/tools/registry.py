@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from rikugan.core.host import HAS_HEXRAYS
-from rikugan.core.thread_safety import idasync
-from rikugan.tools.registry import ToolRegistry
+from spectra.core.host import HAS_HEXRAYS
+from spectra.core.thread_safety import idasync
+from spectra.tools.registry import ToolRegistry
 
 from . import (
     advanced_decomp,

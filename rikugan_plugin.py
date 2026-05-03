@@ -1,7 +1,7 @@
-"""Rikugan - Intelligent Reverse-engineering Integrated System.
+"""Spectra - Intelligent Reverse-engineering Integrated System.
 
 IDA Pro plugin entry point.
-All rikugan.* imports are deferred to avoid crashes during plugin enumeration.
+All spectra.* imports are deferred to avoid crashes during plugin enumeration.
 """
 
 import builtins
@@ -40,12 +40,12 @@ def _guarded_import(*args, **kwargs):
         _import_guard.active = False
 
 
-_guarded_import._rikugan_guarded = True  # marker to avoid double-wrapping
-if not getattr(builtins.__import__, "_rikugan_guarded", False):
+_guarded_import._spectra_guarded = True  # marker to avoid double-wrapping
+if not getattr(builtins.__import__, "_spectra_guarded", False):
     builtins.__import__ = _guarded_import
 
 
-class RikuganPlugmod(idaapi.plugmod_t):
+class SpectraPlugmod(idaapi.plugmod_t):
     """Per-database plugin module."""
 
     def __init__(self):
@@ -57,14 +57,14 @@ class RikuganPlugmod(idaapi.plugmod_t):
         return True
 
     def term(self) -> None:
-        _log("RikuganPlugmod.term() called")
+        _log("SpectraPlugmod.term() called")
         panel = self._panel
         self._panel = None
         if panel is not None:
             try:
                 panel.close()
             except Exception as e:
-                idaapi.msg(f"[Rikugan] Panel close error: {e}\n")
+                idaapi.msg(f"[Spectra] Panel close error: {e}\n")
         # Flush deferred widget deletions while Python is still alive.
         # Without this, orphaned PySide6-wrapped QFrames survive until
         # QApplication::~QApplication() where their C++ destructors call
@@ -95,14 +95,14 @@ class RikuganPlugmod(idaapi.plugmod_t):
             saved_import = builtins.__import__
             builtins.__import__ = importlib.__import__
             try:
-                RikuganPanel = importlib.import_module("rikugan.ida.ui.panel").RikuganPanel
+                SpectraPanel = importlib.import_module("spectra.ida.ui.panel").SpectraPanel
             finally:
                 builtins.__import__ = saved_import
 
             _log("_toggle_panel: panel module loaded")
 
-            _log("_toggle_panel: creating RikuganPanel()")
-            self._panel = RikuganPanel()
+            _log("_toggle_panel: creating SpectraPanel()")
+            self._panel = SpectraPanel()
             _log("_toggle_panel: calling show()")
             self._panel.show()
             _log("_toggle_panel: done")
@@ -110,46 +110,46 @@ class RikuganPlugmod(idaapi.plugmod_t):
             import sys
             import traceback
             tb_str = traceback.format_exc()
-            idaapi.msg(f"[Rikugan] Failed to open panel: {e}\n{tb_str}\n")
+            idaapi.msg(f"[Spectra] Failed to open panel: {e}\n{tb_str}\n")
             try:
-                importlib.import_module("rikugan.core.logging").log_error(
+                importlib.import_module("spectra.core.logging").log_error(
                     f"Failed to open panel: {e}\n{tb_str}"
                 )
             except Exception:
                 try:
                     import os
-                    log_path = os.path.join(os.path.expanduser("~"), ".idapro", "rikugan", "rikugan_debug.log")
+                    log_path = os.path.join(os.path.expanduser("~"), ".idapro", "spectra", "spectra_debug.log")
                     with open(log_path, "a") as f:
-                        f.write(f"[Rikugan CRASH] {e}\n{tb_str}\n")
+                        f.write(f"[Spectra CRASH] {e}\n{tb_str}\n")
                         f.flush()
                         os.fsync(f.fileno())
                 except Exception:
-                    print(f"[Rikugan CRASH] {e}\n{tb_str}", file=sys.stderr)
+                    print(f"[Spectra CRASH] {e}\n{tb_str}", file=sys.stderr)
 
 
-class RikuganPlugin(idaapi.plugin_t):
+class SpectraPlugin(idaapi.plugin_t):
     flags = idaapi.PLUGIN_MULTI | idaapi.PLUGIN_FIX
     comment = "Intelligent Reverse-engineering Integrated System"
     help = ""
-    wanted_name = "Rikugan"
+    wanted_name = "Spectra"
     wanted_hotkey = "Ctrl+Shift+I"
 
     def init(self) -> idaapi.plugmod_t:
-        _ver = importlib.import_module("rikugan.constants").PLUGIN_VERSION
-        idaapi.msg(f"[Rikugan] Plugin loaded (v{_ver})\n")
+        _ver = importlib.import_module("spectra.constants").PLUGIN_VERSION
+        idaapi.msg(f"[Spectra] Plugin loaded (v{_ver})\n")
 
-        plugmod_instance = RikuganPlugmod()
+        plugmod_instance = SpectraPlugmod()
         return plugmod_instance
 
 
 def _log(msg: str) -> None:
     """Best-effort log to IDA output and debug file."""
-    idaapi.msg(f"[Rikugan] {msg}\n")
+    idaapi.msg(f"[Spectra] {msg}\n")
     try:
-        importlib.import_module("rikugan.core.logging").log_trace(msg)
+        importlib.import_module("spectra.core.logging").log_trace(msg)
     except Exception as e:
-        import sys; sys.stderr.write(f"[Rikugan] log_trace unavailable during bootstrap: {e}\n")
+        import sys; sys.stderr.write(f"[Spectra] log_trace unavailable during bootstrap: {e}\n")
 
 
 def PLUGIN_ENTRY():  # noqa: N802
-    return RikuganPlugin()
+    return SpectraPlugin()

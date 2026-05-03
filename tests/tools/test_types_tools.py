@@ -1,4 +1,4 @@
-"""Tests for rikugan.ida.tools.types_tools — IDA type engineering tools."""
+"""Tests for spectra.ida.tools.types_tools — IDA type engineering tools."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from tests.mocks.ida_mock import install_ida_mocks
 
 install_ida_mocks()
 
-import rikugan.ida.tools.types_tools as types_tools
-from rikugan.core.errors import ToolError
+import spectra.ida.tools.types_tools as types_tools
+from spectra.core.errors import ToolError
 
 
 # ---------------------------------------------------------------------------

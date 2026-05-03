@@ -172,7 +172,7 @@ class InputArea(QPlainTextEdit):
         if enabled:
             self.setPlaceholderText("Ask about this binary... (/ for skills, /modify to patch)")
         else:
-            self.setPlaceholderText("Rikugan is thinking...")
+            self.setPlaceholderText("Spectra is thinking...")
 
     # ------------------------------------------------------------------
     # Autocomplete

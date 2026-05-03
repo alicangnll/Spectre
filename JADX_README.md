@@ -1,9 +1,9 @@
-# Rikugan JADX Plugin - Hybrid Android APK Analysis System
+# Spectra JADX Plugin - Hybrid Android APK Analysis System
 
-Rikugan's multi-mode Android APK analysis system that works as:
+Spectra's multi-mode Android APK analysis system that works as:
 - **Standalone CLI tool** - Independent analysis from terminal
-- **IDA Pro integration** - Embedded within IDA Pro's Rikugan
-- **Binary Ninja integration** - Embedded within Binary Ninja's Rikugan
+- **IDA Pro integration** - Embedded within IDA Pro's Spectra
+- **Binary Ninja integration** - Embedded within Binary Ninja's Spectra
 - **JADX native plugin** - Loadable inside JADX Decompiler
 
 ## Features
@@ -30,8 +30,8 @@ Rikugan's multi-mode Android APK analysis system that works as:
 ### Quick Install (All Modes)
 
 ```bash
-# Clone or download Rikugan
-cd /path/to/Rikugan
+# Clone or download Spectra
+cd /path/to/Spectra
 
 # Run auto-installer (detects JADX, IDA, Binary Ninja)
 python install_jadx_plugin.py
@@ -39,8 +39,8 @@ python install_jadx_plugin.py
 
 This will:
 1. Detect installed platforms (JADX, IDA Pro, Binary Ninja)
-2. Install Rikugan as JADX native plugin
-3. Enable integration with IDA/Binary Ninja Rikugan
+2. Install Spectra as JADX native plugin
+3. Enable integration with IDA/Binary Ninja Spectra
 4. Set up configuration files and dependencies
 
 ### Manual Installation by Mode
@@ -62,7 +62,7 @@ sudo ln -s $(pwd)/jadx-1.4.7/bin/jadx /usr/local/bin/jadx
 
 **Install as JADX Plugin:**
 ```bash
-cd /path/to/Rikugan
+cd /path/to/Spectra
 
 # Run auto-installer
 python install_jadx_plugin.py
@@ -75,7 +75,7 @@ cp -r rikugan ~/.jadx/plugins/rikugan/
 # Create plugin config
 cat > ~/.jadx/plugins/rikugan/plugin.json << 'EOF'
 {
-  "name": "Rikugan",
+  "name": "Spectra",
   "version": "1.2.5",
   "description": "AI-powered Android APK analysis assistant",
   "author": "Ali Can Gönüllü",
@@ -88,7 +88,7 @@ EOF
 #### Mode 2: Standalone CLI Tool
 
 ```bash
-cd /path/to/Rikugan
+cd /path/to/Spectra
 
 # Copy to PATH
 cp rikugan_jadx.py ~/.local/bin/rikugan-jadx
@@ -101,11 +101,11 @@ python rikugan_jadx.py analyze app.apk -o ./decompiled
 #### Mode 3: IDA Pro Integration
 
 ```bash
-# Rikugan must be installed in IDA Pro first
+# Spectra must be installed in IDA Pro first
 # JADX integration is automatic through /jadx skill
 
 # In IDA Pro:
-Ctrl+Shift+I → Opens Rikugan panel
+Ctrl+Shift+I → Opens Spectra panel
 /jadx Analyze this APK at /path/to/app.apk
 /jadx What permissions does this app request?
 /jadx Find the MainActivity class
@@ -114,11 +114,11 @@ Ctrl+Shift+I → Opens Rikugan panel
 #### Mode 4: Binary Ninja Integration
 
 ```bash
-# Rikugan must be installed in Binary Ninja first
+# Spectra must be installed in Binary Ninja first
 # JADX integration is automatic through /jadx skill
 
 # In Binary Ninja:
-Tools → Rikugan → Open Chat
+Tools → Spectra → Open Chat
 /jadx Analyze this APK at /path/to/app.apk
 /jadx Search for hardcoded API keys
 /jadx Check for native libraries
@@ -153,25 +153,25 @@ python rikugan_jadx.py plugin-info
 
 **From JADX GUI:**
 ```
-Tools → Rikugan → Analyze APK
-Tools → Rikugan → Search Strings
-Tools → Rikugan → Security Assessment
-Tools → Rikugan → Interactive Mode
+Tools → Spectra → Analyze APK
+Tools → Spectra → Search Strings
+Tools → Spectra → Security Assessment
+Tools → Spectra → Interactive Mode
 ```
 
 **From JADX CLI:**
 ```bash
-# Normal JADX with Rikugan plugin
+# Normal JADX with Spectra plugin
 jadx --plugin rikugan app.apk -d output
 
-# Or call Rikugan directly
+# Or call Spectra directly
 python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
 ```
 
 ### IDA Pro Integration Mode
 
 ```
-# In IDA Pro, open Rikugan panel (Ctrl+Shift+I)
+# In IDA Pro, open Spectra panel (Ctrl+Shift+I)
 /jadx Analyze this APK at /path/to/app.apk
 /jadx What are the main entry points?
 /jadx Find suspicious permissions
@@ -181,7 +181,7 @@ python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
 ### Binary Ninja Integration Mode
 
 ```
-# In Binary Ninja, open Rikugan (Ctrl+Shift+I)
+# In Binary Ninja, open Spectra (Ctrl+Shift+I)
 /jadx Analyze this APK at /path/to/app.apk
 /jadx Check for hardcoded secrets
 /jadx Analyze network communication
@@ -330,7 +330,7 @@ python rikugan_jadx.py interactive app.apk
 > Analyze SSL certificate validation
 ```
 
-## Integration with Rikugan Ecosystem
+## Integration with Spectra Ecosystem
 
 ### Findings Bookmarking
 
@@ -489,8 +489,8 @@ rikugan_jadx.py (Hybrid Plugin)
 
 - **JADX:** 1.4.7+
 - **Python:** 3.10+
-- **IDA Pro:** 7.5+ (with Rikugan installed)
-- **Binary Ninja:** 3.4+ (with Rikugan installed)
+- **IDA Pro:** 7.5+ (with Spectra installed)
+- **Binary Ninja:** 3.4+ (with Spectra installed)
 - **OS:** Linux, macOS, Windows
 
 ## License
@@ -499,8 +499,8 @@ MIT License - See LICENSE file for details
 
 ## Support & Contributing
 
-- **Issues:** https://github.com/alicangnll/Rikugan/issues
-- **Documentation:** https://github.com/alicangnll/Rikugan/tree/main/docs
+- **Issues:** https://github.com/alicangnll/Spectra/issues
+- **Documentation:** https://github.com/alicangnll/Spectra/tree/main/docs
 - **Contributing:** Pull requests welcome!
 
 ## Changelog

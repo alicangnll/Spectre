@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Rikugan installer for Binary Ninja on Windows
+:: Spectra installer for Binary Ninja on Windows
 :: Usage: install_binaryninja.bat [BN_USER_DIR]
 
 set "SCRIPT_DIR=%~dp0"
@@ -102,12 +102,12 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-echo [+] Rikugan Binary Ninja plugin installed successfully!
+echo [+] Spectra Binary Ninja plugin installed successfully!
 echo [*] Plugin: %PLUGIN_LINK%
 echo [*] Config: %CONFIG_DIR%\
 echo [*] Skills: %SKILLS_DIR%\
 echo.
-echo [*] Restart Binary Ninja and open Tools ^> Rikugan ^> Open Panel.
+echo [*] Restart Binary Ninja and open Tools ^> Spectra ^> Open Panel.
 
 endlocal
 exit /b 0

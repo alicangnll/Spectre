@@ -1,4 +1,4 @@
-"""MCP server configuration: load and save mcp.json from the Rikugan config directory."""
+"""MCP server configuration: load and save mcp.json from the Spectra config directory."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ..core.logging import log_debug, log_error
 
 
 def _default_mcp_config_path() -> str:
-    """Compute the default MCP config path without instantiating RikuganConfig."""
+    """Compute the default MCP config path without instantiating SpectraConfig."""
     return os.path.join(get_user_config_base_dir(), CONFIG_DIR_NAME, MCP_CONFIG_FILE)
 
 
@@ -29,10 +29,10 @@ class MCPServerConfig:
 
 
 def load_mcp_config(path: str = "") -> list[MCPServerConfig]:
-    """Load MCP server configurations from the Rikugan config directory.
+    """Load MCP server configurations from the Spectra config directory.
 
     When *path* is not given, computes the default from the host config
-    base directory (e.g. ``~/.idapro/rikugan/mcp.json``).
+    base directory (e.g. ``~/.idapro/spectra/mcp.json``).
 
     Returns an empty list if the file doesn't exist (graceful no-op).
     """

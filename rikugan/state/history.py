@@ -10,7 +10,7 @@ import os
 from typing import Any
 
 from ..constants import SESSION_SCHEMA_VERSION
-from ..core.config import RikuganConfig
+from ..core.config import SpectraConfig
 from ..core.logging import log_debug
 from ..core.types import Message
 from .session import SessionState
@@ -44,7 +44,7 @@ def _build_summary_data(data: dict[str, Any], fallback_id: str) -> dict[str, Any
 class SessionHistory:
     """Manages saved sessions on disk."""
 
-    def __init__(self, config: RikuganConfig):
+    def __init__(self, config: SpectraConfig):
         self._dir = os.path.join(config.checkpoints_dir, "sessions")
         os.makedirs(self._dir, exist_ok=True)
 

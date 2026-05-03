@@ -1,6 +1,6 @@
 {
   "pluginmetadataversion": 2,
-  "name": "Rikugan",
+  "name": "Spectra",
   "author": "alicangnll",
   "type": [
     "ui",
@@ -9,8 +9,8 @@
   "api": [
     "python3"
   ],
-  "description": "Rikugan reverse engineering companion for Binary Ninja.",
-  "longdescription": "Rikugan embeds an agentic LLM workflow into Binary Ninja with native tooling, skills, and an integrated chat sidebar. Supports multiple LLM providers (Anthropic, OpenAI, Google, Ollama) and MCP tool servers.",
+  "description": "Spectra reverse engineering companion for Binary Ninja.",
+  "longdescription": "Spectra embeds an agentic LLM workflow into Binary Ninja with native tooling, skills, and an integrated chat sidebar. Supports multiple LLM providers (Anthropic, OpenAI, Google, Ollama) and MCP tool servers.",
   "license": {
     "name": "MIT",
     "text": "See project repository."
@@ -34,7 +34,7 @@
     "Linux": "Clone/symlink this repository into ~/.binaryninja/plugins/rikugan",
     "Windows": "Clone/symlink this repository into %APPDATA%/Binary Ninja/plugins/rikugan"
   },
-  "projectUrl": "https://github.com/alicangnll/Rikugan",
+  "projectUrl": "https://github.com/alicangnll/Spectra",
   "version": "1.2.1",
   "minimumbinaryninjaversion": 3164
 }

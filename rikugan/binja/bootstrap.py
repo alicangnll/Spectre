@@ -1,6 +1,6 @@
 """Binary Ninja plugin bootstrap: sidebar, commands, and panel orchestration.
 
-Extracted from the root ``rikugan_binaryninja.py`` entry point so the entry
+Extracted from the root ``spectra_binaryninja.py`` entry point so the entry
 point remains a thin host-loader shim. All runtime orchestration lives here.
 """
 
@@ -21,11 +21,11 @@ from ..core.host import get_database_path, set_binary_ninja_context
 from ..core.logging import log_debug
 from .tools.fn_utils import get_function_at, get_function_name
 from .ui.actions import ACTION_DEFS, build_context
-from .ui.panel import RikuganPanel
+from .ui.panel import SpectraPanel
 
-RIKUGAN_SIDEBAR_NAME = "Rikugan"
+SPECTRA_SIDEBAR_NAME = "Spectra"
 
-_PANEL: RikuganPanel | None = None
+_PANEL: SpectraPanel | None = None
 _LAST_BV: Any = None
 _REGISTERED = False
 _SIDEBAR_REGISTERED = False
@@ -121,25 +121,25 @@ def _active_sidebar() -> Any:
         return None
 
 
-def _get_sidebar_panel(create_if_missing: bool = True) -> RikuganPanel | None:
+def _get_sidebar_panel(create_if_missing: bool = True) -> SpectraPanel | None:
     sidebar = _active_sidebar()
     if sidebar is None:
         return None
     try:
-        widget = sidebar.widget(RIKUGAN_SIDEBAR_NAME)
+        widget = sidebar.widget(SPECTRA_SIDEBAR_NAME)
         if widget is None and create_if_missing:
-            sidebar.activate(RIKUGAN_SIDEBAR_NAME)
-            widget = sidebar.widget(RIKUGAN_SIDEBAR_NAME)
+            sidebar.activate(SPECTRA_SIDEBAR_NAME)
+            widget = sidebar.widget(SPECTRA_SIDEBAR_NAME)
         if widget is not None and hasattr(widget, "panel"):
             panel = widget.panel
-            if isinstance(panel, RikuganPanel):
+            if isinstance(panel, SpectraPanel):
                 return panel
     except Exception:
         return None
     return None
 
 
-def _ensure_panel(bv: Any, address: int | None = None) -> RikuganPanel:
+def _ensure_panel(bv: Any, address: int | None = None) -> SpectraPanel:
     global _PANEL
     _update_context(bv, address)
 
@@ -150,7 +150,7 @@ def _ensure_panel(bv: Any, address: int | None = None) -> RikuganPanel:
 
     # Fallback: floating widget
     if _PANEL is None:
-        _PANEL = RikuganPanel()
+        _PANEL = SpectraPanel()
 
     _PANEL.show()
     try:
@@ -202,14 +202,14 @@ def _register_sidebar() -> None:
 
     from PySide6.QtGui import QImage
 
-    class RikuganSidebarWidget(SidebarWidget):  # type: ignore[misc, valid-type]
+    class SpectraSidebarWidget(SidebarWidget):  # type: ignore[misc, valid-type]
         def __init__(self, view_frame, binary_view):
-            super().__init__(RIKUGAN_SIDEBAR_NAME)
+            super().__init__(SPECTRA_SIDEBAR_NAME)
             self.view_frame = view_frame
             self.binary_view = binary_view
             # Ensure host DB context exists before panel/controller construction.
             _update_context(binary_view, None)
-            self.panel = RikuganPanel()
+            self.panel = SpectraPanel()
             self.panel.mount(self)
 
         def notifyViewLocationChanged(self, view, location):  # type: ignore[override]
@@ -224,24 +224,24 @@ def _register_sidebar() -> None:
             try:
                 self.panel.shutdown()
             except Exception as e:
-                log_debug(f"RikuganSidebarWidget.closing panel.shutdown failed: {e}")
+                log_debug(f"SpectraSidebarWidget.closing panel.shutdown failed: {e}")
 
-    # Resolve assets directory relative to the project root (two levels up from rikugan/binja/)
+    # Resolve assets directory relative to the project root (two levels up from spectra/binja/)
     _assets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets")
 
-    class RikuganSidebarWidgetType(SidebarWidgetType):  # type: ignore[misc, valid-type]
+    class SpectraSidebarWidgetType(SidebarWidgetType):  # type: ignore[misc, valid-type]
         def __init__(self):
-            icon = QImage(os.path.join(_assets_dir, "rikugan_icon_light.png"))
+            icon = QImage(os.path.join(_assets_dir, "spectra_icon_light.png"))
             if icon.isNull():
                 icon = QImage(":/icons/sidekick-assistant.png")
             if icon.isNull():
                 icon = QImage(os.path.join(_assets_dir, "chat.png"))
-            SidebarWidgetType.__init__(self, icon, RIKUGAN_SIDEBAR_NAME)
+            SidebarWidgetType.__init__(self, icon, SPECTRA_SIDEBAR_NAME)
 
         def createWidget(self, frame, data):
             if data is None:
                 return None
-            return RikuganSidebarWidget(frame, data)
+            return SpectraSidebarWidget(frame, data)
 
         def defaultLocation(self):
             if SidebarWidgetLocation is not None:
@@ -257,7 +257,7 @@ def _register_sidebar() -> None:
             return False
 
     try:
-        Sidebar.addSidebarWidgetType(RikuganSidebarWidgetType())
+        Sidebar.addSidebarWidgetType(SpectraSidebarWidgetType())
         _SIDEBAR_REGISTERED = True
     except Exception:
         _SIDEBAR_REGISTERED = False
@@ -269,7 +269,7 @@ def _register_sidebar() -> None:
 
 
 def register_plugin() -> None:
-    """Register Rikugan sidebar and commands with Binary Ninja."""
+    """Register Spectra sidebar and commands with Binary Ninja."""
     global _REGISTERED
     if _REGISTERED:
         return
@@ -281,8 +281,8 @@ def register_plugin() -> None:
         return
 
     plugin_cmd.register(
-        "Rikugan\\Open Panel",
-        "Open Rikugan chat panel",
+        "Spectra\\Open Panel",
+        "Open Spectra chat panel",
         _open_panel_command,
     )
 
@@ -290,7 +290,7 @@ def register_plugin() -> None:
     if callable(register_for_address):
         for label, desc, handler, auto_submit in ACTION_DEFS:
             register_for_address(
-                f"Rikugan\\{label}",
+                f"Spectra\\{label}",
                 desc,
                 _action_callback(handler, auto_submit),
             )

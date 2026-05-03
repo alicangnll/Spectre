@@ -1,4 +1,4 @@
-# Rikugan Chat Export
+# Spectra Chat Export
 
 - **Model**: claude-opus-4-6
 - **Exported**: 2026-03-03 00:05:36
@@ -9,7 +9,7 @@
 
 make the maze clear path to me, this game is too hard
 
-## Rikugan
+## Spectra
 
 
 
@@ -132,7 +132,7 @@ Found 20 string(s):
   0x10000705f  [81] __ZNSt3__16vectorI8MazeCellNS_9allocatorIS1_EEE20__throw_length_errorB8ne200100Ev
 ```
 
-## Rikugan
+## Spectra
 
 Interesting! I can see the key classes: `MazeGame`, `MazeCell`, `RecursiveBacktracker` (maze generator), `TerminalRenderer`, and `PathFinder`. Let me look at the maze structure, the `run` method, and the `draw` function to understand how the maze works.
 
@@ -305,7 +305,7 @@ Found 1 string(s):
   0x10000750e  [91] __ZN10PathFinder3bfsERNSt3__16vectorINS1_I8MazeCellNS0_9allocatorIS2_EEEENS3_IS5_EEEEiiiiii
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the maze generation and the MazeCell structure to understand walls, and the key data tables (WALL_BITS, DX, DY).
 
@@ -397,7 +397,7 @@ rdx_4[rax_3] &= not.b(*(rax_8 + &WALL_BITS))
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the WALL_BITS, OPP_BITS, DX, DY tables and the MazeCell structure:
 
@@ -488,7 +488,7 @@ i_1 = *(std::__hash_table<std::__hash_value_type<int32_t,
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now I have a clear picture. Let me read the WALL_BITS and OPP_BITS tables:
 
@@ -503,7 +503,7 @@ Now I have a clear picture. Let me read the WALL_BITS and OPP_BITS tables:
   0x1000034c0  01 02 04 08 02 01 08 04                           |........        |
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the maze constructor to understand how the maze is initialized:
 
@@ -553,7 +553,7 @@ int64_t* rdi_4 = *(rbx + 0x20)
 return (*(*rdi_4 + 0x10))(rdi_4, &rbx[2], zx.q(*rbx), zx.q(rbx[1]), 0, 0)
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the `run` method more carefully and the draw/render function:
 
@@ -654,7 +654,7 @@ Found 3 function(s):
   0x100001730  __ZNK16TerminalRenderer4drawERKNSt3__16vectorINS1_I8MazeCellNS0_9allocatorIS2_EEEENS3_IS5_EEEEiiRK10MazePlayeriiii
 ```
 
-## Rikugan
+## Spectra
 
 Now I understand the rendering. Let me look at the `run` method more carefully to understand the game loop and how hints/pathfinding works:
 
@@ -692,7 +692,7 @@ Found 2 function(s):
   0x1000014a0  __ZNSt3__124uniform_int_distributionIlEclIZZN20RecursiveBacktracker5carveERNS_6vectorINS4_I8MazeCellNS_9allocatorIS5_EEEENS6_IS8_EEEEiiiiENKUlvE_clEvE1GEElRT_RKNS1_10param_typeE
 ```
 
-## Rikugan
+## Spectra
 
 Now let me understand the MazeCell structure. From the constructor, each cell is 3 bytes: `walls` (byte), unknown (byte), `visited` (byte). Let me look at the `run` method more carefully to understand the game logic:
 
@@ -762,7 +762,7 @@ Now let me understand the MazeCell structure. From the constructor, each cell is
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now I have a thorough understanding of the maze. Let me look at the draw function more carefully to understand how the path is shown:
 
@@ -809,7 +809,7 @@ MazeCell is 3 bytes: byte 0 = walls (bitmask: 1=North, 2=South, 4=East, 8=West),
 Finding logged: [data_structure] MazeCell is 3 bytes: byte 0 = walls (bitmask: 1=North, 2=South, 4=East, 8=West), byte 1 = unknown/padding, byte 2 = visited/path marker. Initialized with walls=0x0F (all walls). WALL_BITS at 0x1000034c0 = [1,2,4,8], OPP_BITS at 0x1000034c4 = [2,1,8,4]. DX at 0x1000034a0 = [0,0,1,-1], DY at 0x1000034b0 = [-1,1,0,0].
 ```
 
-## Rikugan
+## Spectra
 
 Now let me understand the approach. The best way to "clear the path" is to remove all walls after the maze is generated, or to make the wall check always pass. Let me look at the wall check more carefully:
 
@@ -853,7 +853,7 @@ Now let me understand the approach. The best way to "clear the path" is to remov
   0x1000009ca  lea     rsi, [rel 0x1000034b0]
 ```
 
-## Rikugan
+## Spectra
 
 Now I can see the wall check clearly. At `0x1000009b4`, `test byte [rdi+r8], r9b` checks if the wall bit is set. If it IS set (jne at `0x1000009b8`), movement is blocked. Let me also check what happens after the BFS hint to understand the full picture:
 
@@ -881,7 +881,7 @@ At 0x1000009b4: test byte [rdi+r8], r9b checks wall bit. At 0x1000009b8: jne 0x1
 Finding logged: [hypothesis] Strategy: Remove all walls by patching the maze initialization. In MazeGame constructor at 0x100000d70, each cell's walls byte is initialized to 0x0F (all walls set). After the RecursiveBacktracker carves passages, walls are selectively removed. The simplest approach: patch the wall check at 0x1000009b8 (jne -> nop/jmp) so the player can walk through any wall. Alternatively, patch the initial wall value from 0x0F to 0x00 so no walls exist.
 ```
 
-## Rikugan
+## Spectra
 
 Wait — but if we just let the player walk through walls, the walls will still be *drawn* and the player won't see the path. The user wants to "see the clear path." Let me think about this differently. The best approach would be to:
 
@@ -964,7 +964,7 @@ Let me check how the BFS path marking works in the draw function:
   64  return _printf("\x1b[1mSteps:%-5d  Hints:%-3d  [WASD/Arrows]=move  [H]=hint  [Q]=quit\n\x1b[0m", zx.q(var_58[2]), zx.q(var_58[3])) __tailcall
 ```
 
-## Rikugan
+## Spectra
 
 Now I understand the rendering. Line 41: `if (*(r13_1 + r12_2) == 0)` — this checks byte 2 of MazeCell (the "visited/path" marker). If it's 0, the cell is drawn as empty space (data_100003570). If it's non-zero, it's drawn as `"\x1b[33m..\x1b[0m\x1b[36m "` (yellow dots — the hint path).
 
@@ -1028,7 +1028,7 @@ So the BFS `PathFinder::bfs` sets byte 2 of each cell on the solution path to ma
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now I have a complete picture. Line 51 confirms: `*(...cell... + 2) = 1` — BFS marks cells on the solution path by setting byte 2 to 1. And in the draw function, line 41: `if (*(r13_1 + r12_2) == 0)` — if byte 2 is 0, draw empty; otherwise draw the yellow dots path marker.
 
@@ -1096,7 +1096,7 @@ Let me look at the constructor to find where `RecursiveBacktracker::carve` is ca
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now I can see the key locations. Let me look at the 'H' hint handler and the wall check. The wall check is at:
 - `0x1000009b4`: `test byte [rdi+r8], r9b` — tests wall bit
@@ -1198,7 +1198,7 @@ The simplest patch: **remove all walls from every cell**. Let me find the exact 
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Found it! At `0x100000dd0`:
 ```
@@ -1225,7 +1225,7 @@ Let me verify the exact bytes at the wall check:
   0x1000009b4  46 84 0c 07 75 20                                 |F...u           |
 ```
 
-## Rikugan
+## Spectra
 
 So:
 - `46 84 0c 07` = `test byte [rdi+r8], r9b` (4 bytes)
@@ -1258,7 +1258,7 @@ Actually, let me reconsider. Let me look at what happens when 'H' is pressed —
   0x100000a2f  0f 00 00                                          |...             |
 ```
 
-## Rikugan
+## Spectra
 
 Now let me look at the 'H' key check to understand the flow:
 
@@ -1290,7 +1290,7 @@ Found 2 string(s):
 
 ```
 
-## Rikugan
+## Spectra
 
 OK, I have a clear plan now. Let me propose the cleanest approach:
 
@@ -1318,7 +1318,7 @@ Patch plan: (1) NOP the wall collision check at 0x1000009b8 (change jne 0x75 0x2
 Finding logged: [hypothesis] Patch plan: (1) NOP the wall collision check at 0x1000009b8 (change jne 0x75 0x20 to NOP 0x90 0x90) so the player can walk through all walls freely. (2) Force auto-hint by patching the initial hint counter or by calling BFS automatically. The wall-removal patch alone lets the player walk straight to the goal in any direction.
 ```
 
-## Rikugan
+## Spectra
 
 Now let me also check if there's a bounds check I need to worry about — if the player walks through walls, they might go out of bounds:
 
@@ -1352,7 +1352,7 @@ Now let me also check if there's a bounds check I need to worry about — if the
   0x1000009de  jmp     0x1000009e4
 ```
 
-## Rikugan
+## Spectra
 
 I see — after the wall check passes, the new position is computed using DX/DY arrays. But there's no bounds check here! The bounds check must happen elsewhere. Let me check if there's a bounds check before the wall check:
 
@@ -1376,7 +1376,7 @@ I see — after the wall check passes, the new position is computed using DX/DY 
   0x100000994  mov     rax, qword [rbx+0x8]
 ```
 
-## Rikugan
+## Spectra
 
 The direction is set in ecx (0=North, 1=South, 2=East, 3=West), then it goes straight to the wall check. The wall itself acts as the bounds check — edge cells have walls on the boundary. If we remove the wall check, the player could walk out of bounds and crash!
 
@@ -1422,7 +1422,7 @@ Better approach: **patch the wall initialization from 0x0F to 0x00, then the car
   0x100000df1  mov     qword [rbp-0x48], rdi
 ```
 
-## Rikugan
+## Spectra
 
 OK, so `mov word [rax], 0xf` sets the first 2 bytes of each cell. That's walls=0x0F and byte1=0x00. Then byte2 (visited) is set to 0.
 
@@ -1487,7 +1487,7 @@ Let me look at the carve function to understand how walls are removed between ce
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Now I fully understand the carve function. It removes walls between cells using `and byte [rdx+r10], dil` (NOT of wall bit) and `and byte [rcx], al` (NOT of opposite wall bit). It recursively carves passages.
 
@@ -1547,7 +1547,7 @@ Final patch strategy: Two patches needed. (1) At 0x1000009b8: NOP the jne (75 20
 Finding logged: [hypothesis] Final patch strategy: Two patches needed. (1) At 0x1000009b8: NOP the jne (75 20 -> 90 90) to remove wall collision. (2) Need bounds checking to prevent out-of-bounds access. The wall check implicitly provided bounds safety since boundary cells have outer walls. Without it, player could walk off the grid. Must add bounds check or find another approach. Alternative: patch the wall init at 0x100000dd0 to set walls=0x00 but then manually ensure boundary walls exist — but that's also complex. Simplest safe approach: patch the carve function to remove ALL walls (not just between adjacent cells) — but boundary walls would still be needed.
 ```
 
-## Rikugan
+## Spectra
 
 Wait, let me reconsider. The boundary walls ARE set because the carve function only removes walls between two in-bounds cells. So if I just NOP the wall check, the player CAN walk through interior walls but CANNOT walk through boundary walls... wait, no. The wall check is what prevents ALL movement through walls, including boundaries. If I NOP it, there's no bounds check at all.
 
@@ -1665,7 +1665,7 @@ Format as a numbered list of changes. After listing all changes, provide:
 Do NOT use any tools. Output the plan as text only.
 
 
-## Rikugan
+## Spectra
 
 ## Modification Plan
 
@@ -1803,7 +1803,7 @@ Follow the Smart Patch workflow:
 Include the original hex bytes and new hex bytes in your exploration_report so the save gate can track what changed.
 
 
-## Rikugan
+## Spectra
 
 
 
@@ -1859,7 +1859,7 @@ Task: Apply targeted binary patches in Binary Ninja based on the user's natural 
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Good. Now let me follow the workflow. First, let me read the current state of the target area:
 
@@ -1908,7 +1908,7 @@ Good. Now let me follow the workflow. First, let me read the current state of th
   0x1000009d0  00 03 14 31 89 53 34 ff  43 38                    |...1.S4.C8      |
 ```
 
-## Rikugan
+## Spectra
 
 **Original bytes at 0x100000990 (74 bytes):**
 ```
@@ -1935,7 +1935,7 @@ Size: 4 bytes
 Bytes: 48 8b 4b 10
 ```
 
-## Rikugan
+## Spectra
 
 Good. The skip target is `0x1000009da` — that's where we jump when movement should be blocked. Now let me assemble the new code. I need to carefully compute RIP-relative offsets for the `lea` instructions:
 
@@ -2120,7 +2120,7 @@ Patch written successfully at 0x100000990
 
 ```
 
-## Rikugan
+## Spectra
 
 Patch written. The assembler used 6-byte near jumps (`0F 88/8D`) instead of 2-byte short jumps, but it still fits in 74 bytes with 7 NOPs to spare. Let me verify the disassembly and decompilation:
 
@@ -2230,7 +2230,7 @@ entry_rdi[0xc] = rs
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 Hmm — the decompiler is still showing the old wall check logic! This is because Binary Ninja cached the old analysis. The disassembly is correct (I can see the new instructions), but the decompiler's HLIL hasn't fully updated. Let me check — it seems the decompiler might be showing stale results. Let me look more carefully at the decompiled output...
 
@@ -2288,7 +2288,7 @@ Done
 
 ```
 
-## Rikugan
+## Spectra
 
 The decompiler is still showing the old HLIL. This might be because Binary Ninja's decompiler is caching aggressively. Let me verify the actual bytes at the patched location are correct, and try a more aggressive re-analysis:
 
@@ -2307,7 +2307,7 @@ The decompiler is still showing the old HLIL. This might be because Binary Ninja
   0x1000009d0  ff 43 38 90 90 90 90 90  90 90                    |.C8.......      |
 ```
 
-## Rikugan
+## Spectra
 
 The bytes are correct — the patch is in place. The disassembly confirms it too. The decompiler is showing stale HLIL. Let me try removing and re-adding the function:
 
@@ -2383,7 +2383,7 @@ stdout:
 
 ```
 
-## Rikugan
+## Spectra
 
 The LLIL is **perfect** — it clearly shows the new bounds-checking logic:
 
@@ -2462,7 +2462,7 @@ Follow the Smart Patch workflow:
 Include the original hex bytes and new hex bytes in your exploration_report so the save gate can track what changed.
 
 
-## Rikugan
+## Spectra
 
 
 
@@ -2531,7 +2531,7 @@ HLIL confirms bounds-only movement: if (new_x >= 0 && new_x < width) { if (new_y
 Finding logged: [patch_result] Patch verified: Wall collision check replaced with bounds check at 0x100000990-0x1000009d9. The decompiled HLIL confirms: (1) no wall/WALL_BITS references remain in the movement block, (2) bounds checks enforce 0 <= new_x < width and 0 <= new_y < height, (3) player position is updated and steps incremented only when in bounds. Player can now walk through all walls in all 4 directions without crashing.
 ```
 
-## Rikugan
+## Spectra
 
 Patch is verified and correct. The single patch at `0x100000990` (74 bytes) achieves the full goal:
 
@@ -2560,7 +2560,7 @@ Follow the Smart Patch workflow:
 Include the original hex bytes and new hex bytes in your exploration_report so the save gate can track what changed.
 
 
-## Rikugan
+## Spectra
 
 
 
@@ -2605,7 +2605,7 @@ This is a **verification step**, not a new patch. The bounds checking was alread
   0x1000034b0  ff ff ff ff 01 00 00 00  00 00 00 00 00 00 00 00  |................|
 ```
 
-## Rikugan
+## Spectra
 
 Now let me trace all four boundary cases through the patched code:
 
@@ -2663,7 +2663,7 @@ DX=[0,0,1,-1], DY=[-1,1,0,0]. js at 0x1000009a0 catches new_x<0, jge at 0x100000
 Finding logged: [patch_result] Boundary safety verified by static trace of all 4 edge cases through patched code. (1) Row 0 + Up: DY[0]=-1 makes new_y=-1, js catches negative → blocked. (2) Col 0 + Left: DX[3]=-1 makes new_x=-1, js catches negative → blocked. (3) Max row + Down: DY[1]=+1 makes new_y=height, jge catches height>=height → blocked. (4) Max col + Right: DX[2]=+1 makes new_x=width, jge catches width>=width → blocked. No out-of-bounds access is possible.
 ```
 
-## Rikugan
+## Spectra
 
 All four boundary cases verified statically — the bounds checks are airtight:
 
@@ -2693,7 +2693,7 @@ Follow the Smart Patch workflow:
 Include the original hex bytes and new hex bytes in your exploration_report so the save gate can track what changed.
 
 
-## Rikugan
+## Spectra
 
 
 
@@ -2747,7 +2747,7 @@ Found 1 string(s):
 
 ```
 
-## Rikugan
+## Spectra
 
 Let me check what's at the string reference address `0x1000035dc` and trace the full win sequence:
 
@@ -2786,7 +2786,7 @@ Steps: %d  Hints used: %d
   0x10000360c  20 25                                             | %              |
 ```
 
-## Rikugan
+## Spectra
 
 The string at `0x1000035dc` is: `\x1b[?25h\x1b[32m\x1b[1m\n*** MAZE SOLVED! ***\n\x1b[0m` — it shows the cursor, sets green+bold, prints the victory message, and resets colors.
 
@@ -2842,7 +2842,7 @@ Win condition verified intact. The check at 0x100000a40-0x100000a54 compares pla
 Finding logged: [patch_result] Win condition verified intact. The check at 0x100000a40-0x100000a54 compares player_x/player_y ([rbx+0x30]/[rbx+0x34]) against goal_x/goal_y ([rbx+0x40]/[rbx+0x44]). On match, it prints "\x1b[32m\x1b[1m\n*** MAZE SOLVED! ***\n\x1b[0m" followed by "Steps: %d  Hints used: %d\n". This code is at 0x100000a40, completely outside the patched region (0x100000990-0x1000009d9). Our patch writes to the same player_x/player_y fields, so the win check will trigger correctly when the player reaches the goal.
 ```
 
-## Rikugan
+## Spectra
 
 Win condition verified — completely untouched by our patch:
 
@@ -2873,7 +2873,7 @@ Follow the Smart Patch workflow:
 Include the original hex bytes and new hex bytes in your exploration_report so the save gate can track what changed.
 
 
-## Rikugan
+## Spectra
 
 
 
@@ -2922,7 +2922,7 @@ This is the final **verification step** — no patch needed. Let me confirm the 
   0x100000a25  48 83 ec 08 4c 89 e7 50  e8 9e 0f 00 00           |H...L..P.....   |
 ```
 
-## Rikugan
+## Spectra
 
 The hint handler at `0x100000a0f` is completely outside our patched region. Let me trace the full hint flow:
 
@@ -2969,7 +2969,7 @@ Now let me verify the 'H' key dispatch reaches this code. The key switch is at `
   0x100000a0d  jmp     0x1000009e0
 ```
 
-## Rikugan
+## Spectra
 
 I see — at `0x1000009da` (our skip target), the code clears the path markers (sets byte 2 of each cell to 0) before the next draw. This is the "clear previous hint" loop. Then at `0x100000a40` it checks the win condition.
 
@@ -3011,7 +3011,7 @@ The 'H' key handler at `0x100000a0f` is reached via the key switch table. Let me
   0x10000095d  jmp     0x100000990
 ```
 
-## Rikugan
+## Spectra
 
 Good — both arrow keys (via escape sequence at `0x100000941`) and WASD keys (via the switch at `0x100000960`) feed into the direction code. The 'H'/'h' case jumps to `0x100000a0f`. Let me verify that path:
 
@@ -3033,7 +3033,7 @@ Good — both arrow keys (via escape sequence at `0x100000941`) and WASD keys (v
   0x100000978  xor     ecx, ecx
 ```
 
-## Rikugan
+## Spectra
 
 This is a jump table switch on the character code. 'H' = 0x48, 'h' = 0x68. The jump table at `r13` dispatches to the hint handler at `0x100000a0f` for both cases. This is entirely outside our patch region.
 
@@ -3061,7 +3061,7 @@ Found 2 string(s):
 [33m..
 ```
 
-## Rikugan
+## Spectra
 
 The yellow dot string `\x1b[33m..` is at `0x10000355f` — this is used by `TerminalRenderer::draw` at `0x100001730` to render cells where byte 2 (path marker) is non-zero. The renderer is a completely separate function, untouched by our patch.
 
@@ -3101,7 +3101,7 @@ Hint handler at 0x100000a0f: inc [rbx+0x3c]; loads width/height/player/goal into
 Finding logged: [patch_result] Hint system ('H' key) verified fully intact. The entire hint pipeline — key dispatch (0x100000960 switch table), hint counter (0x100000a0f), PathFinder::bfs call (0x100000a2d), cell marking (byte 2 = 1), renderer yellow dot check (TerminalRenderer::draw at 0x100001730), and hint clearing loop (0x100000a00) — all reside outside the patched region (0x100000990-0x1000009d9). Pressing 'H' will still show the BFS solution path as yellow dots on the maze.
 ```
 
-## Rikugan
+## Spectra
 
 All 5 verification steps are complete. Here's the final summary:
 
@@ -3128,7 +3128,7 @@ All 5 verification steps are complete. Here's the final summary:
 
 1
 
-## Rikugan
+## Spectra
 
 
 
@@ -3154,7 +3154,7 @@ Save the patched binary via **File → Save** in Binary Ninja and enjoy your vic
 
 [1]    86817 segmentation fault  ./maze
 
-## Rikugan
+## Spectra
 
 
 
@@ -3190,7 +3190,7 @@ Ouch — segfault. The bounds check logic must have an issue. Let me investigate
   0x100000a1a  mov     r8d, dword [rbx+0x34]
 ```
 
-## Rikugan
+## Spectra
 
 There it is! The code at `0x1000009da` falls into a loop that uses **`rax`** as an iterator:
 
@@ -3218,7 +3218,7 @@ The path-clearing loop iterates over the grid's outer vector using `rax`. We nee
   0x1000009d0  ff 43 38 90 90 90 90 90  90 90                    |.C8.......      |
 ```
 
-## Rikugan
+## Spectra
 
 Good — we have 7 NOP bytes at `0x1000009d3–0x1000009d9`. I need to add `mov rax, [rbx+0x8]` (4 bytes: `48 8b 43 08`) before the skip target. I can place it in the NOP sled. But wait — this instruction needs to execute on **every iteration** of the game loop, not just when movement is blocked. Let me re-examine the flow.
 
@@ -3313,7 +3313,7 @@ mov rax @ 0x1000009d3: 488b4308 (4 bytes)
 
 ```
 
-## Rikugan
+## Spectra
 
 All instructions are the same size (6 bytes each), so they fit in the same slots. Now let me write all the fixes:
 
@@ -3359,7 +3359,7 @@ Patched bytes: c1e102488d3d062b00008b73300334390f882d0000003b330f8d25000000488d3
 
 ```
 
-## Rikugan
+## Spectra
 
 Now let me verify the full disassembly flow:
 
@@ -3395,7 +3395,7 @@ Now let me verify the full disassembly flow:
   0x1000009de  jmp     0x1000009e4
 ```
 
-## Rikugan
+## Spectra
 
 Now let me verify the flow is correct for both paths:
 
@@ -3475,7 +3475,7 @@ if (rsi_3 + *(rcx_4 + &DX) s>= 0 && rsi_4 s< *en
 ... (truncated)
 ```
 
-## Rikugan
+## Spectra
 
 The decompilation is now clean and correct. Let me verify the critical flow:
 
@@ -3503,7 +3503,7 @@ Original bytes: c1e102488d3d062b00008b73300334390f8834000000 3b330f8d2c000000...
 Error: Unknown tool: exploration_report
 ```
 
-## Rikugan
+## Spectra
 
 Got it — the fix is applied and verified. Here's the summary:
 

@@ -1,6 +1,6 @@
-# Rikugan Agent Ekleme Rehberi
+# Spectra Agent Ekleme Rehberi
 
-Rikugan'a yeni agent'lar eklemenin 3 ana yolu vardır:
+Spectra'a yeni agent'lar eklemenin 3 ana yolu vardır:
 
 ## 1. Yeni Skill Oluşturma (En Kolay)
 
@@ -18,7 +18,7 @@ my-custom-agent/
 
 ```bash
 # 1. Yeni skill dizini oluştur
-cd /path/to/Rikugan/rikugan/skills/builtins
+cd /path/to/Spectra/rikugan/skills/builtins
 mkdir my-custom-agent
 cd my-custom-agent
 
@@ -55,13 +55,13 @@ EOF
 
 ```bash
 # Skill otomatik olarak yüklenir
-# Rikugan bir sonraki açılışında skill'i keşfeder
+# Spectra bir sonraki açılışında skill'i keşfeder
 ```
 
 ### 4. IDA Pro İçinde Kullanma
 
 ```
-// Rikugan panelinde (Ctrl+Shift+I)
+// Spectra panelinde (Ctrl+Shift+I)
 /my-custom-analyze
 
 // Veya otomatik olarak
@@ -76,7 +76,7 @@ Mevcut bir skill'i kopyalayı ihtiyaclarınıza göre değiştirin.
 
 ```bash
 # 1. Vuln-audit skill'ini kopyala
-cd /path/to/Rikugan/rikugan/skills/builtins
+cd /path/to/Spectra/rikugan/skills/builtins
 cp -r vuln-audit my-vuln-audit
 cd my-vuln-audit
 
@@ -106,7 +106,7 @@ Skill otomatik yüklenir, özel kayıt gerekmez.
 
 ## 3. A2A (Agent-to-Agent) Agent Ekleme
 
-Rikugan dışındaki agent'ları Rikugan'a entegre edin.
+Spectra dışındaki agent'ları Spectra'a entegre edin.
 
 ### Konfigürasyon Dosyası:
 
@@ -135,11 +135,11 @@ Rikugan dışındaki agent'ları Rikugan'a entegre edin.
 ### Kullanım:
 
 ```
-// Rikugan panelinde
+// Spectra panelinde
 /ask Ghidra Agent: Decompile this function at 0x401000
 
 // Otomatik yönlendirme
-Rikugan external agent'a görevi yönlendirir
+Spectra external agent'a görevi yönlendirir
 ```
 
 ## 4. Custom Agent Handler Yazma (İleri Seviye)
@@ -149,7 +149,7 @@ Python kodu ile özel agent handler yazabilirsiniz.
 ### Agent Handler Örneği:
 
 ```python
-# /path/to/Rikugan/rikugan/agents/custom_agent.py
+# /path/to/Spectra/rikugan/agents/custom_agent.py
 
 from typing import Any, Dict
 from ..agent.base import AgentHandler
@@ -215,7 +215,7 @@ class CustomAnalyzerAgent(AgentHandler):
 ### Agent'i Kaydetme:
 
 ```python
-# /path/to/Rikugan/rikugan/agents/__init__.py
+# /path/to/Spectra/rikugan/agents/__init__.py
 
 from .custom_agent import CustomAnalyzerAgent
 
@@ -228,7 +228,7 @@ AGENT_REGISTRY.register(CustomAnalyzerAgent)
 Exploration modunda kullanılan subagent'lar tanımlayabilirsiniz.
 
 ```python
-# /path/to/Rikugan/rikugan/agents/subagents.py
+# /path/to/Spectra/rikugan/agents/subagents.py
 
 from typing import Any, Dict
 
@@ -292,7 +292,7 @@ Task: Bu agent binary'i hızlı bir şekilde analiz eder.
 
 ```bash
 # Agent'ı test et
-cd /path/to/Rikugan
+cd /path/to/Spectra
 python -m pytest tests/agent/test_agent.py -v
 
 # Belirli skill'i test et
@@ -302,7 +302,7 @@ python -m pytest tests/tools/test_skills.py::test_my_custom_agent -v
 ### IDA Pro İçinde Test:
 
 ```
-// Rikugan panelinde
+// Spectra panelinde
 /test-agent my-custom-agent "Analyze 0x401000"
 ```
 
@@ -311,7 +311,7 @@ python -m pytest tests/tools/test_skills.py::test_my_custom_agent -v
 ### Aktif Agent'ları Görüntüle:
 
 ```
-// Rikugan panelinde
+// Spectra panelinde
 /agents list
 
 // Çıktı:
@@ -398,6 +398,6 @@ Task: Bu agent binary'deki kriptografik kullanımlarını analiz eder.
 **Başlangıç için öneri:** İlk olarak mevcut bir skill'i kopyalayı değiştirin, sonra kendi skill'inizi oluşturun.
 
 **Dökümantasyon:**
-- Skill yazma: `/path/to/Rikugan/rikugan/skills/builtins/` dizinindeki skill.md dosyalarına bakın
-- Agent API: `/path/to/Rikugan/rikugan/agent/` dizinindeki modüllere inceleyin
-- Test örnekleri: `/path/to/Rikugan/tests/agent/` dizinindeki test dosyalarına bakın
+- Skill yazma: `/path/to/Spectra/rikugan/skills/builtins/` dizinindeki skill.md dosyalarına bakın
+- Agent API: `/path/to/Spectra/rikugan/agent/` dizinindeki modüllere inceleyin
+- Test örnekleri: `/path/to/Spectra/tests/agent/` dizinindeki test dosyalarına bakın

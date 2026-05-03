@@ -1,6 +1,6 @@
 """IDA UI hooks and context menu integration.
 
-Data-driven table of 9 context-menu actions under Rikugan/.
+Data-driven table of 9 context-menu actions under Spectra/.
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ if _HAS_IDA:
     # Action handler factory
     # ------------------------------------------------------------------
 
-    class _RikuganAction(idaapi.action_handler_t):
+    class _SpectraAction(idaapi.action_handler_t):
         """Generic context-menu action backed by a handler callback."""
 
         def __init__(
@@ -98,7 +98,7 @@ if _HAS_IDA:
             return idaapi.AST_ENABLE_ALWAYS
 
     class _OpenToolsAction(idaapi.action_handler_t):
-        """Open the Rikugan Tools panel."""
+        """Open the Spectra Tools panel."""
 
         def __init__(self, panel_getter: Callable[[], Any]):
             super().__init__()
@@ -124,7 +124,7 @@ if _HAS_IDA:
                 log_info("Auto-reload disabled")
             else:
                 enable_auto_reload()
-                log_info("Auto-reload enabled - Rikugan will reload on source changes")
+                log_info("Auto-reload enabled - Spectra will reload on source changes")
         except Exception as e:
             log_warning(f"Failed to toggle auto-reload: {e}")
 
@@ -176,26 +176,26 @@ if _HAS_IDA:
 
     _ACTION_DEFS: list[tuple[str, str, Callable, bool, str, str, set[str]]] = [
         (
-            "rikugan:send_to",
-            "Send to Rikugan",
+            "spectra:send_to",
+            "Send to Spectra",
             _handle_send_to,
             False,
             "Ctrl+Shift+A",
-            "Send selection or address to Rikugan input",
+            "Send selection or address to Spectra input",
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:explain",
+            "spectra:explain",
             "Explain this",
             _handle_explain,
             True,
             "",
-            "Explain the current function with Rikugan",
+            "Explain the current function with Spectra",
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:rename",
-            "Rename with Rikugan",
+            "spectra:rename",
+            "Rename with Spectra",
             _handle_rename,
             True,
             "",
@@ -203,8 +203,8 @@ if _HAS_IDA:
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:deobfuscate",
-            "Deobfuscate with Rikugan",
+            "spectra:deobfuscate",
+            "Deobfuscate with Spectra",
             _handle_deobfuscate,
             True,
             "",
@@ -212,7 +212,7 @@ if _HAS_IDA:
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:vuln_audit",
+            "spectra:vuln_audit",
             "Find vulnerabilities",
             _handle_vuln_audit,
             True,
@@ -221,7 +221,7 @@ if _HAS_IDA:
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:suggest_types",
+            "spectra:suggest_types",
             "Suggest types",
             _handle_suggest_types,
             True,
@@ -230,7 +230,7 @@ if _HAS_IDA:
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:annotate",
+            "spectra:annotate",
             "Annotate function",
             _handle_annotate,
             True,
@@ -239,7 +239,7 @@ if _HAS_IDA:
             {"pseudo"},
         ),
         (
-            "rikugan:clean_mcode",
+            "spectra:clean_mcode",
             "Clean microcode",
             _handle_clean_mcode,
             True,
@@ -248,7 +248,7 @@ if _HAS_IDA:
             {"pseudo"},
         ),
         (
-            "rikugan:xref_analysis",
+            "spectra:xref_analysis",
             "Xref analysis",
             _handle_xref_analysis,
             True,
@@ -257,7 +257,7 @@ if _HAS_IDA:
             {"disasm", "pseudo"},
         ),
         (
-            "rikugan:toggle_auto_reload",
+            "spectra:toggle_auto_reload",
             "Toggle auto-reload",
             _handle_toggle_auto_reload,
             False,
@@ -276,8 +276,8 @@ if _HAS_IDA:
     # UI hooks
     # ------------------------------------------------------------------
 
-    class RikuganUIHooks(idaapi.UI_Hooks):
-        """UI hooks for adding Rikugan to context menus."""
+    class SpectraUIHooks(idaapi.UI_Hooks):
+        """UI hooks for adding Spectra to context menus."""
 
         def __init__(self, panel_getter: Callable[[], Any]):
             super().__init__()
@@ -307,7 +307,7 @@ if _HAS_IDA:
                 desc = idaapi.action_desc_t(
                     action_id,
                     label,
-                    _RikuganAction(self._get_panel, handler_fn, auto_submit),
+                    _SpectraAction(self._get_panel, handler_fn, auto_submit),
                     hotkey,
                     tooltip,
                 )
@@ -316,27 +316,27 @@ if _HAS_IDA:
             # Register "Open Tools" action (menu + context menu)
             idaapi.register_action(
                 idaapi.action_desc_t(
-                    "rikugan:open_tools",
+                    "spectra:open_tools",
                     "Open Tools",
                     _OpenToolsAction(self._get_panel),
                     "",
-                    "Open the Rikugan Tools panel",
+                    "Open the Spectra Tools panel",
                 )
             )
             idaapi.attach_action_to_menu(
-                "Edit/Plugins/Rikugan/",
-                "rikugan:open_tools",
+                "Edit/Plugins/Spectra/",
+                "spectra:open_tools",
                 idaapi.SETMENU_APP,
             )
 
             # Register "Send to Bulk Rename" action
             idaapi.register_action(
                 idaapi.action_desc_t(
-                    "rikugan:send_to_bulk_rename",
+                    "spectra:send_to_bulk_rename",
                     "Send to Bulk Rename",
                     _SendToBulkRenameAction(self._get_panel),
                     "",
-                    "Send function to Rikugan Bulk Renamer",
+                    "Send function to Spectra Bulk Renamer",
                 )
             )
 
@@ -350,12 +350,12 @@ if _HAS_IDA:
 
             for action_id, _label, _handler, _auto, _hk, _tt, views in _ACTION_DEFS:
                 if view_key in views:
-                    idaapi.attach_action_to_popup(widget, popup, action_id, "Rikugan/")
+                    idaapi.attach_action_to_popup(widget, popup, action_id, "Spectra/")
 
             # Always attach "Send to Bulk Rename" and "Open Tools" in disasm/pseudo views
             if view_key in ("disasm", "pseudo"):
-                idaapi.attach_action_to_popup(widget, popup, "rikugan:send_to_bulk_rename", "Rikugan/")
-                idaapi.attach_action_to_popup(widget, popup, "rikugan:open_tools", "Rikugan/")
+                idaapi.attach_action_to_popup(widget, popup, "spectra:send_to_bulk_rename", "Spectra/")
+                idaapi.attach_action_to_popup(widget, popup, "spectra:open_tools", "Spectra/")
 
         def database_inited(self, is_new_database: bool, idc_script: str) -> None:
             """Called when a database is opened or created."""
@@ -376,12 +376,12 @@ if _HAS_IDA:
             if self._registered:
                 for action_id, *_ in _ACTION_DEFS:
                     idaapi.unregister_action(action_id)
-                idaapi.unregister_action("rikugan:open_tools")
-                idaapi.unregister_action("rikugan:send_to_bulk_rename")
+                idaapi.unregister_action("spectra:open_tools")
+                idaapi.unregister_action("spectra:send_to_bulk_rename")
                 self._registered = False
 
 else:
-    class RikuganUIHooks:
+    class SpectraUIHooks:
         """Stub when IDA is not available."""
 
         def __init__(self, *args, **kwargs):

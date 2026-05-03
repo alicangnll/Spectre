@@ -1,10 +1,10 @@
-"""MCP settings tab: enable/disable Rikugan and external MCP servers."""
+"""MCP settings tab: enable/disable Spectra and external MCP servers."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.config import RikuganConfig
+from ...core.config import SpectraConfig
 from ...core.logging import log_debug
 from ...mcp.config import MCPServerConfig
 from ..qt_compat import (
@@ -23,15 +23,15 @@ if TYPE_CHECKING:
 
 
 class MCPTab(QWidget):
-    """Tab for managing MCP servers: Rikugan configured + external MCP."""
+    """Tab for managing MCP servers: Spectra configured + external MCP."""
 
-    def __init__(self, config: RikuganConfig, service: SettingsService, parent: QWidget = None):
+    def __init__(self, config: SpectraConfig, service: SettingsService, parent: QWidget = None):
         super().__init__(parent)
         self._config = config
         self._service = service
-        self._rikugan_checks: dict[str, QCheckBox] = {}
+        self._spectra_checks: dict[str, QCheckBox] = {}
         self._external_checks: dict[str, QCheckBox] = {}
-        self._rikugan_servers: list[MCPServerConfig] = list(service.mcp.rikugan)
+        self._spectra_servers: list[MCPServerConfig] = list(service.mcp.spectra)
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -42,9 +42,9 @@ class MCPTab(QWidget):
         container = QWidget()
         layout = QVBoxLayout(container)
 
-        # Rikugan MCP servers (pre-loaded by service)
-        rikugan_group = self._build_rikugan_group()
-        layout.addWidget(rikugan_group)
+        # Spectra MCP servers (pre-loaded by service)
+        spectra_group = self._build_spectra_group()
+        layout.addWidget(spectra_group)
 
         # External MCP (pre-loaded by service)
         for source_key, servers in sorted(self._service.mcp.external.items()):
@@ -55,39 +55,39 @@ class MCPTab(QWidget):
         scroll.setWidget(container)
         outer.addWidget(scroll)
 
-    def _build_rikugan_group(self) -> QGroupBox:
-        """Build the Rikugan MCP servers group box."""
-        group = QGroupBox("Rikugan MCP Servers")
+    def _build_spectra_group(self) -> QGroupBox:
+        """Build the Spectra MCP servers group box."""
+        group = QGroupBox("Spectra MCP Servers")
         layout = QVBoxLayout(group)
 
-        if not self._rikugan_servers:
+        if not self._spectra_servers:
             layout.addWidget(QLabel("No MCP servers configured"))
             return group
 
         # Add "Select All" button row
         button_row = QHBoxLayout()
         select_all_btn = QPushButton("Select All")
-        select_all_btn.setToolTip("Enable all Rikugan MCP servers")
-        select_all_btn.clicked.connect(lambda: self._select_all_rikugan_mcp(True))
+        select_all_btn.setToolTip("Enable all Spectra MCP servers")
+        select_all_btn.clicked.connect(lambda: self._select_all_spectra_mcp(True))
         deselect_all_btn = QPushButton("Deselect All")
-        deselect_all_btn.setToolTip("Disable all Rikugan MCP servers")
-        deselect_all_btn.clicked.connect(lambda: self._select_all_rikugan_mcp(False))
+        deselect_all_btn.setToolTip("Disable all Spectra MCP servers")
+        deselect_all_btn.clicked.connect(lambda: self._select_all_spectra_mcp(False))
         button_row.addWidget(select_all_btn)
         button_row.addWidget(deselect_all_btn)
         button_row.addStretch()
         layout.addLayout(button_row)
 
-        for server in sorted(self._rikugan_servers, key=lambda s: s.name):
+        for server in sorted(self._spectra_servers, key=lambda s: s.name):
             cb = QCheckBox(f"{server.name}  —  {server.command}")
             cb.setChecked(server.enabled)
-            self._rikugan_checks[server.name] = cb
+            self._spectra_checks[server.name] = cb
             layout.addWidget(cb)
 
         return group
 
-    def _select_all_rikugan_mcp(self, checked: bool) -> None:
-        """Select or deselect all Rikugan MCP servers."""
-        for checkbox in self._rikugan_checks.values():
+    def _select_all_spectra_mcp(self, checked: bool) -> None:
+        """Select or deselect all Spectra MCP servers."""
+        for checkbox in self._spectra_checks.values():
             checkbox.setChecked(checked)
 
     def _build_external_group(self, source_key: str, servers: list[MCPServerConfig]) -> QGroupBox:
@@ -136,17 +136,17 @@ class MCPTab(QWidget):
             if ext_id.startswith(f"{source_key}:"):
                 checkbox.setChecked(checked)
 
-    def apply_to_config(self, config: RikuganConfig) -> None:
+    def apply_to_config(self, config: SpectraConfig) -> None:
         """Write checkbox state back to config fields."""
-        # Update Rikugan MCP server enabled state
-        for server in self._rikugan_servers:
-            cb = self._rikugan_checks.get(server.name)
+        # Update Spectra MCP server enabled state
+        for server in self._spectra_servers:
+            cb = self._spectra_checks.get(server.name)
             if cb is not None:
                 server.enabled = cb.isChecked()
 
-        # Persist Rikugan MCP config changes via the service
-        if self._rikugan_servers:
-            self._service.save_mcp_servers(self._rikugan_servers)
+        # Persist Spectra MCP config changes via the service
+        if self._spectra_servers:
+            self._service.save_mcp_servers(self._spectra_servers)
 
         # Enabled external MCP (checked = enabled)
         config.enabled_external_mcp = [ext_id for ext_id, cb in self._external_checks.items() if cb.isChecked()]
