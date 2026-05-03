@@ -18,15 +18,15 @@ install_ida_mocks()
 # Hexrays_Hooks, etc.) instead of MagicMock, which would leak fake
 # _tool_definition attributes into the registry.
 import importlib
-import rikugan.ida.tools.microcode as _mc_mod
-import rikugan.ida.tools.microcode_optim as _mco_mod
-import rikugan.ida.tools.database as _db_mod
+import spectra.ida.tools.microcode as _mc_mod
+import spectra.ida.tools.microcode_optim as _mco_mod
+import spectra.ida.tools.database as _db_mod
 importlib.reload(_mco_mod)
 importlib.reload(_mc_mod)
 importlib.reload(_db_mod)
 
-from rikugan.ida.tools.registry import create_default_registry
-from rikugan.tools.registry import ToolRegistry
+from spectra.ida.tools.registry import create_default_registry
+from spectra.tools.registry import ToolRegistry
 
 
 class TestDefaultRegistryCreation(unittest.TestCase):
@@ -133,12 +133,12 @@ class TestRegistryExecution(unittest.TestCase):
         self.assertIn("sub_1000", result)
 
     def test_execute_unknown_tool_raises(self):
-        from rikugan.core.errors import ToolNotFoundError
+        from spectra.core.errors import ToolNotFoundError
         with self.assertRaises(ToolNotFoundError):
             self.registry.execute("nonexistent_tool_xyz", {})
 
     def test_execute_wrong_args_raises(self):
-        from rikugan.core.errors import ToolError
+        from spectra.core.errors import ToolError
         with self.assertRaises(ToolError):
             # list_functions expects int for offset — @tool wraps TypeError as ToolError
             self.registry.execute("list_functions", {"offset": "not_an_int"})

@@ -42,7 +42,7 @@ sys.path.insert(0, str(spectra_path))
 
 # Try to import Spectra components
 try:
-    from rikugan.jadx import JadxAnalyzer
+    from spectra.jadx import JadxAnalyzer
     SPECTRA_AVAILABLE = True
 except ImportError:
     SPECTRA_AVAILABLE = False

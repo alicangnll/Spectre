@@ -2,7 +2,7 @@
 
 Binary Ninja's plugin loader requires a root ``__init__.py`` when loading
 from a directory.  This file is intentionally minimal — all runtime
-orchestration lives in ``rikugan.binja.bootstrap``.
+orchestration lives in ``spectra.binja.bootstrap``.
 """
 
 try:
@@ -11,4 +11,4 @@ except Exception:
     binaryninja = None
 
 if binaryninja is not None:
-    from . import spectra_binaryninja  # noqa: F401
+    from .spectra_binaryninja import *  # noqa: F401

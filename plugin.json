@@ -30,9 +30,9 @@
     ]
   },
   "installinstructions": {
-    "Darwin": "Clone/symlink this repository into ~/Library/Application Support/Binary Ninja/plugins/rikugan",
-    "Linux": "Clone/symlink this repository into ~/.binaryninja/plugins/rikugan",
-    "Windows": "Clone/symlink this repository into %APPDATA%/Binary Ninja/plugins/rikugan"
+    "Darwin": "Clone/symlink this repository into ~/Library/Application Support/Binary Ninja/plugins/spectra",
+    "Linux": "Clone/symlink this repository into ~/.binaryninja/plugins/spectra",
+    "Windows": "Clone/symlink this repository into %APPDATA%/Binary Ninja/plugins/spectra"
   },
   "projectUrl": "https://github.com/alicangnll/Spectra",
   "version": "1.2.1",

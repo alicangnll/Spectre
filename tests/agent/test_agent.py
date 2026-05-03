@@ -10,12 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.agent.turn import TurnEvent, TurnEventType
-from rikugan.agent.plan_mode import parse_plan, create_plan_from_text
-from rikugan.agent.context_window import ContextWindowManager
-from rikugan.core.types import Message, Role, TokenUsage
-from rikugan.core.config import SpectraConfig
-from rikugan.state.session import SessionState
+from spectra.agent.turn import TurnEvent, TurnEventType
+from spectra.agent.plan_mode import parse_plan, create_plan_from_text
+from spectra.agent.context_window import ContextWindowManager
+from spectra.core.types import Message, Role, TokenUsage
+from spectra.core.config import SpectraConfig
+from spectra.state.session import SessionState
 
 
 class TestTurnEvents(unittest.TestCase):
@@ -120,7 +120,7 @@ class TestSessionState(unittest.TestCase):
 class TestSessionHistory(unittest.TestCase):
     def test_save_and_load(self):
         import tempfile
-        from rikugan.state.history import SessionHistory
+        from spectra.state.history import SessionHistory
         cfg = SpectraConfig()
         cfg._config_dir = tempfile.mkdtemp()
 
@@ -138,7 +138,7 @@ class TestSessionHistory(unittest.TestCase):
 
     def test_list_sessions(self):
         import tempfile
-        from rikugan.state.history import SessionHistory
+        from spectra.state.history import SessionHistory
         cfg = SpectraConfig()
         cfg._config_dir = tempfile.mkdtemp()
         history = SessionHistory(cfg)

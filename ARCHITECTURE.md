@@ -62,23 +62,23 @@ User Input
 ```
 
 Key files:
-- `rikugan/agent/loop.py` — `AgentLoop` + `BackgroundAgentRunner`
-- `rikugan/agent/turn.py` — `TurnEvent` / `TurnEventType`
-- `rikugan/tools/base.py` — `@tool` decorator, `ToolDefinition`
-- `rikugan/tools/registry.py` — `ToolRegistry`
-- `rikugan/core/xref.py` — Cross-reference analysis engine
-- `rikugan/core/function_naming.py` — Smart function naming
-- `rikugan/core/type_recovery.py` — Type library auto-detection
-- `rikugan/core/bookmark.py` — Code bookmarking system
-- `rikugan/core/advanced_search.py` — Advanced search engine
-- `rikugan/ui/panel_core.py` — `SpectraPanelCore` (Qt UI)
-- `rikugan/ui/session_controller_base.py` — `SessionControllerBase`
+- `spectra/agent/loop.py` — `AgentLoop` + `BackgroundAgentRunner`
+- `spectra/agent/turn.py` — `TurnEvent` / `TurnEventType`
+- `spectra/tools/base.py` — `@tool` decorator, `ToolDefinition`
+- `spectra/tools/registry.py` — `ToolRegistry`
+- `spectra/core/xref.py` — Cross-reference analysis engine
+- `spectra/core/function_naming.py` — Smart function naming
+- `spectra/core/type_recovery.py` — Type library auto-detection
+- `spectra/core/bookmark.py` — Code bookmarking system
+- `spectra/core/advanced_search.py` — Advanced search engine
+- `spectra/ui/panel_core.py` — `SpectraPanelCore` (Qt UI)
+- `spectra/ui/session_controller_base.py` — `SessionControllerBase`
 
 ---
 
 ## The Agentic Loop
 
-**File**: `rikugan/agent/loop.py`
+**File**: `spectra/agent/loop.py`
 
 ### `AgentLoop.run(user_message) -> Generator[TurnEvent]`
 
@@ -161,7 +161,7 @@ class BackgroundAgentRunner:
 
 ## TurnEvent System
 
-**File**: `rikugan/agent/turn.py`
+**File**: `spectra/agent/turn.py`
 
 All communication from the agent loop to the UI goes through `TurnEvent` objects. Each event has a `type` (enum) and optional payload fields.
 
@@ -200,7 +200,7 @@ Each event type has a static factory method on `TurnEvent` for clean constructio
 
 ## Tool Framework
 
-**Files**: `rikugan/tools/base.py`, `rikugan/tools/registry.py`
+**Files**: `spectra/tools/base.py`, `spectra/tools/registry.py`
 
 ### `@tool` Decorator
 
@@ -329,7 +329,7 @@ Creates an isolated `SubagentRunner` with its own `SessionState`:
 
 ## Skill System
 
-**Files**: `rikugan/skills/loader.py`, `rikugan/skills/registry.py`
+**Files**: `spectra/skills/loader.py`, `spectra/skills/registry.py`
 
 ### Skill Format
 
@@ -362,8 +362,8 @@ Task: Analyze this binary as potential malware.
 ### Discovery
 
 `SkillRegistry.discover()` scans:
-1. Built-in skills: `rikugan/skills/builtins/*/SKILL.md`
-2. User skills: `~/.idapro/rikugan/skills/*/SKILL.md` (IDA) or `~/.binaryninja/rikugan/skills/*/SKILL.md` (BN)
+1. Built-in skills: `spectra/skills/builtins/*/SKILL.md`
+2. User skills: `~/.idapro/spectra/skills/*/SKILL.md` (IDA) or `~/.binaryninja/spectra/skills/*/SKILL.md` (BN)
 
 Reference files in `references/*.md` subdirectories are automatically appended to the skill body.
 
@@ -396,7 +396,7 @@ When a user types `/<slug>`, `_resolve_skill()` in `loop.py`:
 
 ## Exploration Mode
 
-**Files**: `rikugan/agent/exploration_mode.py`, `rikugan/agent/loop.py` (`_run_exploration_mode()`)
+**Files**: `spectra/agent/exploration_mode.py`, `spectra/agent/loop.py` (`_run_exploration_mode()`)
 
 Exploration mode is a **4-phase autonomous agent flow** for binary modification:
 
@@ -491,7 +491,7 @@ class ExplorationState:
 
 ## Plan Mode
 
-**Files**: `rikugan/agent/plan_mode.py`, `rikugan/agent/loop.py`
+**Files**: `spectra/agent/plan_mode.py`, `spectra/agent/loop.py`
 
 Plan mode is a simpler two-step workflow: **plan first, then execute**.
 
@@ -513,7 +513,7 @@ Plan mode is orthogonal to exploration mode. `/plan` does not enter exploration 
 
 ## Subagents
 
-**File**: `rikugan/agent/subagent.py`
+**File**: `spectra/agent/subagent.py`
 
 Subagents are isolated `AgentLoop` instances with their own `SessionState`. They keep the parent's context window clean from verbose tool output.
 
@@ -558,7 +558,7 @@ When a subagent running in explore mode finishes:
 
 ## Mutation Tracking and Undo
 
-**File**: `rikugan/agent/mutation.py`
+**File**: `spectra/agent/mutation.py`
 
 Every mutating tool call (`defn.mutating=True`) is recorded in `AgentLoop._mutation_log` for undo support.
 
@@ -621,7 +621,7 @@ The `/undo` command:
 
 ## Context Window Management
 
-**File**: `rikugan/agent/context_window.py`
+**File**: `spectra/agent/context_window.py`
 
 ### `ContextWindowManager`
 
@@ -660,7 +660,7 @@ if self._context_manager.should_compact():
 
 ## Persistent Memory
 
-**Files**: `rikugan/agent/system_prompt.py`, `rikugan/agent/loop.py`
+**Files**: `spectra/agent/system_prompt.py`, `spectra/agent/loop.py`
 
 ### SPECTRA.md
 
@@ -691,7 +691,7 @@ Shows the current contents of SPECTRA.md in the chat.
 
 ## Session Management
 
-**Files**: `rikugan/state/session.py`, `rikugan/state/history.py`, `rikugan/ui/session_controller_base.py`
+**Files**: `spectra/state/session.py`, `spectra/state/history.py`, `spectra/ui/session_controller_base.py`
 
 ### `SessionState`
 
@@ -740,7 +740,7 @@ class SessionControllerBase:
 ### Persistence
 
 `SessionHistory` handles save/restore:
-- Sessions are JSON-serialized to `<config_dir>/rikugan/sessions/`
+- Sessions are JSON-serialized to `<config_dir>/spectra/sessions/`
 - Auto-saved after each agent turn (if `checkpoint_auto_save` is enabled)
 - Restored per-file when the same IDB/BNDB is reopened
 - Full round-trip: messages, token usage, tool calls, tool results all preserved
@@ -749,7 +749,7 @@ class SessionControllerBase:
 
 ## MCP Integration
 
-**Files**: `rikugan/mcp/client.py`, `rikugan/mcp/bridge.py`, `rikugan/mcp/manager.py`
+**Files**: `spectra/mcp/client.py`, `spectra/mcp/bridge.py`, `spectra/mcp/manager.py`
 
 ### Architecture
 
@@ -781,7 +781,7 @@ Shows the health status of all configured MCP servers (running, healthy, tool co
 
 ## Provider Layer
 
-**Files**: `rikugan/providers/base.py`, `rikugan/providers/registry.py`, `rikugan/providers/*.py`
+**Files**: `spectra/providers/base.py`, `spectra/providers/registry.py`, `spectra/providers/*.py`
 
 ### `LLMProvider` ABC
 
@@ -822,7 +822,7 @@ In `_stream_llm_turn()`:
 
 ## System Prompt Architecture
 
-**Files**: `rikugan/agent/system_prompt.py`, `rikugan/agent/prompts/`
+**Files**: `spectra/agent/system_prompt.py`, `spectra/agent/prompts/`
 
 ### Prompt Structure
 
@@ -859,7 +859,7 @@ In `_stream_llm_turn()`:
 
 ## UI Layer
 
-**Files**: `rikugan/ui/panel_core.py`, `rikugan/ui/chat_view.py`, `rikugan/ui/message_widgets.py`
+**Files**: `spectra/ui/panel_core.py`, `spectra/ui/chat_view.py`, `spectra/ui/message_widgets.py`
 
 ### `SpectraPanelCore`
 
@@ -981,16 +981,16 @@ for attempt in range(max_retries):
 
 ## Logging
 
-**File**: `rikugan/core/logging.py`
+**File**: `spectra/core/logging.py`
 
 ### Log Outputs
 
 1. **IDA Output Window** — `IDAHandler`, INFO level, `[Spectra] LEVEL: message`
 2. **Debug File** — `_FlushFileHandler`, DEBUG level, flushed + fsynced after every write
-   - Location: `<config_dir>/rikugan/rikugan_debug.log`
+   - Location: `<config_dir>/spectra/spectra_debug.log`
    - Survives crashes (fsync)
 3. **Structured JSON** — `_JSONFormatter`, INFO level, JSONL format
-   - Location: `<config_dir>/rikugan/rikugan_structured.jsonl`
+   - Location: `<config_dir>/spectra/spectra_structured.jsonl`
    - Append mode, machine-parseable
 
 ### JSON Log Format
@@ -1007,7 +1007,7 @@ for attempt in range(max_retries):
 
 ### Core Modules
 
-#### `rikugan/core/xref.py` — Cross-Reference Analysis Engine
+#### `spectra/core/xref.py` — Cross-Reference Analysis Engine
 
 ```python
 class XRefGraph:
@@ -1024,7 +1024,7 @@ class XRefGraph:
 - **Jaccard similarity** — Find functions with similar calling patterns
 - **Complexity distribution** — Low/medium/high/very-high buckets
 
-#### `rikugan/core/function_naming.py` — Smart Function Naming
+#### `spectra/core/function_naming.py` — Smart Function Naming
 
 ```python
 class FunctionNamer:
@@ -1039,7 +1039,7 @@ class FunctionNamer:
 - **String analysis** — Finds URLs, IPs, hashes, error messages, config strings
 - **Structure heuristics** — Wrappers, single callee, validation patterns
 
-#### `rikugan/core/type_recovery.py` — Type Library Auto-Detection
+#### `spectra/core/type_recovery.py` — Type Library Auto-Detection
 
 ```python
 class TypeRecoveryEngine:
@@ -1054,7 +1054,7 @@ class TypeRecoveryEngine:
 - **Common structures** — RECT, POINT, sockaddr, sockaddr_in, in_addr, etc.
 - **Signature matching** — Match function signatures to known APIs
 
-#### `rikugan/core/bookmark.py` — Code Bookmarking System
+#### `spectra/core/bookmark.py` — Code Bookmarking System
 
 ```python
 class BookmarkManager:
@@ -1068,7 +1068,7 @@ class BookmarkManager:
 - **Search & filter** — Search by name, notes, tags, category
 - **JSON persistence** — Bookmarks saved to config directory
 
-#### `rikugan/core/advanced_search.py` — Advanced Search Engine
+#### `spectra/core/advanced_search.py` — Advanced Search Engine
 
 ```python
 class AdvancedSearchEngine:
@@ -1095,12 +1095,12 @@ All tools are registered in both IDA Pro and Binary Ninja:
 
 ### Platform Integration
 
-**IDA Pro**: `rikugan/ida/tools/advanced_decomp.py`
+**IDA Pro**: `spectra/ida/tools/advanced_decomp.py`
 - Uses IDA API (`ida_funcs`, `ida_name`, `ida_xref`, `idautils`)
 - Collects functions, xrefs, strings, imports
 - Builds graphs and runs analysis
 
-**Binary Ninja**: `rikugan/binja/tools/advanced_decomp.py`
+**Binary Ninja**: `spectra/binja/tools/advanced_decomp.py`
 - Placeholder for future Binary Ninja API integration
 - Same tool interface, swap host-specific collector
 

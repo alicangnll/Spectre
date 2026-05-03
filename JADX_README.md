@@ -68,18 +68,18 @@ cd /path/to/Spectra
 python install_jadx_plugin.py
 
 # Or manually install to JADX plugin directory
-mkdir -p ~/.jadx/plugins/rikugan
-cp rikugan_jadx.py ~/.jadx/plugins/rikugan/
-cp -r rikugan ~/.jadx/plugins/rikugan/
+mkdir -p ~/.jadx/plugins/spectra
+cp spectra_jadx.py ~/.jadx/plugins/spectra/
+cp -r spectra ~/.jadx/plugins/spectra/
 
 # Create plugin config
-cat > ~/.jadx/plugins/rikugan/plugin.json << 'EOF'
+cat > ~/.jadx/plugins/spectra/plugin.json << 'EOF'
 {
   "name": "Spectra",
   "version": "1.2.5",
   "description": "AI-powered Android APK analysis assistant",
   "author": "Ali Can Gönüllü",
-  "main": "rikugan_jadx.py",
+  "main": "spectra_jadx.py",
   "enabled": true
 }
 EOF
@@ -91,11 +91,11 @@ EOF
 cd /path/to/Spectra
 
 # Copy to PATH
-cp rikugan_jadx.py ~/.local/bin/rikugan-jadx
-chmod +x ~/.local/bin/rikugan-jadx
+cp spectra_jadx.py ~/.local/bin/spectra-jadx
+chmod +x ~/.local/bin/spectra-jadx
 
 # Or use directly
-python rikugan_jadx.py analyze app.apk -o ./decompiled
+python spectra_jadx.py analyze app.apk -o ./decompiled
 ```
 
 #### Mode 3: IDA Pro Integration
@@ -130,23 +130,23 @@ Tools → Spectra → Open Chat
 
 ```bash
 # Analyze APK
-python rikugan_jadx.py analyze app.apk -o ./decompiled
+python spectra_jadx.py analyze app.apk -o ./decompiled
 
 # Search for strings
-python rikugan_jadx.py search app.apk "API_KEY"
-python rikugan_jadx.py search app.apk "http://" --case-sensitive
+python spectra_jadx.py search app.apk "API_KEY"
+python spectra_jadx.py search app.apk "http://" --case-sensitive
 
 # Show package structure
-python rikugan_jadx.py structure app.apk --export structure.json
+python spectra_jadx.py structure app.apk --export structure.json
 
 # Analyze specific class
-python rikugan_jadx.py class app.apk com.example.app.MainActivity
+python spectra_jadx.py class app.apk com.example.app.MainActivity
 
 # Interactive AI mode
-python rikugan_jadx.py interactive app.apk
+python spectra_jadx.py interactive app.apk
 
 # Show plugin info
-python rikugan_jadx.py plugin-info
+python spectra_jadx.py plugin-info
 ```
 
 ### JADX Native Plugin Mode
@@ -162,10 +162,10 @@ Tools → Spectra → Interactive Mode
 **From JADX CLI:**
 ```bash
 # Normal JADX with Spectra plugin
-jadx --plugin rikugan app.apk -d output
+jadx --plugin spectra app.apk -d output
 
 # Or call Spectra directly
-python ~/.jadx/plugins/rikugan/rikugan_jadx.py analyze app.apk -o output
+python ~/.jadx/plugins/spectra/spectra_jadx.py analyze app.apk -o output
 ```
 
 ### IDA Pro Integration Mode
@@ -193,11 +193,11 @@ The plugin automatically detects its execution environment:
 
 ```python
 # Standalone CLI
-$ python rikugan_jadx.py analyze app.apk
+$ python spectra_jadx.py analyze app.apk
 Environment: STANDALONE
 
 # Inside JADX
-$ jadx --plugin rikugan app.apk
+$ jadx --plugin spectra app.apk
 Environment: JADX
 
 # Inside IDA Pro
@@ -214,7 +214,7 @@ Environment: BINARY_NINJA
 All modes support the same Python API:
 
 ```python
-from rikugan.jadx import JadxAnalyzer
+from spectra.jadx import JadxAnalyzer
 
 # Initialize analyzer
 analyzer = JadxAnalyzer()
@@ -252,7 +252,7 @@ analyzer.export_to_json(decompiled_dir, "analysis.json")
 
 Plugin behavior can be configured via `config.json`:
 
-**Location:** `~/.jadx/plugins/rikugan/config.json`
+**Location:** `~/.jadx/plugins/spectra/config.json`
 
 ```json
 {
@@ -283,7 +283,7 @@ Plugin behavior can be configured via `config.json`:
 
 ```bash
 # Analyze suspicious APK
-python rikugan_jadx.py analyze suspicious.apk -o ./malware_analysis
+python spectra_jadx.py analyze suspicious.apk -o ./malware_analysis
 
 # Automatic security assessment
 # - Risk score calculation (0-100)
@@ -293,35 +293,35 @@ python rikugan_jadx.py analyze suspicious.apk -o ./malware_analysis
 # - Insecure storage detection
 
 # Search for C2 domains
-python rikugan_jadx.py search suspicious.apk "http://"
+python spectra_jadx.py search suspicious.apk "http://"
 
 # Check for native code
-python rikugan_jadx.py class suspicious.apk com.example.NativeLib
+python spectra_jadx.py class suspicious.apk com.example.NativeLib
 ```
 
 ### Penetration Testing
 
 ```bash
 # Decompile target app
-python rikugan_jadx.py analyze target.apk -o ./target_app
+python spectra_jadx.py analyze target.apk -o ./target_app
 
 # Find API endpoints
-python rikugan_jadx.py search target.apk "api."
+python spectra_jadx.py search target.apk "api."
 
 # Check for hardcoded secrets
-python rikugan_jadx.py search target.apk "password"
-python rikugan_jadx.py search target.apk "token"
-python rikugan_jadx.py search target.apk "secret"
+python spectra_jadx.py search target.apk "password"
+python spectra_jadx.py search target.apk "token"
+python spectra_jadx.py search target.apk "secret"
 
 # Analyze network communication
-python rikugan_jadx.py search target.apk "https://"
+python spectra_jadx.py search target.apk "https://"
 ```
 
 ### Vulnerability Research
 
 ```bash
 # Interactive deep-dive
-python rikugan_jadx.py interactive app.apk
+python spectra_jadx.py interactive app.apk
 
 > What are the entry points?
 > Show me all exported activities
@@ -365,7 +365,7 @@ When used in IDA Pro or Binary Ninja modes:
 ```bash
 # Analyze multiple APKs
 for apk in *.apk; do
-    python rikugan_jadx.py analyze "$apk" -o "analysis_$(basename $apk .apk)" --export "reports/$(basename $apk .apk).json"
+    python spectra_jadx.py analyze "$apk" -o "analysis_$(basename $apk .apk)" --export "reports/$(basename $apk .apk).json"
 done
 ```
 
@@ -373,7 +373,7 @@ done
 
 ```bash
 # In build pipeline
-python rikugan_jadx.py analyze app-release.apk --security-check --export security_report.json
+python spectra_jadx.py analyze app-release.apk --security-check --export security_report.json
 
 # Check risk score
 RISK_SCORE=$(python -c "import json; print(json.load(open('security_report.json'))['security_assessment']['risk_score'])")
@@ -387,7 +387,7 @@ fi
 ### Custom Analysis Scripts
 
 ```python
-from rikugan.jadx import JadxAnalyzer
+from spectra.jadx import JadxAnalyzer
 
 analyzer = JadxAnalyzer()
 
@@ -426,7 +426,7 @@ def check_malware_indicators(apk_path: str) -> dict:
 
 1. Check plugin directory:
 ```bash
-ls -la ~/.jadx/plugins/rikugan/
+ls -la ~/.jadx/plugins/spectra/
 ```
 
 2. Verify JADX version:
@@ -436,7 +436,7 @@ jadx --version  # Should be 1.4.7 or higher
 
 3. Check plugin metadata:
 ```bash
-cat ~/.jadx/plugins/rikugan/plugin.json
+cat ~/.jadx/plugins/spectra/plugin.json
 ```
 
 ### Missing Dependencies
@@ -454,16 +454,16 @@ brew install jadx  # macOS
 
 ```bash
 # Check which environment is detected
-python rikugan_jadx.py plugin-info
+python spectra_jadx.py plugin-info
 
 # Force specific mode
-python rikugan_jadx.py analyze app.apk --env standalone
+python spectra_jadx.py analyze app.apk --env standalone
 ```
 
 ## Architecture
 
 ```
-rikugan_jadx.py (Hybrid Plugin)
+spectra_jadx.py (Hybrid Plugin)
 ├── Environment Detection
 │   ├── Standalone CLI mode
 │   ├── IDA Pro integration
@@ -479,7 +479,7 @@ rikugan_jadx.py (Hybrid Plugin)
 │   ├── structure - Package structure
 │   ├── class - Class analysis
 │   └── interactive - AI mode
-└── rikugan/
+└── spectra/
     ├── jadx/api.py - JADX wrapper
     ├── core/ - Core functionality
     └── tools/ - Additional tools

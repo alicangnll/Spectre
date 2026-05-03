@@ -130,11 +130,11 @@ uninstall_ida() {
         info "Processing IDA directory: $ida_dir"
 
         # Remove plugin symlinks
-        remove_link "$ida_dir/plugins/rikugan_plugin.py"
-        remove_link "$ida_dir/plugins/rikugan"
+        remove_link "$ida_dir/plugins/spectra_plugin.py"
+        remove_link "$ida_dir/plugins/spectra"
 
         # Remove config directory
-        remove_directory "$ida_dir/rikugan"
+        remove_directory "$ida_dir/spectra"
 
         # Remove old "iris" symlinks if they exist
         remove_link "$ida_dir/plugins/iris_plugin.py"
@@ -174,10 +174,10 @@ uninstall_binja() {
         info "Processing Binary Ninja directory: $bn_dir"
 
         # Remove plugin symlink
-        remove_link "$bn_dir/plugins/rikugan"
+        remove_link "$bn_dir/plugins/spectra"
 
         # Remove config directory
-        remove_directory "$bn_dir/rikugan"
+        remove_directory "$bn_dir/spectra"
 
         # Remove old "iris" symlink if it exists
         remove_link "$bn_dir/plugins/iris"
@@ -192,7 +192,7 @@ uninstall_binja() {
 # ─── Remove repository directory (optional) ───────────────────────────────
 
 uninstall_repo() {
-    local repo_dir="$HOME/.rikugan"
+    local repo_dir="$HOME/.spectra"
 
     if [[ -d "$repo_dir" ]]; then
         if [[ "$FORCE" == true ]]; then

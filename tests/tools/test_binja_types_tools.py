@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.binja.tools.types_tools import _extract_types_dict, _build_struct_decl
+from spectra.binja.tools.types_tools import _extract_types_dict, _build_struct_decl
 
 
 class TestExtractTypesDict(unittest.TestCase):

@@ -7,7 +7,7 @@ Spectra (六眼) is a multi-host reverse-engineering agent plugin that integrate
 ## Directory Structure
 
 ```
-rikugan/
+spectra/
 ├── agent/                    # Agent loop & prompt logic (host-agnostic)
 │   ├── loop.py               # AgentLoop: generator-based turn cycle
 │   ├── turn.py               # TurnEvent / TurnEventType definitions
@@ -38,7 +38,7 @@ rikugan/
 │
 ├── ida/                      # IDA Pro host package
 │   ├── tools/
-│   │   ├── registry.py       # IDA create_default_registry() — imports rikugan.tools.*
+│   │   ├── registry.py       # IDA create_default_registry() — imports spectra.tools.*
 │   │   ├── advanced_decomp.py # Advanced decompilation tools (v1.2.5+)
 │   │   ├── navigation.py     # IDA navigation tools
 │   │   ├── functions.py      # IDA function tools
@@ -60,7 +60,7 @@ rikugan/
 │
 ├── binja/                    # Binary Ninja host package
 │   ├── tools/
-│   │   ├── registry.py       # BN create_default_registry() — imports rikugan.binja.tools.*
+│   │   ├── registry.py       # BN create_default_registry() — imports spectra.binja.tools.*
 │   │   ├── advanced_decomp.py # Advanced decompilation tools (v1.2.5+)
 │   │   ├── common.py         # BN shared helpers (get_bv, get_function_at, etc.)
 │   │   ├── navigation.py     # Navigation tools
@@ -90,7 +90,7 @@ rikugan/
 │   ├── bookmark_manager.py   # Code bookmarking tool (v1.2.5+)
 │   └── advanced_search.py    # Advanced search tool (v1.2.5+)
 │
-├── hosts/                    # Backward-compat shims → rikugan.ida.ui.* / rikugan.binja.ui.*
+├── hosts/                    # Backward-compat shims → spectra.ida.ui.* / spectra.binja.ui.*
 │
 ├── providers/                # LLM provider integrations (host-agnostic)
 │   ├── base.py               # LLMProvider ABC
@@ -146,12 +146,12 @@ rikugan/
 ```
 
 Entry points (root directory):
-- **IDA Pro**: `rikugan_plugin.py` — `PLUGIN_ENTRY()` → `SpectraPlugin` → `SpectraPlugmod`
-- **Binary Ninja**: `rikugan_binaryninja.py` — registers sidebar widget + commands at import time
+- **IDA Pro**: `spectra_plugin.py` — `PLUGIN_ENTRY()` → `SpectraPlugin` → `SpectraPlugmod`
+- **Binary Ninja**: `spectra_binaryninja.py` — registers sidebar widget + commands at import time
 
 ## How the Agent Loop Works
 
-The agent uses a **generator-based turn cycle** (`rikugan/agent/loop.py`):
+The agent uses a **generator-based turn cycle** (`spectra/agent/loop.py`):
 
 ```
 User message → command detection → skill resolution → build system prompt
@@ -218,7 +218,7 @@ The `execute_python` tool always requires explicit user approval before executio
 
 ### Prompt Injection Mitigation
 
-Spectra analyzes untrusted binaries whose content (strings, function names, decompiled code, comments) flows into LLM prompts. A malicious binary could embed adversarial text to manipulate the agent. Mitigations are implemented in `rikugan/core/sanitize.py`:
+Spectra analyzes untrusted binaries whose content (strings, function names, decompiled code, comments) flows into LLM prompts. A malicious binary could embed adversarial text to manipulate the agent. Mitigations are implemented in `spectra/core/sanitize.py`:
 
 | Layer | What it does | Where applied |
 |-------|-------------|---------------|
@@ -230,8 +230,8 @@ Spectra analyzes untrusted binaries whose content (strings, function names, deco
 | **Compaction sanitization** | Context window compaction strips markers from summary snippets | `context_window.py` |
 
 **Key files:**
-- `rikugan/core/sanitize.py` — all sanitization functions
-- `rikugan/agent/prompts/base.py` — `DATA_INTEGRITY_SECTION`
+- `spectra/core/sanitize.py` — all sanitization functions
+- `spectra/agent/prompts/base.py` — `DATA_INTEGRITY_SECTION`
 - Integration points: `loop.py` (tool results, skills, memory), `system_prompt.py` (binary context), `mcp/client.py` (external results)
 
 ## Message Queuing
@@ -244,7 +244,7 @@ Users can send follow-up messages while the agent is working. Queued messages ap
 
 ```python
 from typing import Annotated
-from rikugan.tools.base import tool
+from spectra.tools.base import tool
 
 @tool(category="navigation")
 def jump_to(
@@ -269,15 +269,15 @@ Optional `@tool` parameters:
 
 ### 2. Register in the host's registry
 
-**For IDA** — add the module import to `rikugan/ida/tools/registry.py`:
+**For IDA** — add the module import to `spectra/ida/tools/registry.py`:
 ```python
-from rikugan.tools import my_new_module
+from spectra.tools import my_new_module
 _TOOL_MODULES = (..., my_new_module)
 ```
 
-**For Binary Ninja** — add the module import to `rikugan/binja/tools/registry.py`:
+**For Binary Ninja** — add the module import to `spectra/binja/tools/registry.py`:
 ```python
-from rikugan.binja.tools import my_new_module
+from spectra.binja.tools import my_new_module
 _TOOL_MODULES = (..., my_new_module)
 ```
 
@@ -285,20 +285,20 @@ The registry calls `register_module()` on each module, which discovers all `@too
 
 ## How to Add a New Host
 
-1. Create `rikugan/<host>/` with `tools/` and `ui/` sub-packages
-2. Implement tool modules under `rikugan/<host>/tools/` — use `from rikugan.tools.base import tool`
-3. Create `rikugan/<host>/tools/registry.py` with a `create_default_registry()` factory
-4. Subclass `SessionControllerBase` in `rikugan/<host>/ui/session_controller.py`
-5. Create a panel widget in `rikugan/<host>/ui/panel.py` — embed the shared `PanelCore` widget
-6. Add a host-specific prompt in `rikugan/agent/prompts/<host>.py` and register it in `system_prompt.py`'s `_HOST_PROMPTS` dict
-7. Create an entry point script (e.g., `rikugan_<host>.py`) that bootstraps the plugin
+1. Create `spectra/<host>/` with `tools/` and `ui/` sub-packages
+2. Implement tool modules under `spectra/<host>/tools/` — use `from spectra.tools.base import tool`
+3. Create `spectra/<host>/tools/registry.py` with a `create_default_registry()` factory
+4. Subclass `SessionControllerBase` in `spectra/<host>/ui/session_controller.py`
+5. Create a panel widget in `spectra/<host>/ui/panel.py` — embed the shared `PanelCore` widget
+6. Add a host-specific prompt in `spectra/agent/prompts/<host>.py` and register it in `system_prompt.py`'s `_HOST_PROMPTS` dict
+7. Create an entry point script (e.g., `spectra_<host>.py`) that bootstraps the plugin
 
 ## How to Add a New Skill
 
 Skills are Markdown files with YAML frontmatter:
 
 ```
-rikugan/skills/builtins/<slug>/
+spectra/skills/builtins/<slug>/
   SKILL.md            # Required — frontmatter + prompt body
   references/         # Optional — .md files auto-appended to prompt
     api-notes.md
@@ -315,22 +315,22 @@ allowed_tools: [decompile_function, rename_function]
 Task: <instruction for the agent>
 ```
 
-Users can also create custom skills in their host config directory (`~/.idapro/rikugan/skills/` or `~/.binaryninja/rikugan/skills/`).
+Users can also create custom skills in their host config directory (`~/.idapro/spectra/skills/` or `~/.binaryninja/spectra/skills/`).
 
 ## Import Conventions
 
-- **Cross-package imports** use absolute paths: `from rikugan.tools.base import tool`
-- **Within the same package** use absolute imports: `from rikugan.binja.tools.common import get_bv`
-- **IDA tool modules** (`rikugan/tools/*.py`) use relative imports within `rikugan.tools`
+- **Cross-package imports** use absolute paths: `from spectra.tools.base import tool`
+- **Within the same package** use absolute imports: `from spectra.binja.tools.common import get_bv`
+- **IDA tool modules** (`spectra/tools/*.py`) use relative imports within `spectra.tools`
 - **Host API modules** (ida_*, binaryninja) are imported via `importlib.import_module()` inside `try/except ImportError` blocks to avoid crashes when loaded in the wrong host
-- **Backward-compat shims** in `rikugan/tools_bn/` and `rikugan/hosts/` re-export from canonical locations
+- **Backward-compat shims** in `spectra/tools_bn/` and `spectra/hosts/` re-export from canonical locations
 
 ## System Prompt Structure
 
 System prompts are built from **shared sections** + **host-specific content**:
 
 ```
-rikugan/agent/prompts/
+spectra/agent/prompts/
 ├── base.py     # Shared sections:
 │               #   DISCIPLINE_SECTION  — "Do exactly what was asked"
 │               #   RENAMING_SECTION    — Renaming/retyping guidelines
@@ -348,23 +348,23 @@ rikugan/agent/prompts/
 
 | File | Role |
 |------|------|
-| `rikugan/agent/loop.py` | Core agent loop — generator-based turn cycle |
-| `rikugan/tools/base.py` | `@tool` decorator, `ToolDefinition`, JSON schema generation |
-| `rikugan/tools/registry.py` | `ToolRegistry` — registration, dispatch, argument coercion |
-| `rikugan/ui/session_controller_base.py` | `SessionControllerBase` — multi-session orchestration |
-| `rikugan/ui/panel_core.py` | `PanelCore` — multi-tab chat, export, event routing |
-| `rikugan/ui/chat_view.py` | `ChatView` — message display, queued messages |
-| `rikugan/ui/message_widgets.py` | Message widgets including approval dialog |
-| `rikugan/core/config.py` | `SpectraConfig` — all settings, provider config, host paths |
-| `rikugan/core/host.py` | Host context singleton (BinaryView, address, navigate callback) |
-| `rikugan/core/thread_safety.py` | `@idasync` decorator for main-thread marshalling |
-| `rikugan/providers/base.py` | `LLMProvider` ABC — interface for all LLM providers |
-| `rikugan/mcp/manager.py` | `MCPManager` — starts MCP servers, bridges tools into registry |
-| `rikugan/skills/registry.py` | `SkillRegistry` — discovers and loads SKILL.md files |
-| `rikugan/state/session.py` | `SessionState` — message history, token usage tracking |
-| `rikugan/state/history.py` | `SessionHistory` — auto-save/restore per file |
-| `rikugan_plugin.py` | IDA Pro plugin entry point |
-| `rikugan_binaryninja.py` | Binary Ninja plugin entry point |
+| `spectra/agent/loop.py` | Core agent loop — generator-based turn cycle |
+| `spectra/tools/base.py` | `@tool` decorator, `ToolDefinition`, JSON schema generation |
+| `spectra/tools/registry.py` | `ToolRegistry` — registration, dispatch, argument coercion |
+| `spectra/ui/session_controller_base.py` | `SessionControllerBase` — multi-session orchestration |
+| `spectra/ui/panel_core.py` | `PanelCore` — multi-tab chat, export, event routing |
+| `spectra/ui/chat_view.py` | `ChatView` — message display, queued messages |
+| `spectra/ui/message_widgets.py` | Message widgets including approval dialog |
+| `spectra/core/config.py` | `SpectraConfig` — all settings, provider config, host paths |
+| `spectra/core/host.py` | Host context singleton (BinaryView, address, navigate callback) |
+| `spectra/core/thread_safety.py` | `@idasync` decorator for main-thread marshalling |
+| `spectra/providers/base.py` | `LLMProvider` ABC — interface for all LLM providers |
+| `spectra/mcp/manager.py` | `MCPManager` — starts MCP servers, bridges tools into registry |
+| `spectra/skills/registry.py` | `SkillRegistry` — discovers and loads SKILL.md files |
+| `spectra/state/session.py` | `SessionState` — message history, token usage tracking |
+| `spectra/state/history.py` | `SessionHistory` — auto-save/restore per file |
+| `spectra_plugin.py` | IDA Pro plugin entry point |
+| `spectra_binaryninja.py` | Binary Ninja plugin entry point |
 
 ## CI/CD & Branch Model
 
@@ -400,7 +400,7 @@ All four checks are **required** — a PR cannot merge if any of them fail.
 | Job | Tool | What it enforces |
 |-----|------|-----------------|
 | Ruff | `python -m ruff` | Formatting + lint (style, unused imports, modernization) |
-| Mypy | `python -m mypy` | Type correctness on `rikugan/core` and `rikugan/providers` |
+| Mypy | `python -m mypy` | Type correctness on `spectra/core` and `spectra/providers` |
 | Pytest | `python -m pytest` | All tests under `tests/` must pass |
 | Desloppify | `desloppify scan --profile objective` | Objective code quality score must not drop below baseline (89.0) |
 
@@ -435,8 +435,8 @@ CI does **not** run `desloppify review` (the LLM-powered subjective scoring) —
 ### Import Discipline
 
 - **Host API modules** (`ida_*`, `binaryninja`) are **always** imported via `importlib.import_module()` inside `try/except ImportError`. Never use bare `import ida_funcs` at module level — this crashes when loaded in the wrong host and triggers Shiboken UAF in IDA.
-- **Cross-package** uses absolute paths: `from rikugan.tools.base import tool`
-- **Within a package** also uses absolute paths: `from rikugan.binja.tools.common import get_bv`
+- **Cross-package** uses absolute paths: `from spectra.tools.base import tool`
+- **Within a package** also uses absolute paths: `from spectra.binja.tools.common import get_bv`
 - **Constants from host APIs** that may not exist (e.g., `BADADDR`) must have local fallbacks defined at module level.
 
 ### Tool Implementation Rules
@@ -622,13 +622,13 @@ SpectraPanelCore
 | **Agents**     | `AgentTreeWidget`     | Subagent launcher + live tree    |
 | **A2A**        | `A2ABridgeWidget`     | External agent integration       |
 
-File: `rikugan/ui/tools_panel.py`
+File: `spectra/ui/tools_panel.py`
 
 ### Bulk Function Renamer
 
 #### UI — `BulkRenamerWidget`
 
-File: `rikugan/ui/bulk_renamer.py`
+File: `spectra/ui/bulk_renamer.py`
 
 ```
 BulkRenamerWidget (QWidget)
@@ -679,7 +679,7 @@ Both modes spawn a `SubagentRunner` per batch. The system prompt differs:
 
 #### Backend — `BulkRenamerEngine`
 
-File: `rikugan/agent/bulk_renamer.py`
+File: `spectra/agent/bulk_renamer.py`
 
 ```python
 @dataclass
@@ -772,7 +772,7 @@ User can override via "Force include" checkbox per row.
 
 #### Data Model
 
-File: `rikugan/agent/subagent_manager.py`
+File: `spectra/agent/subagent_manager.py`
 
 ```python
 class SubagentStatus(str, Enum):
@@ -825,7 +825,7 @@ class SubagentManager:
 
 #### UI — `AgentTreeWidget`
 
-File: `rikugan/ui/agent_tree.py`
+File: `spectra/ui/agent_tree.py`
 
 The tree view shows all subagents hierarchically:
 
@@ -923,7 +923,7 @@ SUBAGENT_FAILED = "subagent_failed"
 
 **Goal**: Rebuild network communication structures and C2 protocol.
 
-File: `rikugan/agent/agents/network_recon.py`
+File: `spectra/agent/agents/network_recon.py`
 
 System prompt:
 
@@ -957,7 +957,7 @@ Workflow:
 
 **Goal**: Summarize all findings from the session into a structured report.
 
-File: `rikugan/agent/agents/report_writer.py`
+File: `spectra/agent/agents/report_writer.py`
 
 System prompt:
 
@@ -1009,10 +1009,10 @@ falls back to **subprocess spawning** with structured I/O.
 
 #### Architecture
 
-File: `rikugan/agent/a2a/`
+File: `spectra/agent/a2a/`
 
 ```
-rikugan/agent/a2a/
+spectra/agent/a2a/
 ├── __init__.py
 ├── client.py          # A2AClient — JSON-RPC over HTTPS + SSE
 ├── subprocess_bridge.py  # Fallback for CLI agents
@@ -1022,7 +1022,7 @@ rikugan/agent/a2a/
 
 #### External Agent Registry
 
-File: `rikugan/agent/a2a/registry.py`
+File: `spectra/agent/a2a/registry.py`
 
 ```python
 @dataclass
@@ -1083,7 +1083,7 @@ class SubprocessBridge:
 
 #### UI — `A2ABridgeWidget`
 
-File: `rikugan/ui/a2a_widget.py`
+File: `spectra/ui/a2a_widget.py`
 
 ```
 A2ABridgeWidget (QWidget)
@@ -1109,7 +1109,7 @@ being analyzed without leaking the full conversation.
 
 #### A2A Config
 
-In `rikugan.toml` (user config):
+In `spectra.toml` (user config):
 
 ```toml
 [a2a]
@@ -1129,7 +1129,7 @@ capabilities = ["research"]
 New files to create:
 
 ```
-rikugan/
+spectra/
 ├── agent/
 │   ├── bulk_renamer.py          # BulkRenamerEngine, RenameJob, RenameEvent
 │   ├── subagent_manager.py      # SubagentManager, SubagentInfo
@@ -1154,7 +1154,7 @@ rikugan/
 Modified files:
 
 ```
-rikugan/
+spectra/
 ├── agent/
 │   ├── turn.py                  # +4 new TurnEventType values
 │   └── subagent.py              # SubagentRunner gains manager integration

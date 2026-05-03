@@ -12,18 +12,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.core.types import (
+from spectra.core.types import (
     Message, ModelInfo, ProviderCapabilities, Role, ToolCall,
     StreamChunk, TokenUsage,
 )
-from rikugan.core.config import SpectraConfig
-from rikugan.agent.loop import AgentLoop, BackgroundAgentRunner
-from rikugan.agent.exploration_mode import ExplorationState
-from rikugan.agent.turn import TurnEventType
-from rikugan.tools.base import ParameterSchema, ToolDefinition
-from rikugan.tools.registry import ToolRegistry
-from rikugan.state.session import SessionState
-from rikugan.providers.base import LLMProvider
+from spectra.core.config import SpectraConfig
+from spectra.agent.loop import AgentLoop, BackgroundAgentRunner
+from spectra.agent.exploration_mode import ExplorationState
+from spectra.agent.turn import TurnEventType
+from spectra.tools.base import ParameterSchema, ToolDefinition
+from spectra.tools.registry import ToolRegistry
+from spectra.state.session import SessionState
+from spectra.providers.base import LLMProvider
 
 
 class MockProvider(LLMProvider):
@@ -309,7 +309,7 @@ class TestSkillInvocation(unittest.TestCase):
     def test_skill_rewrite(self):
         """Test that /slug messages get rewritten with skill body."""
         import tempfile
-        from rikugan.skills.registry import SkillRegistry
+        from spectra.skills.registry import SkillRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             skill_dir = os.path.join(tmpdir, "test-skill")

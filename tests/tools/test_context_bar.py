@@ -12,7 +12,7 @@ ensure_pyside6_stubs()
 
 sys.modules.setdefault("binaryninja", types.ModuleType("binaryninja"))
 
-from rikugan.ui.context_bar import _function_name_at, ContextBar  # noqa: E402
+from spectra.ui.context_bar import _function_name_at, ContextBar  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -127,15 +127,15 @@ class TestSetModel(unittest.TestCase):
 
 class TestFunctionNameAt(unittest.TestCase):
     def test_returns_none_in_standalone_mode(self):
-        with patch("rikugan.ui.context_bar.is_ida", return_value=False), \
-             patch("rikugan.ui.context_bar.is_binary_ninja", return_value=False):
+        with patch("spectra.ui.context_bar.is_ida", return_value=False), \
+             patch("spectra.ui.context_bar.is_binary_ninja", return_value=False):
             result = _function_name_at(0x1000)
             self.assertIsNone(result)
 
     def test_returns_none_when_binary_ninja_no_bv(self):
-        with patch("rikugan.ui.context_bar.is_ida", return_value=False), \
-             patch("rikugan.ui.context_bar.is_binary_ninja", return_value=True), \
-             patch("rikugan.ui.context_bar.get_binary_ninja_view", return_value=None):
+        with patch("spectra.ui.context_bar.is_ida", return_value=False), \
+             patch("spectra.ui.context_bar.is_binary_ninja", return_value=True), \
+             patch("spectra.ui.context_bar.get_binary_ninja_view", return_value=None):
             result = _function_name_at(0x1000)
             self.assertIsNone(result)
 
@@ -144,9 +144,9 @@ class TestFunctionNameAt(unittest.TestCase):
         mock_func = MagicMock()
         mock_func.name = "target_fn"
         mock_bv.get_function_at.return_value = mock_func
-        with patch("rikugan.ui.context_bar.is_ida", return_value=False), \
-             patch("rikugan.ui.context_bar.is_binary_ninja", return_value=True), \
-             patch("rikugan.ui.context_bar.get_binary_ninja_view", return_value=mock_bv):
+        with patch("spectra.ui.context_bar.is_ida", return_value=False), \
+             patch("spectra.ui.context_bar.is_binary_ninja", return_value=True), \
+             patch("spectra.ui.context_bar.get_binary_ninja_view", return_value=mock_bv):
             result = _function_name_at(0x1000)
             self.assertEqual(result, "target_fn")
 
@@ -154,9 +154,9 @@ class TestFunctionNameAt(unittest.TestCase):
         mock_bv = MagicMock()
         mock_bv.get_function_at.return_value = None
         mock_bv.get_functions_containing.return_value = []
-        with patch("rikugan.ui.context_bar.is_ida", return_value=False), \
-             patch("rikugan.ui.context_bar.is_binary_ninja", return_value=True), \
-             patch("rikugan.ui.context_bar.get_binary_ninja_view", return_value=mock_bv):
+        with patch("spectra.ui.context_bar.is_ida", return_value=False), \
+             patch("spectra.ui.context_bar.is_binary_ninja", return_value=True), \
+             patch("spectra.ui.context_bar.get_binary_ninja_view", return_value=mock_bv):
             result = _function_name_at(0x1000)
             self.assertIsNone(result)
 

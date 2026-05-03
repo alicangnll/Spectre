@@ -18,7 +18,7 @@ my-custom-agent/
 
 ```bash
 # 1. Yeni skill dizini oluştur
-cd /path/to/Spectra/rikugan/skills/builtins
+cd /path/to/Spectra/spectra/skills/builtins
 mkdir my-custom-agent
 cd my-custom-agent
 
@@ -76,7 +76,7 @@ Mevcut bir skill'i kopyalayı ihtiyaclarınıza göre değiştirin.
 
 ```bash
 # 1. Vuln-audit skill'ini kopyala
-cd /path/to/Spectra/rikugan/skills/builtins
+cd /path/to/Spectra/spectra/skills/builtins
 cp -r vuln-audit my-vuln-audit
 cd my-vuln-audit
 
@@ -111,7 +111,7 @@ Spectra dışındaki agent'ları Spectra'a entegre edin.
 ### Konfigürasyon Dosyası:
 
 ```json
-// ~/.idapro/rikugan/config.json
+// ~/.idapro/spectra/config.json
 {
   "a2a_agents": [
     {
@@ -149,7 +149,7 @@ Python kodu ile özel agent handler yazabilirsiniz.
 ### Agent Handler Örneği:
 
 ```python
-# /path/to/Spectra/rikugan/agents/custom_agent.py
+# /path/to/Spectra/spectra/agents/custom_agent.py
 
 from typing import Any, Dict
 from ..agent.base import AgentHandler
@@ -215,7 +215,7 @@ class CustomAnalyzerAgent(AgentHandler):
 ### Agent'i Kaydetme:
 
 ```python
-# /path/to/Spectra/rikugan/agents/__init__.py
+# /path/to/Spectra/spectra/agents/__init__.py
 
 from .custom_agent import CustomAnalyzerAgent
 
@@ -228,7 +228,7 @@ AGENT_REGISTRY.register(CustomAnalyzerAgent)
 Exploration modunda kullanılan subagent'lar tanımlayabilirsiniz.
 
 ```python
-# /path/to/Spectra/rikugan/agents/subagents.py
+# /path/to/Spectra/spectra/agents/subagents.py
 
 from typing import Any, Dict
 
@@ -334,7 +334,7 @@ Active Agents: 3
 ### Agent Davranışını Ayarlama:
 
 ```json
-// ~/.idapro/rikugan/config.json
+// ~/.idapro/spectra/config.json
 {
   "exploration_turn_limit": 100,    // Kaç tur sonrası durdurulacak
   "max_concurrent_agents": 5,      // Maksimum paralel agent sayısı
@@ -398,6 +398,6 @@ Task: Bu agent binary'deki kriptografik kullanımlarını analiz eder.
 **Başlangıç için öneri:** İlk olarak mevcut bir skill'i kopyalayı değiştirin, sonra kendi skill'inizi oluşturun.
 
 **Dökümantasyon:**
-- Skill yazma: `/path/to/Spectra/rikugan/skills/builtins/` dizinindeki skill.md dosyalarına bakın
-- Agent API: `/path/to/Spectra/rikugan/agent/` dizinindeki modüllere inceleyin
+- Skill yazma: `/path/to/Spectra/spectra/skills/builtins/` dizinindeki skill.md dosyalarına bakın
+- Agent API: `/path/to/Spectra/spectra/agent/` dizinindeki modüllere inceleyin
 - Test örnekleri: `/path/to/Spectra/tests/agent/` dizinindeki test dosyalarına bakın

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from rikugan.agent.minify import minify_messages, minify_text
-from rikugan.core.types import Message, ToolResult
+from spectra.agent.minify import minify_messages, minify_text
+from spectra.core.types import Message, ToolResult
 
 
 class TestMinifyText:

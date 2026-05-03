@@ -16,13 +16,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.core.types import Message, Role
+from spectra.core.types import Message, Role
 
 
 def _reload_anthropic_provider_module() -> None:
     """Force the real provider module to load, not leftover test stubs."""
-    sys.modules.pop("rikugan.providers.anthropic_provider", None)
-    sys.modules.pop("rikugan.core.types", None)
+    sys.modules.pop("spectra.providers.anthropic_provider", None)
+    sys.modules.pop("spectra.core.types", None)
 
 
 class TestAnthropicStreaming(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestAnthropicStreaming(unittest.TestCase):
 
     def _make_provider(self):
         _reload_anthropic_provider_module()
-        from rikugan.providers.anthropic_provider import AnthropicProvider
+        from spectra.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test-key", model="claude-test")
         return p
 
@@ -127,7 +127,7 @@ class TestOpenAIStreaming(unittest.TestCase):
     """Test OpenAIProvider.chat_stream with mock OpenAI stream chunks."""
 
     def _make_provider(self):
-        from rikugan.providers.openai_provider import OpenAIProvider
+        from spectra.providers.openai_provider import OpenAIProvider
         return OpenAIProvider(api_key="test-key", model="gpt-test")
 
     def test_text_only_stream(self):

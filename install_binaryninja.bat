@@ -7,8 +7,8 @@ setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-if not exist "%SCRIPT_DIR%\rikugan_binaryninja.py" (
-    echo [-] rikugan_binaryninja.py not found in %SCRIPT_DIR%
+if not exist "%SCRIPT_DIR%\spectra_binaryninja.py" (
+    echo [-] spectra_binaryninja.py not found in %SCRIPT_DIR%
     exit /b 1
 )
 if not exist "%SCRIPT_DIR%\plugin.json" (
@@ -38,7 +38,7 @@ if not defined BN_USER_DIR (
 )
 
 set "PLUGINS_DIR=%BN_USER_DIR%\plugins"
-set "CONFIG_DIR=%BN_USER_DIR%\rikugan"
+set "CONFIG_DIR=%BN_USER_DIR%\spectra"
 set "SKILLS_DIR=%CONFIG_DIR%\skills"
 
 :: ── Remove old "iris" installation (rebrand cleanup) ───────────────
@@ -66,7 +66,7 @@ if !errorlevel! neq 0 (
 if not exist "%PLUGINS_DIR%\"  mkdir "%PLUGINS_DIR%"
 if not exist "%SKILLS_DIR%\" mkdir "%SKILLS_DIR%"
 
-set "BUILTINS_SRC=%SCRIPT_DIR%\rikugan\skills\builtins"
+set "BUILTINS_SRC=%SCRIPT_DIR%\spectra\skills\builtins"
 if exist "%BUILTINS_SRC%\" (
     echo [*] Installing built-in skills into %SKILLS_DIR%...
     for /d %%S in ("%BUILTINS_SRC%\*") do (
@@ -80,14 +80,14 @@ if exist "%BUILTINS_SRC%\" (
     )
 )
 
-set "PLUGIN_LINK=%PLUGINS_DIR%\rikugan"
+set "PLUGIN_LINK=%PLUGINS_DIR%\spectra"
 if exist "%PLUGIN_LINK%\" (
     fsutil reparsepoint query "%PLUGIN_LINK%" >nul 2>&1
     if !errorlevel! equ 0 (
         rmdir "%PLUGIN_LINK%"
     ) else (
-        if exist "%PLUGINS_DIR%\rikugan.bak\" rmdir /s /q "%PLUGINS_DIR%\rikugan.bak"
-        ren "%PLUGIN_LINK%" "rikugan.bak"
+        if exist "%PLUGINS_DIR%\spectra.bak\" rmdir /s /q "%PLUGINS_DIR%\spectra.bak"
+        ren "%PLUGIN_LINK%" "spectra.bak"
     )
 )
 

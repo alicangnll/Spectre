@@ -84,9 +84,9 @@ trap 'unset -f run_py run_desloppify' EXIT
 # ── 1. Ruff — format check ─────────────────────────────────────────────────────
 info "[1/5] Ruff format..."
 if $FIX; then
-    run_py -m ruff format rikugan/ && ok "ruff format (auto-fixed)" || fail "ruff format" "failed"
+    run_py -m ruff format spectra/ && ok "ruff format (auto-fixed)" || fail "ruff format" "failed"
 else
-    if run_py -m ruff format --check rikugan/ 2>&1; then
+    if run_py -m ruff format --check spectra/ 2>&1; then
         ok "ruff format"
     else
         fail "ruff format" "run with --fix to auto-fix"
@@ -96,13 +96,13 @@ fi
 # ── 2. Ruff — lint (config in pyproject.toml) ────────────────────────────────
 info "[2/5] Ruff lint..."
 if $FIX; then
-    if run_py -m ruff check rikugan/ --fix 2>&1; then
+    if run_py -m ruff check spectra/ --fix 2>&1; then
         ok "ruff lint (auto-fixed)"
     else
         fail "ruff lint" "see above"
     fi
 else
-    if run_py -m ruff check rikugan/ 2>&1; then
+    if run_py -m ruff check spectra/ 2>&1; then
         ok "ruff lint"
     else
         fail "ruff lint" "see above"
@@ -111,7 +111,7 @@ fi
 
 # ── 3. Mypy — core modules only (config in pyproject.toml) ───────────────────
 info "[3/5] Mypy (core + providers)..."
-MYPY_OUT=$(run_py -m mypy rikugan/core rikugan/providers --pretty \
+MYPY_OUT=$(run_py -m mypy spectra/core spectra/providers --pretty \
     2>&1) && MYPY_OK=true || MYPY_OK=false
 
 if $MYPY_OK; then

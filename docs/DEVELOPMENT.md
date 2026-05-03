@@ -43,7 +43,7 @@ export SPECTRA_AUTO_RELOAD=1
 ida64 /path/to/malware
 
 # Terminal 2: Edit Spectra source code
-vim rikugan/ui/markdown.py
+vim spectra/ui/markdown.py
 
 # Auto-reload happens automatically when you save!
 # Check IDA console for: "Reloading Spectra due to source changes..."
@@ -52,7 +52,7 @@ vim rikugan/ui/markdown.py
 ### Status Messages
 
 - `File watcher started` - Auto-reload is monitoring for changes
-- `Changed: rikugan/ui/markdown.py` - File was modified
+- `Changed: spectra/ui/markdown.py` - File was modified
 - `Reloading Spectra...` - Reload in progress
 - `Spectra reloaded successfully` - Reload completed
 - `Auto-reload disabled` - Auto-reload stopped
@@ -116,7 +116,7 @@ Findings are stored in JSON alongside your IDB:
 ### Programmatic Usage
 
 ```python
-from rikugan.tools.findings_bookmark import get_findings_manager
+from spectra.tools.findings_bookmark import get_findings_manager
 
 # Get manager for current IDB
 manager = get_findings_manager()

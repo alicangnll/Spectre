@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from rikugan.ui.markdown import _has_markdown_syntax, _inline, _inline_formatting, md_to_html
+from spectra.ui.markdown import _has_markdown_syntax, _inline, _inline_formatting, md_to_html
 
 
 class TestMdToHtmlEmptyAndNone(unittest.TestCase):

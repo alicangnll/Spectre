@@ -25,24 +25,24 @@ Clone the repo and symlink it into the host's plugin directory so changes take e
 ```bash
 # macOS
 git clone https://github.com/alicangnll/Spectra
-ln -s "$(pwd)/rikugan" ~/Library/Application\ Support/Binary\ Ninja/plugins/rikugan
+ln -s "$(pwd)/spectra" ~/Library/Application\ Support/Binary\ Ninja/plugins/spectra
 
 # Linux
 git clone https://github.com/alicangnll/Spectra
-ln -s "$(pwd)/rikugan" ~/.binaryninja/plugins/rikugan
+ln -s "$(pwd)/spectra" ~/.binaryninja/plugins/spectra
 
 # Windows (run as Administrator)
 git clone https://github.com/alicangnll/Spectra
-mklink /D "%APPDATA%\Binary Ninja\plugins\rikugan" "<full path to cloned repo>"
+mklink /D "%APPDATA%\Binary Ninja\plugins\spectra" "<full path to cloned repo>"
 ```
 
 **IDA Pro**
 ```bash
 # macOS / Linux
-ln -s "$(pwd)/rikugan" ~/.idapro/plugins/rikugan
+ln -s "$(pwd)/spectra" ~/.idapro/plugins/spectra
 
 # Windows
-mklink /D "%APPDATA%\Hex-Rays\IDA Pro\plugins\rikugan" "<full path to cloned repo>"
+mklink /D "%APPDATA%\Hex-Rays\IDA Pro\plugins\spectra" "<full path to cloned repo>"
 ```
 
 ---

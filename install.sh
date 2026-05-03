@@ -8,7 +8,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/alicangnll/Spectra/main/install.sh | bash -s -- --both
 #
 # Environment variables:
-#   RIKUGAN_DIR     — where to clone the repo   (default: ~/.rikugan)
+#   SPECTRA_DIR     — where to clone the repo   (default: ~/.spectra)
 #   RIKUGAN_BRANCH  — git branch to check out   (default: main)
 #   IDADIR          — override IDA install dir  (forwarded to install_ida.sh)
 #   IDA_PYTHON      — override Python for IDA    (forwarded to install_ida.sh)
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 REPO_URL="https://github.com/alicangnll/Spectra.git"
-INSTALL_DIR="${RIKUGAN_DIR:-$HOME/.rikugan}"
+INSTALL_DIR="${SPECTRA_DIR:-$HOME/.spectra}"
 BRANCH="${RIKUGAN_BRANCH:-main}"
 
 # ── Colors ───────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ for arg in "$@"; do
             echo "  (no flag)   Auto-detect installed hosts"
             echo ""
             echo "Environment:"
-            echo "  RIKUGAN_DIR=$INSTALL_DIR"
+            echo "  SPECTRA_DIR=$INSTALL_DIR"
             echo "  RIKUGAN_BRANCH=$BRANCH"
             exit 0
             ;;

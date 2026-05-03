@@ -18,21 +18,21 @@ sys.modules.setdefault("binaryninja", _bn_stub)
 sys.modules.setdefault("binaryninjaui", None)  # type: ignore[assignment]
 
 # Stub spectra.binja.ui dependencies that require Qt
-_panel_mod = types.ModuleType("rikugan.binja.ui.panel")
+_panel_mod = types.ModuleType("spectra.binja.ui.panel")
 _panel_mod.SpectraPanel = type("SpectraPanel", (), {})  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.ui.panel", _panel_mod)
+sys.modules.setdefault("spectra.binja.ui.panel", _panel_mod)
 
-_actions_mod = types.ModuleType("rikugan.binja.ui.actions")
+_actions_mod = types.ModuleType("spectra.binja.ui.actions")
 _actions_mod.ACTION_DEFS = ()  # type: ignore[attr-defined]
 _actions_mod.build_context = MagicMock(return_value={})  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.ui.actions", _actions_mod)
+sys.modules.setdefault("spectra.binja.ui.actions", _actions_mod)
 
-_fn_utils_mod = types.ModuleType("rikugan.binja.tools.fn_utils")
+_fn_utils_mod = types.ModuleType("spectra.binja.tools.fn_utils")
 _fn_utils_mod.get_function_at = MagicMock(return_value=None)  # type: ignore[attr-defined]
 _fn_utils_mod.get_function_name = MagicMock(return_value="")  # type: ignore[attr-defined]
-sys.modules.setdefault("rikugan.binja.tools.fn_utils", _fn_utils_mod)
+sys.modules.setdefault("spectra.binja.tools.fn_utils", _fn_utils_mod)
 
-from rikugan.binja import bootstrap as bnj  # noqa: E402
+from spectra.binja import bootstrap as bnj  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

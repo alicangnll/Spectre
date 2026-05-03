@@ -1,4 +1,4 @@
-"""Tests for rikugan.ui.qt_compat — Qt compatibility shim."""
+"""Tests for spectra.ui.qt_compat — Qt compatibility shim."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import unittest
 from tests.qt_stubs import ensure_pyside6_stubs
 
 ensure_pyside6_stubs()
-import rikugan.ui.qt_compat as qt_compat  # noqa: E402
+import spectra.ui.qt_compat as qt_compat  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _UI_ROOT = _REPO_ROOT / "spectra" / "ui"

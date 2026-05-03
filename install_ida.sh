@@ -64,7 +64,7 @@ else
 fi
 
 PLUGINS_DIR="$IDA_USER_DIR/plugins"
-CONFIG_DIR="$IDA_USER_DIR/rikugan"
+CONFIG_DIR="$IDA_USER_DIR/spectra"
 
 # ── Remove old "iris" installation (rebrand cleanup) ─────────────────
 for old_name in "iris_plugin.py" "iris"; do
@@ -82,13 +82,13 @@ done
 
 # ── Sanity checks ─────────────────────────────────────────────────────
 
-if [[ ! -f "$SCRIPT_DIR/rikugan_plugin.py" ]]; then
-    err "rikugan_plugin.py not found in $SCRIPT_DIR — run this from the repo root"
+if [[ ! -f "$SCRIPT_DIR/spectra_plugin.py" ]]; then
+    err "spectra_plugin.py not found in $SCRIPT_DIR — run this from the repo root"
     exit 1
 fi
 
-if [[ ! -d "$SCRIPT_DIR/rikugan" ]]; then
-    err "rikugan/ package not found in $SCRIPT_DIR — run this from the repo root"
+if [[ ! -d "$SCRIPT_DIR/spectra" ]]; then
+    err "spectra/ package not found in $SCRIPT_DIR — run this from the repo root"
     exit 1
 fi
 
@@ -440,9 +440,9 @@ mkdir -p "$CONFIG_DIR"
 # ── Copy built-in skills ──────────────────────────────────────────────
 
 SKILLS_DIR="$CONFIG_DIR/skills"
-BUILTINS_SRC="$SCRIPT_DIR/rikugan/skills/builtins"
+BUILTINS_SRC="$SCRIPT_DIR/spectra/skills/builtins"
 
-# Built-in skills are loaded directly from rikugan/skills/builtins/ (via symlink).
+# Built-in skills are loaded directly from spectra/skills/builtins/ (via symlink).
 # The user skills directory is for user-created skills only.
 # Remove stale built-in copies that previous installs may have placed here.
 if [[ -d "$BUILTINS_SRC" ]] && [[ -d "$SKILLS_DIR" ]]; then
@@ -480,15 +480,15 @@ install_link() {
 }
 
 info "Installing Spectra into $PLUGINS_DIR..."
-install_link "$SCRIPT_DIR/rikugan_plugin.py" "$PLUGINS_DIR/rikugan_plugin.py" "rikugan_plugin.py"
-install_link "$SCRIPT_DIR/rikugan"        "$PLUGINS_DIR/rikugan"        "rikugan/"
+install_link "$SCRIPT_DIR/spectra_plugin.py" "$PLUGINS_DIR/spectra_plugin.py" "spectra_plugin.py"
+install_link "$SCRIPT_DIR/spectra"        "$PLUGINS_DIR/spectra"        "spectra/"
 
 # ── Done ──────────────────────────────────────────────────────────────
 
 echo ""
 ok "Spectra installed successfully!"
-info "Plugin:  $PLUGINS_DIR/rikugan_plugin.py"
-info "Package: $PLUGINS_DIR/rikugan"
+info "Plugin:  $PLUGINS_DIR/spectra_plugin.py"
+info "Package: $PLUGINS_DIR/spectra"
 info "Config:  $CONFIG_DIR/"
 info "Skills:  $SKILLS_DIR/"
 echo ""

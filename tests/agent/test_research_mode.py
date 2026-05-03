@@ -11,14 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from rikugan.agent.loop import _parse_user_command
-from rikugan.agent.modes.research import (
+from spectra.agent.loop import _parse_user_command
+from spectra.agent.modes.research import (
     ResearchNote,
     ResearchState,
     _generate_index,
     _slugify,
 )
-from rikugan.agent.turn import TurnEvent, TurnEventType
+from spectra.agent.turn import TurnEvent, TurnEventType
 
 
 class TestParseResearchCommand(unittest.TestCase):

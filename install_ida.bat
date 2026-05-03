@@ -11,13 +11,13 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ── Sanity checks ────────────────────────────────────────────────────
 
-if not exist "%SCRIPT_DIR%\rikugan_plugin.py" (
-    echo [-] rikugan_plugin.py not found in %SCRIPT_DIR% — run this from the repo root
+if not exist "%SCRIPT_DIR%\spectra_plugin.py" (
+    echo [-] spectra_plugin.py not found in %SCRIPT_DIR% — run this from the repo root
     exit /b 1
 )
 
-if not exist "%SCRIPT_DIR%\rikugan\" (
-    echo [-] rikugan\ package not found in %SCRIPT_DIR% — run this from the repo root
+if not exist "%SCRIPT_DIR%\spectra\" (
+    echo [-] spectra\ package not found in %SCRIPT_DIR% — run this from the repo root
     exit /b 1
 )
 
@@ -53,7 +53,7 @@ if not defined IDA_USER_DIR (
 )
 
 set "PLUGINS_DIR=%IDA_USER_DIR%\plugins"
-set "CONFIG_DIR=%IDA_USER_DIR%\rikugan"
+set "CONFIG_DIR=%IDA_USER_DIR%\spectra"
 
 :: ── Remove old "iris" installation (rebrand cleanup) ───────────────
 if exist "%PLUGINS_DIR%\iris_plugin.py" (
@@ -158,7 +158,7 @@ if not exist "%CONFIG_DIR%\"  mkdir "%CONFIG_DIR%"
 :: ── Copy built-in skills ────────────────────────────────────────────
 
 set "SKILLS_DIR=%CONFIG_DIR%\skills"
-set "BUILTINS_SRC=%SCRIPT_DIR%\rikugan\skills\builtins"
+set "BUILTINS_SRC=%SCRIPT_DIR%\spectra\skills\builtins"
 
 if exist "%BUILTINS_SRC%\" (
     echo [*] Installing built-in skills into %SKILLS_DIR%...
@@ -180,43 +180,43 @@ if exist "%BUILTINS_SRC%\" (
 
 echo [*] Installing Spectra into %PLUGINS_DIR%...
 
-:: rikugan_plugin.py
-if exist "%PLUGINS_DIR%\rikugan_plugin.py" (
-    del "%PLUGINS_DIR%\rikugan_plugin.py"
+:: spectra_plugin.py
+if exist "%PLUGINS_DIR%\spectra_plugin.py" (
+    del "%PLUGINS_DIR%\spectra_plugin.py"
 )
-copy "%SCRIPT_DIR%\rikugan_plugin.py" "%PLUGINS_DIR%\rikugan_plugin.py" >nul
+copy "%SCRIPT_DIR%\spectra_plugin.py" "%PLUGINS_DIR%\spectra_plugin.py" >nul
 if !errorlevel! equ 0 (
-    echo [+] rikugan_plugin.py -^> %PLUGINS_DIR%\rikugan_plugin.py
+    echo [+] spectra_plugin.py -^> %PLUGINS_DIR%\spectra_plugin.py
 ) else (
-    echo [-] Failed to copy rikugan_plugin.py
+    echo [-] Failed to copy spectra_plugin.py
     exit /b 1
 )
 
-:: rikugan/ package — use directory junction (symlink-like, no admin required)
-if exist "%PLUGINS_DIR%\rikugan\" (
+:: spectra/ package — use directory junction (symlink-like, no admin required)
+if exist "%PLUGINS_DIR%\spectra\" (
     :: Check if it's a junction
-    fsutil reparsepoint query "%PLUGINS_DIR%\rikugan" >nul 2>&1
+    fsutil reparsepoint query "%PLUGINS_DIR%\spectra" >nul 2>&1
     if !errorlevel! equ 0 (
-        rmdir "%PLUGINS_DIR%\rikugan"
+        rmdir "%PLUGINS_DIR%\spectra"
     ) else (
         :: Real directory — back it up
-        echo [!] Backing up existing rikugan\ to rikugan.bak\
-        if exist "%PLUGINS_DIR%\rikugan.bak\" rmdir /s /q "%PLUGINS_DIR%\rikugan.bak"
-        ren "%PLUGINS_DIR%\rikugan" "rikugan.bak"
+        echo [!] Backing up existing spectra\ to spectra.bak\
+        if exist "%PLUGINS_DIR%\spectra.bak\" rmdir /s /q "%PLUGINS_DIR%\spectra.bak"
+        ren "%PLUGINS_DIR%\spectra" "spectra.bak"
     )
 )
 
-mklink /J "%PLUGINS_DIR%\rikugan" "%SCRIPT_DIR%\rikugan" >nul 2>&1
+mklink /J "%PLUGINS_DIR%\spectra" "%SCRIPT_DIR%\spectra" >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [+] rikugan\ -^> %PLUGINS_DIR%\rikugan  (junction^)
+    echo [+] spectra\ -^> %PLUGINS_DIR%\spectra  (junction^)
 ) else (
     :: Junction failed (rare), fall back to xcopy
     echo [*] Junction failed, falling back to copy...
-    xcopy "%SCRIPT_DIR%\rikugan" "%PLUGINS_DIR%\rikugan\" /E /I /Y /Q >nul
+    xcopy "%SCRIPT_DIR%\spectra" "%PLUGINS_DIR%\spectra\" /E /I /Y /Q >nul
     if !errorlevel! equ 0 (
-        echo [+] rikugan\ -^> %PLUGINS_DIR%\rikugan  (copied^)
+        echo [+] spectra\ -^> %PLUGINS_DIR%\spectra  (copied^)
     ) else (
-        echo [-] Failed to copy rikugan\ package
+        echo [-] Failed to copy spectra\ package
         exit /b 1
     )
 )
@@ -225,8 +225,8 @@ if !errorlevel! equ 0 (
 
 echo.
 echo [+] Spectra installed successfully!
-echo [*] Plugin:  %PLUGINS_DIR%\rikugan_plugin.py
-echo [*] Package: %PLUGINS_DIR%\rikugan
+echo [*] Plugin:  %PLUGINS_DIR%\spectra_plugin.py
+echo [*] Package: %PLUGINS_DIR%\spectra
 echo [*] Config:  %CONFIG_DIR%\
 echo [*] Skills:  %SKILLS_DIR%\
 echo.

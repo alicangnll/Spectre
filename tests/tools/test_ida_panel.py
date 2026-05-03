@@ -17,21 +17,21 @@ from tests.qt_stubs import ensure_pyside6_stubs, _qt_class
 ensure_pyside6_stubs()
 
 # Stub spectra.ui.panel_core
-_panel_core_mod = types.ModuleType("rikugan.ui.panel_core")
+_panel_core_mod = types.ModuleType("spectra.ui.panel_core")
 _panel_core_mod.SpectraPanelCore = _qt_class("SpectraPanelCore")
-sys.modules.setdefault("rikugan.ui.panel_core", _panel_core_mod)
+sys.modules.setdefault("spectra.ui.panel_core", _panel_core_mod)
 
 # Stub session/actions modules
-_session_mod = types.ModuleType("rikugan.ida.ui.session_controller")
+_session_mod = types.ModuleType("spectra.ida.ui.session_controller")
 _session_mod.IdaSessionController = MagicMock()
 _session_mod.SessionController = _session_mod.IdaSessionController  # backwards-compat alias
-sys.modules["rikugan.ida.ui.session_controller"] = _session_mod
+sys.modules["spectra.ida.ui.session_controller"] = _session_mod
 
-_actions_mod = types.ModuleType("rikugan.ida.ui.actions")
+_actions_mod = types.ModuleType("spectra.ida.ui.actions")
 _actions_mod.SpectraUIHooks = MagicMock()
-sys.modules["rikugan.ida.ui.actions"] = _actions_mod
+sys.modules["spectra.ida.ui.actions"] = _actions_mod
 
-from rikugan.ida.ui.panel import SpectraPanel  # noqa: E402
+from spectra.ida.ui.panel import SpectraPanel  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

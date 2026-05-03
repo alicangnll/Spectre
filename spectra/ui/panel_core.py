@@ -1155,7 +1155,7 @@ class SpectraPanelCore(QWidget):
         try:
             from .agent_creator_dialog import AgentCreatorDialog
             from pathlib import Path
-            import rikugan.skills
+            import spectra.skills
 
             # Get the built-in skills directory directly
             skills_dir = Path(spectra.skills.__file__).parent / "builtins"

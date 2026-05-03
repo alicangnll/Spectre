@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- **Agent Loop**: Generator-based turn cycle (`rikugan/agent/loop.py`). User message → skill resolution → system prompt build → stream LLM → intercept tool calls → execute → feed results back → repeat.
-- **Hosts**: IDA Pro (`rikugan_plugin.py`) and Binary Ninja (`rikugan_binaryninja.py`). Host-agnostic core in `rikugan/agent/`, `rikugan/core/`, `rikugan/ui/`, `rikugan/providers/`, `rikugan/mcp/`, `rikugan/skills/`, `rikugan/state/`.
-- **Tools**: 56 tools per host. Defined with the `@tool` decorator in `rikugan/tools/` (IDA) and `rikugan/binja/tools/` (Binary Ninja). Categories: navigation, functions, strings, database, disassembly, decompiler, xrefs, annotations, types, scripting, microcode (IDA) / IL (Binary Ninja).
-- **Skills**: Markdown files with YAML frontmatter in `rikugan/skills/builtins/`. Activated with `/<slug>`. 12 built-in skills.
+- **Agent Loop**: Generator-based turn cycle (`spectra/agent/loop.py`). User message → skill resolution → system prompt build → stream LLM → intercept tool calls → execute → feed results back → repeat.
+- **Hosts**: IDA Pro (`spectra_plugin.py`) and Binary Ninja (`spectra_binaryninja.py`). Host-agnostic core in `spectra/agent/`, `spectra/core/`, `spectra/ui/`, `spectra/providers/`, `spectra/mcp/`, `spectra/skills/`, `spectra/state/`.
+- **Tools**: 56 tools per host. Defined with the `@tool` decorator in `spectra/tools/` (IDA) and `spectra/binja/tools/` (Binary Ninja). Categories: navigation, functions, strings, database, disassembly, decompiler, xrefs, annotations, types, scripting, microcode (IDA) / IL (Binary Ninja).
+- **Skills**: Markdown files with YAML frontmatter in `spectra/skills/builtins/`. Activated with `/<slug>`. 12 built-in skills.
 - **Exploration Mode**: 4-phase autonomous flow triggered by `/modify <goal>`: EXPLORE → PLAN → EXECUTE → SAVE. Phase 1 runs as a subagent.
 - **Plan Mode**: `/plan <msg>` — generate plan, user approves, execute step by step.
 - **Mutation Tracking**: Every mutating tool call is logged with a reverse operation. `/undo [N]` replays them in reverse.
@@ -15,19 +15,19 @@
 - **Providers**: Anthropic (Claude), OpenAI, Google Gemini, Ollama, MiniMax, OpenAI-compatible endpoints.
 - **Session Persistence**: Per-file auto-save/restore. Multi-tab chat. Session fork (deep copy to new tab).
 - **Context Window**: Auto-compaction at 80% usage threshold.
-- **Persistent Memory**: `RIKUGAN.md` per binary — facts saved by `save_memory` pseudo-tool, loaded into system prompt.
+- **Persistent Memory**: `SPECTRA.md` per binary — facts saved by `save_memory` pseudo-tool, loaded into system prompt.
 
 ## Documentation
 
-- [Full Architecture Reference](https://buzzer-re.github.io/rikugan/ARCHITECTURE.html): Agent loop internals, TurnEvent system, tool framework, exploration mode, plan mode, subagents, mutation tracking, context window, MCP integration, provider layer, UI layer, thread safety model.
-- [Docs / Getting Started](https://buzzer-re.github.io/rikugan/docs.html): Installation, configuration, usage, skills, MCP setup.
+- [Full Architecture Reference](https://buzzer-re.github.io/spectra/ARCHITECTURE.html): Agent loop internals, TurnEvent system, tool framework, exploration mode, plan mode, subagents, mutation tracking, context window, MCP integration, provider layer, UI layer, thread safety model.
+- [Docs / Getting Started](https://buzzer-re.github.io/spectra/docs.html): Installation, configuration, usage, skills, MCP setup.
 - [ARCHITECTURE.md](ARCHITECTURE.md): Full technical reference (same content as Architecture page, local copy).
 - [AGENTS.md](AGENTS.md): Developer guide — directory structure, how to add tools, hosts, and skills.
 
 ## File Layout
 
 ```
-rikugan/
+spectra/
 ├── agent/          # AgentLoop, BackgroundAgentRunner, exploration, plan, subagent, mutation, context window
 ├── core/           # Config, constants, errors, host context, logging, thread safety, types
 ├── tools/          # IDA tool implementations (@tool decorator, ToolDefinition, ToolRegistry)
@@ -40,8 +40,8 @@ rikugan/
 ├── state/          # SessionState, SessionHistory
 ├── ui/             # Shared Qt widgets (PanelCore, ChatView, MutationLogPanel, etc.)
 └── hosts/          # Backward-compat shims
-rikugan_plugin.py           # IDA Pro entry point
-rikugan_binaryninja.py      # Binary Ninja entry point
+spectra_plugin.py           # IDA Pro entry point
+spectra_binaryninja.py      # Binary Ninja entry point
 ```
 
 ## Commands
@@ -52,7 +52,7 @@ rikugan_binaryninja.py      # Binary Ninja entry point
 | `/modify <msg>` | Exploration mode: EXPLORE → PLAN → EXECUTE → SAVE |
 | `/explore <msg>` | Explore-only: autonomous read-only binary analysis |
 | `/undo [N]` | Undo last N mutations (default 1) |
-| `/memory` | Show current RIKUGAN.md contents |
+| `/memory` | Show current SPECTRA.md contents |
 | `/mcp` | Show MCP server health |
 | `/doctor` | Diagnose setup issues |
 | `/<skill-slug>` | Activate a skill (e.g. `/malware-analysis`, `/ctf`) |
@@ -78,7 +78,7 @@ rikugan_binaryninja.py      # Binary Ninja entry point
 
 ```python
 from typing import Annotated
-from rikugan.tools.base import tool
+from spectra.tools.base import tool
 
 @tool(category="navigation", mutating=False)
 def my_tool(address: Annotated[str, "Target address (hex)"]) -> str:
@@ -86,11 +86,11 @@ def my_tool(address: Annotated[str, "Target address (hex)"]) -> str:
     ...
 ```
 
-Register by adding the module to the host's `create_default_registry()` in `rikugan/ida/tools/registry.py` or `rikugan/binja/tools/registry.py`.
+Register by adding the module to the host's `create_default_registry()` in `spectra/ida/tools/registry.py` or `spectra/binja/tools/registry.py`.
 
 ## Adding Skills
 
-Create `rikugan/skills/builtins/<slug>/SKILL.md`:
+Create `spectra/skills/builtins/<slug>/SKILL.md`:
 
 ```markdown
 ---

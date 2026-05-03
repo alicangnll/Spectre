@@ -12,20 +12,20 @@ ensure_pyside6_stubs()
 
 # Stub heavy spectra submodules
 for _mod_name in [
-    "rikugan.ui.styles",
-    "rikugan.ui.chat_view",
-    "rikugan.ui.input_area",
-    "rikugan.ui.context_bar",
-    "rikugan.ui.tool_widgets",
-    "rikugan.core.config",
-    "rikugan.core.logging",
-    "rikugan.core.types",
-    "rikugan.agent.turn",
-    "rikugan.agent.mutation",
-    "rikugan.providers.auth_cache",
-    "rikugan.providers.anthropic_provider",
-    "rikugan.providers.ollama_provider",
-    "rikugan.providers.registry",
+    "spectra.ui.styles",
+    "spectra.ui.chat_view",
+    "spectra.ui.input_area",
+    "spectra.ui.context_bar",
+    "spectra.ui.tool_widgets",
+    "spectra.core.config",
+    "spectra.core.logging",
+    "spectra.core.types",
+    "spectra.agent.turn",
+    "spectra.agent.mutation",
+    "spectra.providers.auth_cache",
+    "spectra.providers.anthropic_provider",
+    "spectra.providers.ollama_provider",
+    "spectra.providers.registry",
 ]:
     if _mod_name not in sys.modules:
         _stub = types.ModuleType(_mod_name)
@@ -42,15 +42,15 @@ for _mod_name in [
         sys.modules[_mod_name] = _stub
 
 # Ensure DEFAULT_OLLAMA_URL is a string (used in comparisons)
-_ollama_stub = sys.modules.get("rikugan.providers.ollama_provider")
+_ollama_stub = sys.modules.get("spectra.providers.ollama_provider")
 if _ollama_stub and not isinstance(getattr(_ollama_stub, "DEFAULT_OLLAMA_URL", None), str):
     _ollama_stub.DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
 # Force-remove any stub that test_binja_panel/test_ida_panel may have registered
 # so we always import the real module here.
-sys.modules.pop("rikugan.ui.panel_core", None)
+sys.modules.pop("spectra.ui.panel_core", None)
 
-from rikugan.ui.panel_core import (  # noqa: E402
+from spectra.ui.panel_core import (  # noqa: E402
     _export_detect_lang, _export_format_tool_args,
     _export_format_tool_result, SpectraPanelCore,
     _TOOL_RESULT_TRUNCATE_CHARS,

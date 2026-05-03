@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spectra Docs — Installation, Configuration &amp; Usage</title>
-<link rel="icon" type="image/png" href="assets/rikugan_icon.png">
+<link rel="icon" type="image/png" href="assets/spectra_icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
@@ -221,7 +221,7 @@ td code{font-size:.82rem}
 <!-- ═══════════ NAV ═══════════ -->
 <nav class="nav">
   <a href="index.html" class="nav-brand">
-    <img src="assets/rikugan_icon.png" alt="">
+    <img src="assets/spectra_icon.png" alt="">
     Spectra <span class="jp">六眼</span>
   </a>
   <div class="nav-links">
@@ -229,7 +229,7 @@ td code{font-size:.82rem}
     <a href="index.html#features">Features</a>
     <a href="docs.html" class="active">Docs</a>
     <a href="ARCHITECTURE.html">Architecture</a>
-    <a href="https://github.com/buzzer-re/rikugan" class="btn-gh" target="_blank" rel="noopener">
+    <a href="https://github.com/buzzer-re/spectra" class="btn-gh" target="_blank" rel="noopener">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a>
@@ -307,8 +307,8 @@ td code{font-size:.82rem}
 <div class="steps">
   <div class="step">
     <h4>Clone the repository</h4>
-    <pre><code class="language-bash">git clone https://github.com/buzzer-re/rikugan.git
-cd rikugan</code></pre>
+    <pre><code class="language-bash">git clone https://github.com/buzzer-re/spectra.git
+cd spectra</code></pre>
   </div>
 
   <div class="step">
@@ -347,7 +347,7 @@ cd rikugan</code></pre>
   <div class="step">
     <h4>Set your API key</h4>
     <p>Open Spectra in your disassembler, click <strong>Settings</strong>, and paste your API key for your preferred provider.</p>
-    <img src="assets/rikugan_settings.png" alt="Spectra Settings Dialog" class="doc-img" loading="lazy">
+    <img src="assets/spectra_settings.png" alt="Spectra Settings Dialog" class="doc-img" loading="lazy">
   </div>
 </div>
 
@@ -361,11 +361,11 @@ cd rikugan</code></pre>
 <div class="table-wrap">
   <table>
     <tr><th>Host</th><th>Platform</th><th>Config Path</th></tr>
-    <tr><td>IDA Pro</td><td>Linux / macOS</td><td><code>~/.idapro/rikugan/config.json</code></td></tr>
-    <tr><td>IDA Pro</td><td>Windows</td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\config.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>Linux</td><td><code>~/.binaryninja/rikugan/config.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>macOS</td><td><code>~/Library/Application Support/Binary Ninja/rikugan/config.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>Windows</td><td><code>%APPDATA%\Binary Ninja\rikugan\config.json</code></td></tr>
+    <tr><td>IDA Pro</td><td>Linux / macOS</td><td><code>~/.idapro/spectra/config.json</code></td></tr>
+    <tr><td>IDA Pro</td><td>Windows</td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\config.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>Linux</td><td><code>~/.binaryninja/spectra/config.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>macOS</td><td><code>~/Library/Application Support/Binary Ninja/spectra/config.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>Windows</td><td><code>%APPDATA%\Binary Ninja\spectra\config.json</code></td></tr>
   </table>
 </div>
 <p>You can edit this JSON file directly, or use the Settings dialog in the UI.</p>
@@ -526,11 +526,11 @@ cd rikugan</code></pre>
 <div class="table-wrap">
   <table>
     <tr><th>Host</th><th>Platform</th><th>MCP Config Path</th></tr>
-    <tr><td>IDA Pro</td><td>Linux / macOS</td><td><code>~/.idapro/rikugan/mcp.json</code></td></tr>
-    <tr><td>IDA Pro</td><td>Windows</td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\mcp.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>Linux</td><td><code>~/.binaryninja/rikugan/mcp.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>macOS</td><td><code>~/Library/Application Support/Binary Ninja/rikugan/mcp.json</code></td></tr>
-    <tr><td>Binary Ninja</td><td>Windows</td><td><code>%APPDATA%\Binary Ninja\rikugan\mcp.json</code></td></tr>
+    <tr><td>IDA Pro</td><td>Linux / macOS</td><td><code>~/.idapro/spectra/mcp.json</code></td></tr>
+    <tr><td>IDA Pro</td><td>Windows</td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\mcp.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>Linux</td><td><code>~/.binaryninja/spectra/mcp.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>macOS</td><td><code>~/Library/Application Support/Binary Ninja/spectra/mcp.json</code></td></tr>
+    <tr><td>Binary Ninja</td><td>Windows</td><td><code>%APPDATA%\Binary Ninja\spectra\mcp.json</code></td></tr>
   </table>
 </div>
 <pre><code class="language-json">{
@@ -550,13 +550,13 @@ cd rikugan</code></pre>
 <h2 id="custom-skills">Custom Skills</h2>
 <p>Create custom skills in your user directory:</p>
 <pre><code class="language-text"># IDA Pro
-~/.idapro/rikugan/skills/                                        # Linux / macOS
-%APPDATA%\Hex-Rays\IDA Pro\rikugan\skills\                       # Windows
+~/.idapro/spectra/skills/                                        # Linux / macOS
+%APPDATA%\Hex-Rays\IDA Pro\spectra\skills\                       # Windows
 
 # Binary Ninja
-~/.binaryninja/rikugan/skills/                                   # Linux
-~/Library/Application Support/Binary Ninja/rikugan/skills/       # macOS
-%APPDATA%\Binary Ninja\rikugan\skills\                           # Windows
+~/.binaryninja/spectra/skills/                                   # Linux
+~/Library/Application Support/Binary Ninja/spectra/skills/       # macOS
+%APPDATA%\Binary Ninja\spectra\skills\                           # Windows
 
 my-skill/
   SKILL.md             # required: frontmatter + prompt body
@@ -660,24 +660,24 @@ Task: &lt;instruction for the agent&gt;
 <div class="table-wrap">
   <table>
     <tr><th>File</th><th>IDA Pro — Linux / macOS</th><th>IDA Pro — Windows</th></tr>
-    <tr><td>Main config</td><td><code>~/.idapro/rikugan/config.json</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\config.json</code></td></tr>
-    <tr><td>MCP config</td><td><code>~/.idapro/rikugan/mcp.json</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\mcp.json</code></td></tr>
-    <tr><td>Custom skills</td><td><code>~/.idapro/rikugan/skills/</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\skills\</code></td></tr>
-    <tr><td>Sessions</td><td><code>~/.idapro/rikugan/sessions/</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\sessions\</code></td></tr>
-    <tr><td>Debug log</td><td><code>~/.idapro/rikugan/rikugan_debug.log</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\rikugan_debug.log</code></td></tr>
-    <tr><td>Structured log</td><td><code>~/.idapro/rikugan/rikugan_structured.jsonl</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\rikugan\rikugan_structured.jsonl</code></td></tr>
+    <tr><td>Main config</td><td><code>~/.idapro/spectra/config.json</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\config.json</code></td></tr>
+    <tr><td>MCP config</td><td><code>~/.idapro/spectra/mcp.json</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\mcp.json</code></td></tr>
+    <tr><td>Custom skills</td><td><code>~/.idapro/spectra/skills/</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\skills\</code></td></tr>
+    <tr><td>Sessions</td><td><code>~/.idapro/spectra/sessions/</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\sessions\</code></td></tr>
+    <tr><td>Debug log</td><td><code>~/.idapro/spectra/spectra_debug.log</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\spectra_debug.log</code></td></tr>
+    <tr><td>Structured log</td><td><code>~/.idapro/spectra/spectra_structured.jsonl</code></td><td><code>%APPDATA%\Hex-Rays\IDA Pro\spectra\spectra_structured.jsonl</code></td></tr>
     <tr><td>Persistent memory</td><td colspan="2"><code>&lt;idb_directory&gt;/RIKUGAN.md</code></td></tr>
   </table>
 </div>
 <div class="table-wrap">
   <table>
     <tr><th>File</th><th>Binary Ninja — Linux</th><th>Binary Ninja — macOS</th><th>Binary Ninja — Windows</th></tr>
-    <tr><td>Main config</td><td><code>~/.binaryninja/rikugan/config.json</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/config.json</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\config.json</code></td></tr>
-    <tr><td>MCP config</td><td><code>~/.binaryninja/rikugan/mcp.json</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/mcp.json</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\mcp.json</code></td></tr>
-    <tr><td>Custom skills</td><td><code>~/.binaryninja/rikugan/skills/</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/skills/</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\skills\</code></td></tr>
-    <tr><td>Sessions</td><td><code>~/.binaryninja/rikugan/sessions/</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/sessions/</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\sessions\</code></td></tr>
-    <tr><td>Debug log</td><td><code>~/.binaryninja/rikugan/rikugan_debug.log</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/rikugan_debug.log</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\rikugan_debug.log</code></td></tr>
-    <tr><td>Structured log</td><td><code>~/.binaryninja/rikugan/rikugan_structured.jsonl</code></td><td><code>~/Library/Application Support/Binary Ninja/rikugan/rikugan_structured.jsonl</code></td><td><code>%APPDATA%\Binary Ninja\rikugan\rikugan_structured.jsonl</code></td></tr>
+    <tr><td>Main config</td><td><code>~/.binaryninja/spectra/config.json</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/config.json</code></td><td><code>%APPDATA%\Binary Ninja\spectra\config.json</code></td></tr>
+    <tr><td>MCP config</td><td><code>~/.binaryninja/spectra/mcp.json</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/mcp.json</code></td><td><code>%APPDATA%\Binary Ninja\spectra\mcp.json</code></td></tr>
+    <tr><td>Custom skills</td><td><code>~/.binaryninja/spectra/skills/</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/skills/</code></td><td><code>%APPDATA%\Binary Ninja\spectra\skills\</code></td></tr>
+    <tr><td>Sessions</td><td><code>~/.binaryninja/spectra/sessions/</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/sessions/</code></td><td><code>%APPDATA%\Binary Ninja\spectra\sessions\</code></td></tr>
+    <tr><td>Debug log</td><td><code>~/.binaryninja/spectra/spectra_debug.log</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/spectra_debug.log</code></td><td><code>%APPDATA%\Binary Ninja\spectra\spectra_debug.log</code></td></tr>
+    <tr><td>Structured log</td><td><code>~/.binaryninja/spectra/spectra_structured.jsonl</code></td><td><code>~/Library/Application Support/Binary Ninja/spectra/spectra_structured.jsonl</code></td><td><code>%APPDATA%\Binary Ninja\spectra\spectra_structured.jsonl</code></td></tr>
     <tr><td>Persistent memory</td><td colspan="3"><code>&lt;bndb_directory&gt;/RIKUGAN.md</code></td></tr>
   </table>
 </div>

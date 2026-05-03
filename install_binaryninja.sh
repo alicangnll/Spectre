@@ -51,9 +51,9 @@ else
 fi
 
 PLUGINS_DIR="$BN_USER_DIR/plugins"
-CONFIG_DIR="$BN_USER_DIR/rikugan"
+CONFIG_DIR="$BN_USER_DIR/spectra"
 SKILLS_DIR="$CONFIG_DIR/skills"
-PLUGIN_LINK="$PLUGINS_DIR/rikugan"
+PLUGIN_LINK="$PLUGINS_DIR/spectra"
 
 # ── Remove old "iris" installation (rebrand cleanup) ─────────────────
 OLD_LINK="$PLUGINS_DIR/iris"
@@ -67,7 +67,7 @@ elif [[ -d "$OLD_LINK" ]]; then
     ok "Old 'iris' directory removed"
 fi
 
-if [[ ! -f "$SCRIPT_DIR/rikugan_binaryninja.py" ]] || [[ ! -f "$SCRIPT_DIR/plugin.json" ]]; then
+if [[ ! -f "$SCRIPT_DIR/spectra_binaryninja.py" ]] || [[ ! -f "$SCRIPT_DIR/plugin.json" ]]; then
     err "Binary Ninja plugin files missing in $SCRIPT_DIR"
     exit 1
 fi
@@ -168,10 +168,10 @@ fi
 mkdir -p "$PLUGINS_DIR"
 mkdir -p "$SKILLS_DIR"
 
-# Built-in skills are loaded directly from rikugan/skills/builtins/ (via symlink).
+# Built-in skills are loaded directly from spectra/skills/builtins/ (via symlink).
 # The user skills directory is for user-created skills only.
 # Remove stale built-in copies that previous installs may have placed here.
-BUILTINS_SRC="$SCRIPT_DIR/rikugan/skills/builtins"
+BUILTINS_SRC="$SCRIPT_DIR/spectra/skills/builtins"
 if [[ -d "$BUILTINS_SRC" ]] && [[ -d "$SKILLS_DIR" ]]; then
     for skill in "$BUILTINS_SRC"/*/; do
         slug="$(basename "$skill")"

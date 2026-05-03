@@ -13,8 +13,8 @@ install_ida_mocks()
 
 def _reload_anthropic_provider_module() -> None:
     """Force the real provider module to load, not leftover test stubs."""
-    sys.modules.pop("rikugan.providers.anthropic_provider", None)
-    sys.modules.pop("rikugan.core.types", None)
+    sys.modules.pop("spectra.providers.anthropic_provider", None)
+    sys.modules.pop("spectra.core.types", None)
 
 
 class TestBuiltinModels(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestBuiltinModels(unittest.TestCase):
 
     def test_anthropic_builtin_models(self):
         _reload_anthropic_provider_module()
-        from rikugan.providers.anthropic_provider import AnthropicProvider
+        from spectra.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test", model="test")
         models = p._builtin_models()
         self.assertTrue(len(models) > 0)
@@ -31,7 +31,7 @@ class TestBuiltinModels(unittest.TestCase):
             self.assertTrue(m.context_window > 0)
 
     def test_openai_builtin_models(self):
-        from rikugan.providers.openai_provider import OpenAIProvider
+        from spectra.providers.openai_provider import OpenAIProvider
         p = OpenAIProvider(api_key="test", model="test")
         models = p._builtin_models()
         self.assertTrue(len(models) > 0)
@@ -39,7 +39,7 @@ class TestBuiltinModels(unittest.TestCase):
             self.assertEqual(m.provider, "openai")
 
     def test_gemini_builtin_models(self):
-        from rikugan.providers.gemini_provider import GeminiProvider
+        from spectra.providers.gemini_provider import GeminiProvider
         models = GeminiProvider._builtin_models()
         self.assertTrue(len(models) > 0)
         for m in models:
@@ -52,7 +52,7 @@ class TestProviderCapabilities(unittest.TestCase):
 
     def test_anthropic_capabilities(self):
         _reload_anthropic_provider_module()
-        from rikugan.providers.anthropic_provider import AnthropicProvider
+        from spectra.providers.anthropic_provider import AnthropicProvider
         p = AnthropicProvider(api_key="test", model="test")
         caps = p.capabilities
         self.assertTrue(caps.streaming)
@@ -60,14 +60,14 @@ class TestProviderCapabilities(unittest.TestCase):
         self.assertTrue(caps.vision)
 
     def test_openai_capabilities(self):
-        from rikugan.providers.openai_provider import OpenAIProvider
+        from spectra.providers.openai_provider import OpenAIProvider
         p = OpenAIProvider(api_key="test", model="test")
         caps = p.capabilities
         self.assertTrue(caps.streaming)
         self.assertTrue(caps.tool_use)
 
     def test_gemini_capabilities(self):
-        from rikugan.providers.gemini_provider import GeminiProvider
+        from spectra.providers.gemini_provider import GeminiProvider
         p = GeminiProvider(api_key="test", model="test")
         caps = p.capabilities
         self.assertTrue(caps.streaming)

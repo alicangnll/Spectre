@@ -64,4 +64,4 @@ Installers create plugin links, install Python dependencies, and initialize the 
 
 ## Source
 
-https://github.com/buzzer-re/rikugan
+https://github.com/buzzer-re/spectra
