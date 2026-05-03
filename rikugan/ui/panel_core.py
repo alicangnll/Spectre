@@ -1472,6 +1472,10 @@ class RikuganPanelCore(QWidget):
         self._mode_stack.setCurrentIndex(index)
         if index == 1:
             self._ensure_tools_initialized()
+            # Load bulk renamer functions ONLY when entering Tools tab
+            if getattr(self, "_tools_initialized", False) and not getattr(self, "_renamer_loaded", False):
+                self._renamer_loaded = True  # Mark as loaded, prevent duplicate loads
+                QTimer.singleShot(0, self._load_renamer_functions)
             if hasattr(self, '_tools_btn'):
                 self._tools_btn.setChecked(True)
         elif index == 2:
@@ -1681,8 +1685,8 @@ class RikuganPanelCore(QWidget):
             self._tools_form = self._tools_form_factory(self._tools_panel)
 
         # Populate bulk renamer with functions from the binary.
-        # Defer to next event-loop tick so the panel paints first
-        QTimer.singleShot(0, self._load_renamer_functions)
+        # ONLY load functions when actually entering the Tools tab, not during init
+        # This will be triggered by _on_mode_changed when index == 1
 
         # Start tools polling timer
         self._tools_poll_timer = QTimer(self)
