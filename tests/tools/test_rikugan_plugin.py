@@ -176,7 +176,7 @@ class TestSpectraPlugmodTogglePanel(unittest.TestCase):
         real_import_module = importlib.import_module
 
         def fake_import(name, *args, **kwargs):
-            if name == "spectra.ida.ui.panel":
+            if name == "rikugan.ida.ui.panel":
                 return types.SimpleNamespace(SpectraPanel=mock_panel_cls)
             return real_import_module(name)
 
@@ -187,7 +187,7 @@ class TestSpectraPlugmodTogglePanel(unittest.TestCase):
         mock_panel_cls.assert_called_once()
         mock_panel_instance.show.assert_called_once()
         imported = [call.args[0] for call in mock_import.call_args_list]
-        self.assertIn("spectra.ida.ui.panel", imported)
+        self.assertIn("rikugan.ida.ui.panel", imported)
 
 
 # ---------------------------------------------------------------------------

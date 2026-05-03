@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.tools.base import tool
-from spectra.tools.registry import ToolRegistry
-from spectra.core.errors import ToolNotFoundError
+from rikugan.tools.base import tool
+from rikugan.tools.registry import ToolRegistry
+from rikugan.core.errors import ToolNotFoundError
 
 
 class TestToolDecorator(unittest.TestCase):
@@ -65,7 +65,7 @@ class TestToolDecorator(unittest.TestCase):
             """Fails."""
             raise ValueError("boom")
 
-        from spectra.core.errors import ToolError
+        from rikugan.core.errors import ToolError
         with self.assertRaises(ToolError):
             failing_tool()
 
@@ -110,12 +110,12 @@ class TestBuiltinTools(unittest.TestCase):
     """Test that built-in tools are loadable (using mocks)."""
 
     def test_navigation_tools(self):
-        from spectra.ida.tools.navigation import get_cursor_position
+        from rikugan.ida.tools.navigation import get_cursor_position
         result = get_cursor_position()
         self.assertTrue(result.startswith("0x"))
 
     def test_database_tools_loadable(self):
-        from spectra.ida.tools import database
+        from rikugan.ida.tools import database
         self.assertTrue(hasattr(database, "get_binary_info"))
 
 

@@ -4,7 +4,7 @@ Must be called BEFORE importing any spectra.ui module. Example::
 
     from tests.qt_stubs import ensure_pyside6_stubs
     ensure_pyside6_stubs()
-    from spectra.ui.some_module import ...
+    from rikugan.ui.some_module import ...
 """
 
 from __future__ import annotations

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.tools.script_guard import _check_ast, run_guarded_script
+from rikugan.tools.script_guard import _check_ast, run_guarded_script
 
 
 def _empty_ns():

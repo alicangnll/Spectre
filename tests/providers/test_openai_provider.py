@@ -12,11 +12,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.core.types import Message, Role, ToolCall, ToolResult
+from rikugan.core.types import Message, Role, ToolCall, ToolResult
 
 
 def _make_provider():
-    from spectra.providers.openai_provider import OpenAIProvider
+    from rikugan.providers.openai_provider import OpenAIProvider
     return OpenAIProvider(api_key="test-key", model="gpt-test")
 
 
@@ -123,13 +123,13 @@ class TestOpenAINormalizeResponse(unittest.TestCase):
 
 class TestOpenAIHandleApiError(unittest.TestCase):
     def test_generic_error_raises_provider_error(self):
-        from spectra.core.errors import ProviderError
+        from rikugan.core.errors import ProviderError
         p = _make_provider()
         with self.assertRaises(ProviderError):
             p._handle_api_error(RuntimeError("something broke"))
 
     def test_context_length_string(self):
-        from spectra.core.errors import ProviderError
+        from rikugan.core.errors import ProviderError
         p = _make_provider()
         with self.assertRaises(ProviderError):
             p._handle_api_error(RuntimeError("maximum context length exceeded"))

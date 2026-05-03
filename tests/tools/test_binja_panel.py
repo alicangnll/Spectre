@@ -13,15 +13,15 @@ ensure_pyside6_stubs()
 # Stub out binaryninja and the heavy spectra modules panel.py imports
 sys.modules.setdefault("binaryninja", types.ModuleType("binaryninja"))
 
-_panel_core_mod = types.ModuleType("spectra.ui.panel_core")
+_panel_core_mod = types.ModuleType("rikugan.ui.panel_core")
 _panel_core_mod.SpectraPanelCore = _qt_class("SpectraPanelCore")
-sys.modules.setdefault("spectra.ui.panel_core", _panel_core_mod)
+sys.modules.setdefault("rikugan.ui.panel_core", _panel_core_mod)
 
-_session_mod = types.ModuleType("spectra.binja.ui.session_controller")
+_session_mod = types.ModuleType("rikugan.binja.ui.session_controller")
 _session_mod.BinaryNinjaSessionController = MagicMock()
-sys.modules["spectra.binja.ui.session_controller"] = _session_mod
+sys.modules["rikugan.binja.ui.session_controller"] = _session_mod
 
-from spectra.binja.ui.panel import SpectraPanel  # noqa: E402
+from rikugan.binja.ui.panel import SpectraPanel  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

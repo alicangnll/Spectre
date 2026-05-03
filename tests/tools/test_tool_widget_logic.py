@@ -12,7 +12,7 @@ import unittest
 from tests.qt_stubs import ensure_pyside6_stubs
 ensure_pyside6_stubs()
 
-from spectra.ui.tool_widgets import (  # noqa: E402
+from rikugan.ui.tool_widgets import (  # noqa: E402
     _strip_mcp_prefix,
     _tool_color,
     _format_tool_group_label,

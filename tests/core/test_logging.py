@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.core.logging import (
+from rikugan.core.logging import (
     get_logger,
     log_info,
     log_warning,
@@ -106,7 +106,7 @@ class TestIDAHandler(unittest.TestCase):
     def test_emit_to_stderr_when_no_host_sink(self):
         """When no host sink is registered, HostOutputHandler falls back to stderr."""
         import io
-        import spectra.core.log_sinks as sinks_mod
+        import rikugan.core.log_sinks as sinks_mod
 
         handler = IDAHandler()
         handler.setFormatter(logging.Formatter("%(message)s"))
@@ -155,7 +155,7 @@ class TestFlushFileHandler(unittest.TestCase):
             os.unlink(path)
 
     def test_log_file_path_creates_directory(self):
-        from spectra.core.log_sinks import _log_file_path
+        from rikugan.core.log_sinks import _log_file_path
         path = _log_file_path()
         self.assertTrue(os.path.isdir(os.path.dirname(path)))
         self.assertTrue(path.endswith("spectra_debug.log"))

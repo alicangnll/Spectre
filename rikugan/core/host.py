@@ -63,7 +63,7 @@ def is_binary_ninja() -> bool:
 
 
 # Convenience module-level flags — importers that just need a bool
-# can use ``from spectra.core.host import IDA_AVAILABLE`` instead of
+# can use ``from rikugan.core.host import IDA_AVAILABLE`` instead of
 # calling ``is_ida()`` repeatedly.
 IDA_AVAILABLE: bool = is_ida()
 BINARY_NINJA_AVAILABLE: bool = is_binary_ninja()

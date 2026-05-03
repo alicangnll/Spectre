@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.tools.base import ParameterSchema, ToolDefinition
-from spectra.tools.registry import ToolRegistry
+from rikugan.tools.base import ParameterSchema, ToolDefinition
+from rikugan.tools.registry import ToolRegistry
 
 
 def _make_defn(params: list[ParameterSchema]) -> ToolDefinition:

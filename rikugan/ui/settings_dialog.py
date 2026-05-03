@@ -1310,7 +1310,7 @@ class SettingsDialog(QDialog):
         try:
             from .agent_creator_dialog import AgentCreatorDialog
             from pathlib import Path
-            import spectra.skills
+            import rikugan.skills
 
             # Get the built-in skills directory directly
             skills_dir = Path(spectra.skills.__file__).parent / "builtins"

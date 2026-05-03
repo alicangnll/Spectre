@@ -12,16 +12,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.mcp.config import MCPServerConfig, load_mcp_config, save_mcp_config
-from spectra.mcp.protocol import (
+from rikugan.mcp.config import MCPServerConfig, load_mcp_config, save_mcp_config
+from rikugan.mcp.protocol import (
     MCPToolSchema,
     encode_jsonrpc_request,
     decode_jsonrpc_response,
 )
-from spectra.mcp.bridge import _mcp_schema_to_parameters, register_mcp_tools
-from spectra.mcp.client import MCPClient
-from spectra.mcp.manager import MCPManager
-from spectra.tools.registry import ToolRegistry
+from rikugan.mcp.bridge import _mcp_schema_to_parameters, register_mcp_tools
+from rikugan.mcp.client import MCPClient
+from rikugan.mcp.manager import MCPManager
+from rikugan.tools.registry import ToolRegistry
 
 
 class TestMCPConfig(unittest.TestCase):

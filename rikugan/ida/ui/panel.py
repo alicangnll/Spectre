@@ -5,8 +5,8 @@ from __future__ import annotations
 import importlib
 from typing import Any
 
-from spectra.ui.panel_core import SpectraPanelCore
-from spectra.ui.qt_compat import QT_BINDING, QVBoxLayout, QWidget
+from rikugan.ui.panel_core import SpectraPanelCore
+from rikugan.ui.qt_compat import QT_BINDING, QVBoxLayout, QWidget
 
 from .actions import SpectraUIHooks
 from .session_controller import IdaSessionController

@@ -14,26 +14,26 @@ install_ida_mocks()
 
 # Some UI tests stub modules in sys.modules; ensure this test gets real ones.
 for _mod_name in [
-    "spectra.core.types",
-    "spectra.core.config",
-    "spectra.core.logging",
-    "spectra.agent.turn",
-    "spectra.agent.mutation",
-    "spectra.providers.auth_cache",
-    "spectra.providers.anthropic_provider",
-    "spectra.providers.ollama_provider",
-    "spectra.providers.registry",
-    "spectra.ui.chat_view",
-    "spectra.ui.context_bar",
-    "spectra.ui.input_area",
-    "spectra.ui.styles",
-    "spectra.ui.tool_widgets",
+    "rikugan.core.types",
+    "rikugan.core.config",
+    "rikugan.core.logging",
+    "rikugan.agent.turn",
+    "rikugan.agent.mutation",
+    "rikugan.providers.auth_cache",
+    "rikugan.providers.anthropic_provider",
+    "rikugan.providers.ollama_provider",
+    "rikugan.providers.registry",
+    "rikugan.ui.chat_view",
+    "rikugan.ui.context_bar",
+    "rikugan.ui.input_area",
+    "rikugan.ui.styles",
+    "rikugan.ui.tool_widgets",
 ]:
     sys.modules.pop(_mod_name, None)
 
-from spectra.core.config import SpectraConfig
-from spectra.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
-from spectra.ida.ui.session_controller import IdaSessionController
+from rikugan.core.config import SpectraConfig
+from rikugan.core.types import Message, Role, TokenUsage, ToolCall, ToolResult
+from rikugan.ida.ui.session_controller import IdaSessionController
 
 
 class TestIdaSessionController(unittest.TestCase):
@@ -105,7 +105,7 @@ class TestIdaSessionController(unittest.TestCase):
         self.ctrl.on_agent_finished()
 
         # Verify session was saved to disk
-        from spectra.state.history import SessionHistory
+        from rikugan.state.history import SessionHistory
         history = SessionHistory(self.cfg)
         sessions = history.list_sessions(db_instance_id=self.ctrl._db_instance_id)
         self.assertTrue(any(s["id"] == self.ctrl.session.id for s in sessions))
@@ -187,7 +187,7 @@ class TestIdaSessionController(unittest.TestCase):
         self.ctrl.shutdown()
 
         with patch.object(self.cfg, "enabled_external_mcp", []):
-            with patch("spectra.core.external_sources.discover_all_external_mcp") as discover_mcp:
+            with patch("rikugan.core.external_sources.discover_all_external_mcp") as discover_mcp:
                 ctrl = IdaSessionController(self.cfg)
                 ctrl._runtime_init_done.wait(timeout=5.0)
                 ctrl.shutdown()
@@ -198,7 +198,7 @@ class TestIdaSessionController(unittest.TestCase):
         self.ctrl.shutdown()
 
         with patch.object(self.cfg, "enabled_external_mcp", ["claude:test"]):
-            with patch("spectra.core.external_sources.discover_all_external_mcp", return_value={"claude": [], "codex": []}) as discover_mcp:
+            with patch("rikugan.core.external_sources.discover_all_external_mcp", return_value={"claude": [], "codex": []}) as discover_mcp:
                 ctrl = IdaSessionController(self.cfg)
                 ctrl._runtime_init_done.wait(timeout=5.0)
                 ctrl.shutdown()

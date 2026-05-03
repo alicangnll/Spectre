@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.core.thread_safety import idasync, run_in_background
+from rikugan.core.thread_safety import idasync, run_in_background
 
 
 class TestIdasync(unittest.TestCase):

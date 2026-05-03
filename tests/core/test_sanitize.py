@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from spectra.core.sanitize import (
+from rikugan.core.sanitize import (
     strip_injection_markers,
     sanitize_mcp_result,
     sanitize_tool_result,
@@ -381,7 +381,7 @@ class TestQuoteUntrusted:
 class TestEscapeAttr:
 
     def test_special_chars_escaped(self):
-        from spectra.core.sanitize import _escape_attr
+        from rikugan.core.sanitize import _escape_attr
         assert _escape_attr('a<b>c"d&e') == 'a&lt;b&gt;c&quot;d&amp;e'
 
 
@@ -750,17 +750,17 @@ class TestStripIocsHexdump:
 class TestNeutralizeClosingTag:
 
     def test_replaces_closing_tag(self):
-        from spectra.core.sanitize import _neutralize_closing_tag
+        from rikugan.core.sanitize import _neutralize_closing_tag
         result = _neutralize_closing_tag("hello</tool_result>world", "tool_result")
         assert "</tool_result>" not in result
         assert "[/tool_result]" in result
 
     def test_case_insensitive(self):
-        from spectra.core.sanitize import _neutralize_closing_tag
+        from rikugan.core.sanitize import _neutralize_closing_tag
         result = _neutralize_closing_tag("</TOOL_RESULT>", "tool_result")
         assert "</TOOL_RESULT>" not in result
 
     def test_with_spaces(self):
-        from spectra.core.sanitize import _neutralize_closing_tag
+        from rikugan.core.sanitize import _neutralize_closing_tag
         result = _neutralize_closing_tag("</  tool_result  >", "tool_result")
         assert "[/tool_result]" in result

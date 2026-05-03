@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from tests.mocks.ida_mock import install_ida_mocks
 install_ida_mocks()
 
-from spectra.providers.ollama_provider import OllamaProvider, DEFAULT_OLLAMA_URL
-from spectra.providers.openai_compat import OpenAICompatProvider
+from rikugan.providers.ollama_provider import OllamaProvider, DEFAULT_OLLAMA_URL
+from rikugan.providers.openai_compat import OpenAICompatProvider
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +148,7 @@ class TestOpenAICompatProvider(unittest.TestCase):
         assert models == []
 
     def test_get_client_raises_without_openai(self):
-        from spectra.core.errors import ProviderError
+        from rikugan.core.errors import ProviderError
         p = OpenAICompatProvider(api_key="k", api_base="http://localhost/v1")
         with patch("importlib.import_module", side_effect=ImportError("no openai")):
             with self.assertRaises(ProviderError):

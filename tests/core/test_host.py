@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import spectra.core.host as host_mod
-from spectra.core.host import (
+import rikugan.core.host as host_mod
+from rikugan.core.host import (
     HOST_BINARY_NINJA,
     HOST_IDA,
     HOST_STANDALONE,

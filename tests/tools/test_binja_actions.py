@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock
 
-from spectra.binja.ui.actions import (
+from rikugan.binja.ui.actions import (
     ACTION_DEFS,
     build_context,
     handle_annotate,
