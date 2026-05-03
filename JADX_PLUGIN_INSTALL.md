@@ -87,10 +87,10 @@ python install_jadx_plugin.py
 # Extract to C:\jadx
 
 # Add to PATH
-setx PATH "%PATH%;C:\jadx\bin"
+setx PATH "%PATH%;C:\jadxin"
 
 # Install Spectra plugin
-cd C:\path\to\Spectra
+cd C:\path	o\Spectra
 python install_jadx_plugin.py
 ```
 
@@ -265,10 +265,10 @@ python install_jadx_plugin.py
 # Install JADX
 # Download from https://github.com/skylot/jadx/releases
 # Extract to C:\jadx
-# Add C:\jadx\bin to system PATH
+# Add C:\jadxin to system PATH
 
 # Install Spectra plugin
-cd C:\path\to\Spectra
+cd C:\path	o\Spectra
 python install_jadx_plugin.py
 ```
 

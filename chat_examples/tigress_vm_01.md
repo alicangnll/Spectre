@@ -134,7 +134,8 @@ Good. I see `main` at `0x4005f4`, a format string "Call this program with %i arg
 
 ```c
 if (argc != 2)
-printf("Call this program with %i arguments\n", 1)
+printf("Call this program with %i arguments
+", 1)
 exit(0xffffffff)
 noreturn
 int64_t var_38[0x2]
@@ -146,7 +147,8 @@ int64_t var_28[0x2]
 sub_4006d1(&var_38, &var_28, &var_28)
 int32_t i_1 = 0
 while (i_1 s<= 0)
-printf("%lu\n", var_28[sx.q(i_1)])
+printf("%lu
+", var_28[sx.q(i_1)])
 i_1 += 1
 return 0
 ```
@@ -1307,7 +1309,8 @@ print()
 # SHL -> ... << 4? Need to trace more carefully
 
 # Let me just do a numeric emulation instead
-print("\n=== Switching to numeric emulation ===")
+print("
+=== Switching to numeric emulation ===")
 
 ```
 
@@ -2137,7 +2140,8 @@ x = 42
 result, log = emulate_vm_verbose(x)
 print(f"Input: {x}")
 print(f"Output: {result}")
-print(f"\nStore operations:")
+print(f"
+Store operations:")
 for l in log:
     print(f"  {l}")
 
@@ -2249,13 +2253,17 @@ def emulate_vm_verbose(input_val):
 x = 42
 result, log = emulate_vm_verbose(x)
 print(f"Input: x = {x}")
-print(f"\nStore trace:")
+print(f"
+Store trace:")
 for l in log:
     print(f"  {l}")
-print(f"\nOutput: {result}")
+print(f"
+Output: {result}")
 
 # Now let me derive the symbolic formula
-print("\n\n=== Symbolic Formula ===")
+print("
+
+=== Symbolic Formula ===")
 x = 42
 L = MASK64
 a = (x + 886599889) & L
@@ -2281,7 +2289,8 @@ print(f"local[3] = ROL(val, shift_left) = {rotated}")
 # Then local[3] gets updated with more operations
 # Let me check what the next block does
 d = local_vars_check = [a, b, c, rotated]
-print(f"\nlocal vars after first 4 stores: {[hex(v) for v in d]}")
+print(f"
+local vars after first 4 stores: {[hex(v) for v in d]}")
 
 ```
 
@@ -2500,9 +2509,11 @@ for x in [0, 1, 42, 100, 12345678, 0xdeadbeef, 999999999, 0x123456789abcdef0]:
     print(f"  x={x:20d}: VM={vm_result:20d} SYM={sym_result:20d} {ok}")
 
 if match:
-    print("\nAll match! Symbolic formula is correct.")
+    print("
+All match! Symbolic formula is correct.")
 else:
-    print("\nMISMATCH detected!")
+    print("
+MISMATCH detected!")
 
 ```
 

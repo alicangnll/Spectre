@@ -220,34 +220,3 @@ Byte-level problem, byte-level fix. Use `execute_python`.
 ```python
 import ida_bytes
 ida_bytes.patch_byte(junk_ea, 0x90)         # NOP one junk byte
-ida_bytes.patch_bytes(start, b"\x90" * n)    # NOP range
-# Then redefine the function if needed:
-# ida_funcs.del_func(func_ea); idc.add_func(func_ea)
-```
-
-Check disassembly view first — IDA often handles these at the disassembly level already.
-
----
-
-## VM Boundary Detection
-
-Not reversible with IL-level tools. Document and move on.
-
-1. **Identify**: VM entry point (where native code transfers control to the VM), bytecode buffer address, handler table address, handler dispatch mechanism.
-2. **Document**: Use `set_comment` and `rename_address` to annotate all VM-related addresses.
-3. **Scope**: Focus deobfuscation efforts on non-virtualized code paths.
-4. **Escalate**: Recommend specialized VM lifting tools (Miasm, angr, Triton) for the virtualized portions.
-
----
-
-## Combining Techniques
-
-Most real obfuscation uses multiple layers. The agent should:
-
-1. **Read first** — get microcode at multiple maturity levels to understand what's present.
-2. **Prioritize** — CFF is usually the outermost layer. Remove it first to expose inner layers.
-3. **Install incrementally** — one optimizer at a time. Redecompile after each. Don't try to fix everything in one pass.
-4. **Verify after each step** — if the code doesn't improve, the pattern match was wrong. Read again, adjust.
-5. **Layer removal order**: typically CFF → opaque predicates/BCF → MBA → instruction substitution → dead code cleanup.
-
-For `execute_python` with ida-domain hooks, multiple techniques can run in a single `DecompilerHooks` subclass — call each pass function from `locopt(mba)` or `preoptimized(mba)`. But only combine passes after each one works individually.

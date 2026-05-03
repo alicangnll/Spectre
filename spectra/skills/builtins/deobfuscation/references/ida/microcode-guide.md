@@ -202,23 +202,3 @@ When microcode-level modification is insufficient, use `execute_python`:
 
 ```python
 ida_bytes.patch_byte(ea, 0x90)           # NOP one byte
-ida_bytes.patch_bytes(ea, b"\x90" * 5)   # NOP sled
-```
-
-Or through ida-domain:
-```python
-with Database.open() as db:
-    db.bytes.patch_byte_at(ea, value)
-```
-
-## Key Microcode Opcodes
-
-| Category | Opcodes |
-|----------|---------|
-| Data movement | `m_mov`, `m_ldc`, `m_stx`, `m_ldx` |
-| Arithmetic | `m_add`, `m_sub`, `m_mul`, `m_udiv`, `m_sdiv`, `m_umod`, `m_smod` |
-| Bitwise | `m_and`, `m_or`, `m_xor`, `m_shl`, `m_shr`, `m_sar`, `m_bnot` |
-| Comparison/set | `m_setz`, `m_setnz`, `m_setb`, `m_seta`, `m_setl`, `m_setg` |
-| Control flow | `m_jcnd`, `m_jz`, `m_jnz`, `m_jg`, `m_jl`, `m_jge`, `m_jle`, `m_ja`, `m_jae`, `m_jb`, `m_jbe` |
-| Unconditional | `m_goto`, `m_call`, `m_ret` |
-| Special | `m_nop`, `m_jtbl` |

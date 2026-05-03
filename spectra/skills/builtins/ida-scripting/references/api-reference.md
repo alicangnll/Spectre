@@ -325,7 +325,8 @@ ida_xref.del_dref(from_ea, to_ea)
 
 ```python
 # Messages
-ida_kernwin.msg("Text\n")
+ida_kernwin.msg("Text
+")
 ida_kernwin.warning("Warning popup")
 ida_kernwin.info("Info popup")
 

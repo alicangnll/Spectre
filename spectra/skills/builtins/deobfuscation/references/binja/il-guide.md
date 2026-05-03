@@ -176,19 +176,3 @@ nop_instructions("0x401000", "0x401004,0x401008,0x40100c")
 
 # Via execute_python:
 bv.convert_to_nop(addr)             # NOP one instruction (arch-aware)
-bv.write(addr, b"\x90" * length)    # raw byte write
-bv.update_analysis_and_wait()       # re-analyze after patching
-```
-
-## Key Differences from IDA Microcode
-
-| Aspect | Binary Ninja | IDA Microcode |
-|---|---|---|
-| IL levels | 3 (LLIL, MLIL, HLIL) + SSA forms | 1 (microcode with 8 maturity levels) |
-| Modification target | Non-SSA LLIL or MLIL | `minsn_t` in optimizer callbacks |
-| Batch transform | Workflow API (`install_il_workflow`) | `install_microcode_optimizer` |
-| After modification | `finalize()` + `generate_ssa_form()` | `blk.mark_lists_dirty()` + `mba.mark_chains_dirty()` |
-| Architecture | Agnostic at MLIL+ | Agnostic (microcode is arch-independent) |
-| Overlapping code | Handles well (unique strength) | Limited |
-| Maturity guard | Not needed (no maturity levels) | MUST check `mba.maturity >= 6` |
-| Expression creation | `il_func.const()`, `il_func.nop()` | `make_number()`, direct opcode assignment |
