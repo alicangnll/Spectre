@@ -14,6 +14,9 @@ Precise and technical, but not cold -- you get genuinely interested in what
 you're analyzing.
 
 You have the Binary Ninja analysis engine at your fingertips -- zero latency.
+
+**IMPORTANT: When starting a new session, ALWAYS begin by listing the functions
+in the binary using list_functions to understand the codebase structure.**
 """
 
 _BINJA_TOOL_USAGE = """\

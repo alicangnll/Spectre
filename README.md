@@ -4,9 +4,9 @@
 
 A reverse-engineering agent for **IDA Pro**, **Binary Ninja**, and **VSCode** that integrates a multi-provider LLM directly into your analysis workflow. This project was vibecoded together with my friend, Claude Code.
 
-![alt text](assets/binja_showcase.png)
+![Spectra IDA Pro](assets/ida_showcase.png)
 
-![alt text](assets/ida_showcase.png)
+![Spectra Binary Ninja](assets/binja_showcase.png)
 
 [Documentation](https://spectra.reversing.codes/docs.html) | [Architecture](https://spectra.reversing.codes/ARCHITECTURE.html) | [Issues](https://github.com/alicangnll/Spectra/issues)
 
@@ -204,19 +204,19 @@ The enhanced **Memory Corruption** skill provides comprehensive coverage of mode
 
 **Exploration** — Inspired by how code agents work, but applied to binaries. The orchestrator maps the binary (imports, exports, strings, key functions), then spawns isolated subagents to analyze in parallel. Each reports back, and the orchestrator synthesizes a complete picture.
 
-|![alt text](assets/subagents_example_3.png)|
+|![Spectra Exploration](assets/subagents_example_3.png)|
 |:--:|
 |Orchestrator spawning subagents in parallel|
 
 **Natural Language Patches** (Experimental) — `/modify` lets you describe what you want changed in plain English. Spectra explores the binary, builds context, and applies the patches.
 
-|![alt text](assets/maze_solve.gif)|
+|![Spectra Natural Language Patches](assets/maze_solve.gif)|
 |:--:|
 |`/modify make this maze game easy, let me pass through walls`|
 
 **Deobfuscation** (Experimental, Binary Ninja) — The `/deobfuscation` skill activates plan mode to recognize and remove control flow flattening, opaque predicates, MBA expressions, and junk code using IL read/write primitives.
 
-|![](assets/cff_remove_example.gif)|
+|![Spectra Deobfuscation](assets/cff_remove_example.gif)|
 |:--:|
 |~3x speed of the workflow, original process took ~4:30 min|
 
@@ -293,47 +293,6 @@ smart-patch-binja, smart-patch-ida, vuln-audit, web-app-security
 - **MCP Servers** — Connect to external MCP servers for extended capabilities
 - **Custom Skills** — Create your own skills with custom tools and workflows
 - **Codex Skills** — Import skills from Codex editors
-
-### Interface Integration Details
-
-**IDA Pro Integration:**
-- Native IDA plugin with Qt-based chat interface
-- Direct access to IDA API (IDA, IDA Python, Hex-Rays)
-- Real-time disassembly and decompilation analysis
-- Cross-reference navigation and visualization
-- Function renaming and annotation tools
-- Script execution with safety prompts
-- Memory view and structure analysis
-- IDA database persistence
-
-**Binary Ninja Integration:**
-- Native Binary Ninja plugin with UI chat panel
-- Direct access to Binary Ninja API (BNIL, LLIL, MLIL)
-- Advanced IL manipulation and analysis
-- Cross-reference visualization and graph views
-- Binary database modification and patching
-- Type library integration and recovery
-- Function analysis and naming
-- Binary Ninja cloud collaboration support
-
-**VSCode Extension:**
-- VSCode native extension with sidebar chat
-- Right-click context menu integration
-- Code selection analysis
-- Multi-language support (C++, Python, Assembly, etc.)
-- File-based analysis workflow
-- Git integration and diff analysis
-- Terminal integration and command execution
-- Workspace-aware context management
-
-**CLI Mode:**
-- Standalone binary analysis without GUI
-- Batch processing and automation
-- Scriptable workflows
-- Integration with CI/CD pipelines
-- Headless operation for servers
-- Multi-binary batch analysis
-- Report generation in multiple formats
 
 ## Configuration & Setup
 
