@@ -293,9 +293,35 @@ class BulkRenamerEngine:
         decompiled: list[tuple[RenameJob, str]] = []
         for job in pending:
             if self._cancel.is_set():
+                # Mark remaining pending jobs as cancelled
+                for remaining_job in pending:
+                    if remaining_job.status == RenameStatus.PENDING:
+                        remaining_job.status = RenameStatus.FAILED
+                        remaining_job.error = "Cancelled"
+                        self._event_queue.put(
+                            RenameEvent(
+                                type=RenameEventType.JOB_ERROR,
+                                address=remaining_job.address,
+                                current_name=remaining_job.current_name,
+                                error="Cancelled",
+                            )
+                        )
                 break
             self._paused.wait()
             if self._cancel.is_set():
+                # Mark remaining pending jobs as cancelled
+                for remaining_job in pending:
+                    if remaining_job.status == RenameStatus.PENDING:
+                        remaining_job.status = RenameStatus.FAILED
+                        remaining_job.error = "Cancelled"
+                        self._event_queue.put(
+                            RenameEvent(
+                                type=RenameEventType.JOB_ERROR,
+                                address=remaining_job.address,
+                                current_name=remaining_job.current_name,
+                                error="Cancelled",
+                            )
+                        )
                 break
 
             job.status = RenameStatus.DECOMPILING
@@ -379,9 +405,53 @@ class BulkRenamerEngine:
         def _run_sub_batch(sub: list[tuple[RenameJob, str]]) -> None:
             nonlocal completed_count, batch_counter
             if self._cancel.is_set():
+                # Mark all jobs in this batch as cancelled
+                for item in sub:
+                    job = item[0]
+                    job.status = RenameStatus.FAILED
+                    job.error = "Cancelled"
+                    self._event_queue.put(
+                        RenameEvent(
+                            type=RenameEventType.JOB_ERROR,
+                            address=job.address,
+                            current_name=job.current_name,
+                            error="Cancelled",
+                        )
+                    )
+                with lock:
+                    completed_count += len(sub)
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
             self._paused.wait()
             if self._cancel.is_set():
+                # Mark all jobs in this batch as cancelled
+                for item in sub:
+                    job = item[0]
+                    job.status = RenameStatus.FAILED
+                    job.error = "Cancelled"
+                    self._event_queue.put(
+                        RenameEvent(
+                            type=RenameEventType.JOB_ERROR,
+                            address=job.address,
+                            current_name=job.current_name,
+                            error="Cancelled",
+                        )
+                    )
+                with lock:
+                    completed_count += len(sub)
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             with lock:
@@ -636,6 +706,16 @@ class BulkRenamerEngine:
             try:
                 for event in runner.run_task(task, max_turns=10):
                     if self._cancel.is_set():
+                        job.status = RenameStatus.FAILED
+                        job.error = "Cancelled"
+                        self._event_queue.put(
+                            RenameEvent(
+                                type=RenameEventType.JOB_ERROR,
+                                address=job.address,
+                                current_name=job.current_name,
+                                error="Cancelled",
+                            )
+                        )
                         self._update_mgr_agent(agent_id, "cancelled", "Cancelled", turn_count)
                         return
                     if event.type.value == "turn_end":
