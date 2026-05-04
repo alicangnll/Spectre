@@ -404,10 +404,13 @@ class BulkRenamerEngine:
 
         def _run_sub_batch(sub: list[tuple[RenameJob, str]]) -> None:
             nonlocal completed_count, batch_counter
+
+            # Mark all jobs in this batch as analysing (will be updated to failed/cancelled if needed)
+            sub_jobs = [item[0] for item in sub]
+
             if self._cancel.is_set():
                 # Mark all jobs in this batch as cancelled
-                for item in sub:
-                    job = item[0]
+                for job in sub_jobs:
                     job.status = RenameStatus.FAILED
                     job.error = "Cancelled"
                     self._event_queue.put(
@@ -418,8 +421,9 @@ class BulkRenamerEngine:
                             error="Cancelled",
                         )
                     )
+                # Update progress for cancelled batch
                 with lock:
-                    completed_count += len(sub)
+                    completed_count += len(sub_jobs)
                 self._event_queue.put(
                     RenameEvent(
                         type=RenameEventType.BATCH_PROGRESS,
@@ -431,8 +435,7 @@ class BulkRenamerEngine:
             self._paused.wait()
             if self._cancel.is_set():
                 # Mark all jobs in this batch as cancelled
-                for item in sub:
-                    job = item[0]
+                for job in sub_jobs:
                     job.status = RenameStatus.FAILED
                     job.error = "Cancelled"
                     self._event_queue.put(
@@ -443,8 +446,9 @@ class BulkRenamerEngine:
                             error="Cancelled",
                         )
                     )
+                # Update progress for cancelled batch
                 with lock:
-                    completed_count += len(sub)
+                    completed_count += len(sub_jobs)
                 self._event_queue.put(
                     RenameEvent(
                         type=RenameEventType.BATCH_PROGRESS,
@@ -504,16 +508,6 @@ class BulkRenamerEngine:
                 self._update_mgr_agent(agent_id, "failed", str(e), 1)
 
             # Always update progress after each batch completes (success or failure)
-            with lock:
-                completed_count += len(sub_jobs)
-            self._event_queue.put(
-                RenameEvent(
-                    type=RenameEventType.BATCH_PROGRESS,
-                    completed=completed_count,
-                    total=total,
-                )
-            )
-
             with lock:
                 completed_count += len(sub_jobs)
             self._event_queue.put(
@@ -645,10 +639,30 @@ class BulkRenamerEngine:
             nonlocal completed_count
 
             if self._cancel.is_set():
+                # Still count cancelled jobs
+                with lock:
+                    completed_count += 1
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             self._paused.wait()
             if self._cancel.is_set():
+                # Still count cancelled jobs
+                with lock:
+                    completed_count += 1
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             agent_name = f"agent_{job.current_name}"
@@ -691,6 +705,16 @@ class BulkRenamerEngine:
                     )
                 )
                 self._update_mgr_agent(agent_id, "failed", str(e), 0)
+                # Still count failed jobs
+                with lock:
+                    completed_count += 1
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             # Run deep analysis via subagent
@@ -728,6 +752,16 @@ class BulkRenamerEngine:
                             )
                         )
                         self._update_mgr_agent(agent_id, "cancelled", "Cancelled", turn_count)
+                        # Still count cancelled jobs
+                        with lock:
+                            completed_count += 1
+                        self._event_queue.put(
+                            RenameEvent(
+                                type=RenameEventType.BATCH_PROGRESS,
+                                completed=completed_count,
+                                total=total,
+                            )
+                        )
                         return
                     if event.type.value == "turn_end":
                         turn_count += 1
@@ -745,6 +779,16 @@ class BulkRenamerEngine:
                     )
                 )
                 self._update_mgr_agent(agent_id, "failed", str(e), turn_count)
+                # Still count failed jobs
+                with lock:
+                    completed_count += 1
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             # Parse the RENAME line from the subagent output
@@ -761,6 +805,16 @@ class BulkRenamerEngine:
                     )
                 )
                 self._update_mgr_agent(agent_id, "failed", job.error, turn_count)
+                # Still count failed jobs
+                with lock:
+                    completed_count += 1
+                self._event_queue.put(
+                    RenameEvent(
+                        type=RenameEventType.BATCH_PROGRESS,
+                        completed=completed_count,
+                        total=total,
+                    )
+                )
                 return
 
             new_name = match.group(2)
@@ -797,7 +851,9 @@ class BulkRenamerEngine:
                 log_error(f"Deep rename failed for 0x{job.address:x}: {e}")
                 self._update_mgr_agent(agent_id, "failed", str(e), turn_count)
 
-            completed_count += 1
+            # Always update progress after each job completes (success or failure)
+            with lock:
+                completed_count += 1
             self._event_queue.put(
                 RenameEvent(
                     type=RenameEventType.BATCH_PROGRESS,
