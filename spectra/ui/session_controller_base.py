@@ -67,12 +67,14 @@ class SessionControllerBase:
         # Multi-tab session management
         self._sessions: dict[str, SessionState] = {}
         self._active_tab_id: str = ""
-        tab_id = self._create_session()
-        self._active_tab_id = tab_id
 
         # Per-tab agent runners - each tab can run its own agent independently
         self._runners: dict[str, BackgroundAgentRunner] = {}
         self._pending_messages: dict[str, list[str]] = {}
+
+        # Create initial session
+        tab_id = self._create_session()
+        self._active_tab_id = tab_id
 
     def _initialize_runtime(self) -> None:
         """Load heavy runtime components off the UI path."""
