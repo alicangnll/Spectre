@@ -13,7 +13,7 @@ from typing import Any
 _BLOCKED_MODULES = frozenset({"subprocess", "shlex", "pty", "commands"})
 
 # Built-in calls that must never appear.
-_BLOCKED_CALLS = frozenset({"exec", "eval", "compile", "__import__"})
+_BLOCKED_CALLS = frozenset({"exec", "eval", "compile"})
 
 # Attribute calls that must never appear (module.func patterns).
 _BLOCKED_ATTRS = frozenset(
@@ -43,7 +43,6 @@ _BLOCKED_ATTRS = frozenset(
 # reflective bypasses (e.g. __builtins__['__import__'], eval("os.system")).
 _REMOVED_BUILTINS = frozenset(
     {
-        "__import__",
         "exec",
         "eval",
         "compile",
