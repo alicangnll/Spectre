@@ -10,6 +10,7 @@ from ...tools.registry import ToolRegistry
 from . import (  # type: ignore[assignment]
     advanced_decomp,
     annotations,
+    collaboration,
     database,
     decompiler,
     disassembly,
@@ -17,7 +18,9 @@ from . import (  # type: ignore[assignment]
     il,
     il_analysis,
     il_transform,
+    kernel_analysis,
     navigation,
+    obfuscation_detect,
     scripting,
     strings,
     types_tools,
@@ -39,6 +42,9 @@ _TOOL_MODULES = (
     il_analysis,
     il_transform,
     advanced_decomp,
+    kernel_analysis,
+    obfuscation_detect,
+    collaboration,
 )
 
 

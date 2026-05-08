@@ -9,12 +9,15 @@ from spectra.tools.registry import ToolRegistry
 from . import (
     advanced_decomp,
     annotations,
+    collaboration,
     database,
     decompiler,
     disassembly,
     functions,
+    kernel_analysis,
     microcode,
     navigation,
+    obfuscation_detect,
     scripting,
     strings,
     types_tools,
@@ -34,6 +37,9 @@ _TOOL_MODULES = (
     scripting,
     microcode,
     advanced_decomp,
+    kernel_analysis,
+    obfuscation_detect,
+    collaboration,
 )
 
 
