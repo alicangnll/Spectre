@@ -8,7 +8,10 @@ from spectra.tools.registry import ToolRegistry
 
 from . import (
     advanced_decomp,
+    ai_features,
     annotations,
+    auto_exploit,
+    code_quality,
     collaboration,
     database,
     decompiler,
@@ -19,6 +22,7 @@ from . import (
     navigation,
     obfuscation_detect,
     scripting,
+    ssl_pinning,
     strings,
     types_tools,
     xrefs,
@@ -40,6 +44,10 @@ _TOOL_MODULES = (
     kernel_analysis,
     obfuscation_detect,
     collaboration,
+    ssl_pinning,
+    auto_exploit,
+    code_quality,
+    ai_features,
 )
 
 
